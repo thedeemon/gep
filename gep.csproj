@@ -1,0 +1,244 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F2A7E665-A8D9-4FCF-B95F-5120BE27A284}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>gep</RootNamespace>
+    <AssemblyName>gep</AssemblyName>
+    <ApplicationIcon>gep_shot64a.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DirectShowLib-2005, Version=2.0.0.0, Culture=neutral, PublicKeyToken=67e7b740cdfc2d3f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\DirectShowLib-2005.dll</HintPath>
+    </Reference>
+    <Reference Include="NineRays.ObfuscationAttributes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=59d4bed864488801">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\NineRays.ObfuscationAttributes.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="amvideo.cs" />
+    <Compile Include="EditFilterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditFilterForm.Designer.cs">
+      <DependentUpon>EditFilterForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Field.cs" />
+    <Compile Include="FieldsToProperties.cs" />
+    <Compile Include="Filter.cs" />
+    <Compile Include="FilterGraphTools.cs" />
+    <Compile Include="FilterProps.cs" />
+    <Compile Include="Filterz.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Filterz.Designer.cs">
+      <DependentUpon>Filterz.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GenerateCodeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GenerateCodeForm.Designer.cs">
+      <DependentUpon>GenerateCodeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GenerateCodeGfxForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GenerateCodeGfxForm.Designer.cs">
+      <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Graph.cs" />
+    <Compile Include="History.cs" />
+    <Compile Include="InterfacesListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="InterfacesListForm.Designer.cs">
+      <DependentUpon>InterfacesListForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GraphForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GraphForm.Designer.cs">
+      <DependentUpon>GraphForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MatchingFiltersForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MatchingFiltersForm.Designer.cs">
+      <DependentUpon>MatchingFiltersForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MediaTypeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MediaTypeForm.Designer.cs">
+      <DependentUpon>MediaTypeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MediaTypeProps.cs" />
+    <Compile Include="Pin.cs" />
+    <Compile Include="PriorityQueue.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="PropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PropertiesForm.Designer.cs">
+      <DependentUpon>PropertiesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AboutForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditFilterForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>EditFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Filterz.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>Filterz.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GenerateCodeForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GenerateCodeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GenerateCodeGfxForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GraphForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GraphForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="InterfacesListForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>InterfacesListForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MatchingFiltersForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>MatchingFiltersForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MediaTypeForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>MediaTypeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PropertiesForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>PropertiesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RegisterForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>RegisterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RenderURLForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>RenderURLForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RotForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>RotForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SampleGrabberForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SampleGrabberForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="RegisterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RegisterForm.Designer.cs">
+      <DependentUpon>RegisterForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RegistryChecker.cs" />
+    <Compile Include="RenderURLForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RenderURLForm.Designer.cs">
+      <DependentUpon>RenderURLForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RotForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RotForm.Designer.cs">
+      <DependentUpon>RotForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SampleGrabberForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SampleGrabberForm.Designer.cs">
+      <DependentUpon>SampleGrabberForm.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="gep_shot32a.ico" />
+    <Content Include="gep_shot64a.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

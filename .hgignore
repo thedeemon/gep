@@ -1,0 +1,9 @@
+syntax: glob
+*.ncb
+*.plg
+*.bsc
+*.pch
+*.orig
+*.rej
+*.bk
+obj/*
