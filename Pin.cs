@@ -79,9 +79,51 @@ namespace gep
             connection = con;
             if (con == null && really)
             {
-                Filter.Graph.Disconnect(ipin);
-                //int hr = ipin.Disconnect();                
-                //DsError.ThrowExceptionForHR(hr);
+                Filter.Graph.Disconnect(ipin);                
+            }
+        }
+
+        public List<InterfaceInfo> ScanInterfaces()
+        {
+            return FilterGraphTools.ScanInterfaces(ipin);
+        }
+
+        public bool HasPropertyPage()
+        {
+            return (ipin as ISpecifyPropertyPages) != null;
+        }
+
+        public void ShowPropertyPage(IntPtr parent)
+        {
+            int hr = 0;
+            
+            if (ipin == null)
+                throw new ArgumentNullException("ipin");
+
+            if (HasPropertyPage())
+            {               
+                DsCAUUID caGuid;
+                hr = (ipin as ISpecifyPropertyPages).GetPages(out caGuid);
+                DsError.ThrowExceptionForHR(hr);
+
+                try
+                {
+                    object[] objs = new object[1];
+                    objs[0] = ipin;
+
+                    NativeMethods.OleCreatePropertyFrame(
+                        parent, 0, 0,
+                        UniqName,
+                        objs.Length, objs,
+                        caGuid.cElems, caGuid.pElems,
+                        0, 0,
+                        IntPtr.Zero
+                        );
+                }
+                finally
+                {
+                    Marshal.FreeCoTaskMem(caGuid.pElems);
+                }
             }
         }
 

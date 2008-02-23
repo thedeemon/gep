@@ -129,23 +129,45 @@ namespace gep
 
         private void ShowPropertyPage(object sender, System.EventArgs e)
         {
-            if (rightClickedFilter != null) 
+            if (rightClickedFilter != null)
+            {
                 FilterGraphTools.ShowFilterPropertyPage(rightClickedFilter.BaseFilter, Handle);
-            rightClickedFilter = null;
+                rightClickedFilter = null;
+            }
+
+            if (connectingPin != null)
+            {
+                connectingPin.ShowPropertyPage(Handle);
+                connectingPin = null;
+            }
         }
 
         private void ScanInterfaces(object sender, System.EventArgs e)
         {
+            List<InterfaceInfo> lst = null;
+            string name = null;
             if (rightClickedFilter != null)
             {
-                List<InterfaceInfo> lst = rightClickedFilter.ScanInterfaces();
+                lst = rightClickedFilter.ScanInterfaces();     
+                name = rightClickedFilter.Name + " interfaces";
+                rightClickedFilter = null;
+            }
+            
+            if (connectingPin != null)
+            {
+                lst = connectingPin.ScanInterfaces();
+                name = connectingPin.UniqName + " interfaces";
+                connectingPin = null;
+            }
+
+            if (lst != null)
+            {
                 InterfacesListForm ilf = new InterfacesListForm();
                 ilf.MdiParent = MdiParent;
-                ilf.Text = rightClickedFilter.Name + " interfaces";
+                ilf.Text = name;
                 ilf.SetList(lst);
                 ilf.Show();
-            }
-            rightClickedFilter = null;
+            }            
         }
 
         private void VfWConfig(object sender, System.EventArgs e)
@@ -419,7 +441,11 @@ namespace gep
                     ContextMenu menu = new ContextMenu();
                     if (connectingPin.Direction==PinDirection.Output)
                         menu.MenuItems.Add("Render pin", this.RenderPin);
+                    if (connectingPin.HasPropertyPage())
+                        menu.MenuItems.Add("Property page", this.ShowPropertyPage);
+                    menu.MenuItems.Add("Scan interfaces", this.ScanInterfaces);
                     menu.MenuItems.Add("Show matching filters", this.ShowMatchingFilters);
+                    
                     IAMStreamConfig isc = connectingPin.IPin as IAMStreamConfig;
                     if (isc != null)
                         menu.MenuItems.Add("IAMStreamConfig::SetFormat", this.ConfigStream);
