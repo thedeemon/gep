@@ -104,9 +104,25 @@ namespace gep
                     object fld_value = field.GetValue(_target);
                     string str = fld_value.ToString();
                     if (fld_value is IFormattable && str.Length > 1) {
+                        StringBuilder sb = new StringBuilder();
                         IFormattable frm = (IFormattable)fld_value;
-                        str += " (0x" + frm.ToString("X", Thread.CurrentThread.CurrentCulture) + ")";
-                    }
+                        string hex = frm.ToString("X", Thread.CurrentThread.CurrentCulture);
+                        if (field.Name == "Compression")
+                        {
+                            UInt32 ival = UInt32.Parse(str);
+                            char[] fourcc = new char[4];
+                            fourcc[0] = (char)(ival & 0xFF);
+                            fourcc[1] = (char)((ival >> 8) & 0xFF);
+                            fourcc[2] = (char)((ival >> 16) & 0xFF);
+                            fourcc[3] = (char)((ival >> 24) & 0xFF);
+                            sb.Append("'");
+                            sb.Append(fourcc);
+                            sb.Append("' "+str+" (0x" + hex + ")");
+                        }
+                        else                        
+                            sb.Append(str + " (0x" + hex + ")");
+                        str = sb.ToString();
+                    }                    
                     fieldDesc = new CustomFieldPropertyDescriptor(str, attrs, field.Name, _target.GetType());
                     //fieldDesc = new FieldPropertyDescriptor(field, attrs);
                 }
