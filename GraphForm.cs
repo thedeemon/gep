@@ -47,6 +47,12 @@ namespace gep
 
         public bool IsFromRot { get { return graph.IsFromRot; } }
 
+        public bool UseClock
+        {
+            get { return graph.UseClock; }
+            set { graph.UseClock = value; }
+        }
+
         private void GraphForm_Paint(object sender, PaintEventArgs e)
         {
             Point viewpoint = new Point(hScrollBar.Value, vScrollBar.Value - toolStripHeight);

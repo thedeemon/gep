@@ -37,7 +37,10 @@ namespace gep
             { 
                 activeGraphForm = value;
                 if (activeGraphForm != null)
+                {
                     disconnectFromRunningToolStripMenuItem.Enabled = activeGraphForm.IsFromRot;
+                    useClockToolStripMenuItem.Checked = activeGraphForm.UseClock;
+                }
             }
         }
 
@@ -291,6 +294,15 @@ namespace gep
             {
                 int v = suggestURLs ? 1 : 0;
                 rk.SetValue("suggestURL", v);
+            }
+        }
+
+        private void OnUseClock(object sender, EventArgs e)
+        {
+            if (activeGraphForm != null)
+            {
+                activeGraphForm.UseClock = !activeGraphForm.UseClock;
+                useClockToolStripMenuItem.Checked = activeGraphForm.UseClock;
             }
         }
 

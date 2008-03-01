@@ -46,11 +46,11 @@ namespace gep
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(49, 43);
+            this.label2.Location = new System.Drawing.Point(37, 43);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(94, 13);
+            this.label2.Size = new System.Drawing.Size(121, 13);
             this.label2.TabIndex = 1;
-            this.label2.Text = "(C) Dee Mon 2007";
+            this.label2.Text = "(C) Dee Mon 2007-2008";
             // 
             // linkLabel1
             // 

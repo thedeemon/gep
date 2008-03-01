@@ -61,6 +61,7 @@ namespace gep
             this.buyToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.status = new System.Windows.Forms.StatusStrip();
             this.status_label = new System.Windows.Forms.ToolStripStatusLabel();
+            this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainmenu.SuspendLayout();
             this.maintoolbar.SuspendLayout();
             this.status.SuspendLayout();
@@ -97,7 +98,7 @@ namespace gep
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
             // 
             // newToolStripMenuItem
@@ -106,7 +107,7 @@ namespace gep
             this.newToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
             this.newToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.newToolStripMenuItem.Text = "&New";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.OnNewGraph);
             // 
@@ -116,14 +117,14 @@ namespace gep
             this.openToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.openToolStripMenuItem.Text = "&Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // connectToRunningToolStripMenuItem
             // 
             this.connectToRunningToolStripMenuItem.Name = "connectToRunningToolStripMenuItem";
-            this.connectToRunningToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.connectToRunningToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.connectToRunningToolStripMenuItem.Text = "Connect to running...";
             this.connectToRunningToolStripMenuItem.Click += new System.EventHandler(this.OnConnectToROT);
             // 
@@ -131,28 +132,28 @@ namespace gep
             // 
             this.disconnectFromRunningToolStripMenuItem.Enabled = false;
             this.disconnectFromRunningToolStripMenuItem.Name = "disconnectFromRunningToolStripMenuItem";
-            this.disconnectFromRunningToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.disconnectFromRunningToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.disconnectFromRunningToolStripMenuItem.Text = "Disconnect from running";
             this.disconnectFromRunningToolStripMenuItem.Click += new System.EventHandler(this.disconnectFromRunningToolStripMenuItem_Click);
             // 
             // renderFileToolStripMenuItem
             // 
             this.renderFileToolStripMenuItem.Name = "renderFileToolStripMenuItem";
-            this.renderFileToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.renderFileToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.renderFileToolStripMenuItem.Text = "Render file...";
             this.renderFileToolStripMenuItem.Click += new System.EventHandler(this.OnRenderFile);
             // 
             // renderURLToolStripMenuItem
             // 
             this.renderURLToolStripMenuItem.Name = "renderURLToolStripMenuItem";
-            this.renderURLToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.renderURLToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.renderURLToolStripMenuItem.Text = "Render URL...";
             this.renderURLToolStripMenuItem.Click += new System.EventHandler(this.OnRenderURL);
             // 
             // toolStripSeparator
             // 
             this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(198, 6);
+            this.toolStripSeparator.Size = new System.Drawing.Size(204, 6);
             // 
             // saveToolStripMenuItem
             // 
@@ -160,40 +161,40 @@ namespace gep
             this.saveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // saveAsToolStripMenuItem
             // 
             this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.saveAsToolStripMenuItem.Text = "Save &As";
             this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
             // 
             // generateCodeToolStripMenuItem
             // 
             this.generateCodeToolStripMenuItem.Name = "generateCodeToolStripMenuItem";
-            this.generateCodeToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.generateCodeToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.generateCodeToolStripMenuItem.Text = "Generate code";
             this.generateCodeToolStripMenuItem.Click += new System.EventHandler(this.OnGenCode);
             // 
             // saveGraphAsImageToolStripMenuItem
             // 
             this.saveGraphAsImageToolStripMenuItem.Name = "saveGraphAsImageToolStripMenuItem";
-            this.saveGraphAsImageToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.saveGraphAsImageToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.saveGraphAsImageToolStripMenuItem.Text = "Save graph as image";
             this.saveGraphAsImageToolStripMenuItem.Click += new System.EventHandler(this.OnSaveImage);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(198, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(204, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -201,22 +202,23 @@ namespace gep
             // 
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.autoLayoutFiltersToolStripMenuItem,
-            this.suggestURLsForSourcesToolStripMenuItem});
+            this.suggestURLsForSourcesToolStripMenuItem,
+            this.useClockToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "Options";
             // 
             // autoLayoutFiltersToolStripMenuItem
             // 
             this.autoLayoutFiltersToolStripMenuItem.Name = "autoLayoutFiltersToolStripMenuItem";
-            this.autoLayoutFiltersToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+            this.autoLayoutFiltersToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.autoLayoutFiltersToolStripMenuItem.Text = "AutoArrange filters";
             this.autoLayoutFiltersToolStripMenuItem.Click += new System.EventHandler(this.OnAutoArrage);
             // 
             // suggestURLsForSourcesToolStripMenuItem
             // 
             this.suggestURLsForSourcesToolStripMenuItem.Name = "suggestURLsForSourcesToolStripMenuItem";
-            this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+            this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources";
             this.suggestURLsForSourcesToolStripMenuItem.Click += new System.EventHandler(this.OnSuggestURLs);
             // 
@@ -226,25 +228,25 @@ namespace gep
             this.clearFavoritesToolStripMenuItem,
             this.toolStripSeparator2});
             this.favoritesToolStripMenuItem.Name = "favoritesToolStripMenuItem";
-            this.favoritesToolStripMenuItem.Size = new System.Drawing.Size(64, 20);
+            this.favoritesToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
             this.favoritesToolStripMenuItem.Text = "Favorites";
             // 
             // clearFavoritesToolStripMenuItem
             // 
             this.clearFavoritesToolStripMenuItem.Name = "clearFavoritesToolStripMenuItem";
-            this.clearFavoritesToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.clearFavoritesToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.clearFavoritesToolStripMenuItem.Text = "Clear favorites";
             this.clearFavoritesToolStripMenuItem.Click += new System.EventHandler(this.OnClearFavorites);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(153, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
             // 
             // windowsToolStripMenuItem
             // 
             this.windowsToolStripMenuItem.Name = "windowsToolStripMenuItem";
-            this.windowsToolStripMenuItem.Size = new System.Drawing.Size(62, 20);
+            this.windowsToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
             this.windowsToolStripMenuItem.Text = "Windows";
             this.windowsToolStripMenuItem.DropDownClosed += new System.EventHandler(this.windowsToolStripMenuItem_DropDownClosed);
             this.windowsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.windowsToolStripMenuItem_DropDownOpening);
@@ -254,13 +256,13 @@ namespace gep
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "&Help";
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -343,8 +345,15 @@ namespace gep
             // status_label
             // 
             this.status_label.Name = "status_label";
-            this.status_label.Size = new System.Drawing.Size(67, 17);
+            this.status_label.Size = new System.Drawing.Size(71, 17);
             this.status_label.Text = "status string";
+            // 
+            // useClockToolStripMenuItem
+            // 
+            this.useClockToolStripMenuItem.Name = "useClockToolStripMenuItem";
+            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.useClockToolStripMenuItem.Text = "Use clock";
+            this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
             // 
             // MainForm
             // 
@@ -408,6 +417,7 @@ namespace gep
         private System.Windows.Forms.ToolStripMenuItem windowsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renderURLToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem suggestURLsForSourcesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem useClockToolStripMenuItem;
     }
 }
 

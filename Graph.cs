@@ -859,6 +859,38 @@ namespace gep
 
         public long Duration { get { return totalDuration; } }
 
+        private bool useClock = true;
+        public bool UseClock
+        {
+            get { return useClock; }
+            set
+            {
+                if (value)
+                {
+                    graphBuilder.SetDefaultSyncSource();
+                    useClock = true;
+                }
+                else
+                {
+                    try
+                    {
+                        IMediaFilter imf = (IMediaFilter)graphBuilder;
+                        int hr = imf.SetSyncSource(null);
+                        DsError.ThrowExceptionForHR(hr);
+                        useClock = false;
+                    }
+                    catch (COMException e)
+                    {
+                        ShowCOMException(e, "Exception caught when setting clock to NULL");
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.ToString(), "Exception caught when setting clock to NULL");
+                    }
+                }
+            }
+        }
+
         public void SelectSeveralFilters(Rectangle rc)
         {
             foreach (Filter f in filters)
