@@ -66,7 +66,8 @@ namespace gep
 
             if (basefilter == null)
                 throw new Exception("Can't create filter");
-            
+
+            fp.SetFilter(this);            
         }
 
         public Filter(IBaseFilter ibf)
@@ -80,6 +81,7 @@ namespace gep
             string strCatguid = Graph.GuidToString( FilterCategory.LegacyAmFilterCategory );
             filterProps = new FilterProps(fi.achName, "", strGuid, strCatguid);
             filterProps.MakeFileName();
+            filterProps.SetFilter(this);
         }
 
         public void ReloadPins()

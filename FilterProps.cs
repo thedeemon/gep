@@ -9,7 +9,7 @@ using Microsoft.Win32;
 using System.IO;
 using System.Diagnostics;
 using System.Globalization;
-
+using System.Runtime.InteropServices;
 
 namespace gep
 {
@@ -27,6 +27,7 @@ namespace gep
         DateTime cr_time, mod_time;
         FileVersionInfo ver_info;
         bool prepared = false;
+        IntPtr pointer; //to IUnknown
 
         public FilterProps(string _name, string _longname, string _guid, string _catguid)
         {
@@ -106,6 +107,11 @@ namespace gep
             prepared = true;
         }
 
+        public void SetFilter(Filter f)
+        {
+            pointer = Marshal.GetIUnknownForObject(f.BaseFilter);
+        }
+
         [CategoryAttribute("1) Filter"),
         ReadOnlyAttribute(true),
         DescriptionAttribute("Friendly name.")]
@@ -153,6 +159,14 @@ namespace gep
         public string Merit
         {
             get { Prepare(); return "0x" + merit.ToString("X8"); }
+        }
+
+        [CategoryAttribute("1) Filter"),
+        ReadOnlyAttribute(true),
+        DescriptionAttribute("Pointer to IUnknown.")]
+        public string Pointer
+        {
+            get { Prepare(); return "0x" + pointer.ToString("X8"); }
         }
 
         [CategoryAttribute("2) File"),
