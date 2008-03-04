@@ -976,6 +976,7 @@ namespace gep
             typeof(IMemAllocator),
             typeof(IMemAllocatorCallbackTemp),
             typeof(IMemAllocatorNotifyCallbackTemp),
+            typeof(IMemInputPin),
             typeof(IMixerOCX),
             typeof(IMixerOCXNotify),
             typeof(IMixerPinConfig),
@@ -1336,5 +1337,61 @@ namespace gep
 
     }
     #endregion
+    
+    //MIDL_INTERFACE("56a8689d-0ad4-11ce-b03a-0020af0ba770")
+    //IMemInputPin : public IUnknown
+    //{
+    //public:
+    //    virtual HRESULT STDMETHODCALLTYPE GetAllocator( 
+    //        /* [out] */ IMemAllocator **ppAllocator) = 0;
+        
+    //    virtual HRESULT STDMETHODCALLTYPE NotifyAllocator( 
+    //        /* [in] */ IMemAllocator *pAllocator,
+    //        /* [in] */ BOOL bReadOnly) = 0;
+        
+    //    virtual HRESULT STDMETHODCALLTYPE GetAllocatorRequirements( 
+    //        /* [out] */ ALLOCATOR_PROPERTIES *pProps) = 0;
+        
+    //    virtual HRESULT STDMETHODCALLTYPE Receive( 
+    //        /* [in] */ IMediaSample *pSample) = 0;
+        
+    //    virtual HRESULT STDMETHODCALLTYPE ReceiveMultiple( 
+    //        /* [size_is][in] */ IMediaSample **pSamples,
+    //        /* [in] */ long nSamples,
+    //        /* [out] */ long *nSamplesProcessed) = 0;
+        
+    //    virtual HRESULT STDMETHODCALLTYPE ReceiveCanBlock( void) = 0;
+        
+    //};
+    [ComImport, System.Security.SuppressUnmanagedCodeSecurity,
+    Guid("56a8689d-0ad4-11ce-b03a-0020af0ba770"),
+    InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IMemInputPin
+    {
+        [PreserveSig]
+        int GetAllocator([Out] out IMemAllocator ppAllocator);
+
+        [PreserveSig]
+        int NotifyAllocator(
+            [In] IMemAllocator pAllocator,
+            [In, MarshalAs(UnmanagedType.Bool)] bool bReadOnly
+            );
+
+        [PreserveSig]
+        int GetAllocatorRequirements([Out] out AllocatorProperties pProps);
+
+        [PreserveSig]
+        int Receive([In] IMediaSample pSample);
+
+        [PreserveSig]
+        int ReceiveMultiple(
+            [In] IntPtr pSamples, // IMediaSample[]
+            [In] int nSamples,
+            [Out] out int nSamplesProcessed
+            );
+
+        [PreserveSig]
+        int ReceiveCanBlock();
+    }
 
 }

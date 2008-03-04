@@ -57,7 +57,7 @@ namespace gep
         {
             Point viewpoint = new Point(hScrollBar.Value, vScrollBar.Value - toolStripHeight);
             graph.Draw(e.Graphics, viewpoint);
-            if (connectingPin != null)
+            if (connectingPin != null && connectingPin.Connection==null)
             {
                 Pen pen = otherPin==null ? Pens.Red : Pens.LightGreen;
                 Point mstart = movingStart;
@@ -256,7 +256,53 @@ namespace gep
             connectingPin = null;
         }
 
-        
+        private void ShowAllocatorProperties(object sender, System.EventArgs e)
+        {
+            if (connectingPin != null)
+            {
+                IMemInputPin imip = connectingPin.IPin as IMemInputPin;
+                if (imip != null)
+                {
+                    IMemAllocator ma = null;
+                    imip.GetAllocator(out ma);
+                    if (ma != null)
+                    {
+                        AllocatorProperties pr = new AllocatorProperties();
+                        ma.GetProperties(pr);
+                        Program.mainform.propform.SetObject(new FieldsToPropertiesProxyTypeDescriptor(pr));
+                    }
+                }
+            }
+            connectingPin = null;
+        }
+
+        private void ShowAllocatorRequirements(object sender, System.EventArgs e)
+        {
+            if (connectingPin != null)
+            {
+                IMemInputPin imip = connectingPin.IPin as IMemInputPin;
+                if (imip != null)
+                {
+                    try
+                    {
+                        AllocatorProperties pr = new AllocatorProperties();
+                        int hr = imip.GetAllocatorRequirements(out pr);
+                        DsError.ThrowExceptionForHR(hr);
+                        if (pr != null)
+                            Program.mainform.propform.SetObject(new FieldsToPropertiesProxyTypeDescriptor(pr));
+                    }
+                    catch (COMException ex)
+                    {
+                        Graph.ShowCOMException(ex, "Can't get requirements");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Exception caught in IMemInputPin::GetAllocatorRequirements");
+                    }
+                }
+            }
+            connectingPin = null;
+        }
 
         Filter movingFilter, rightClickedFilter;
         Point movingStart; //click point in pixels
@@ -313,10 +359,10 @@ namespace gep
             if (filter != null)
             {
                 Pin pin = filter.PinInPoint(mousepos);
-                if (pin != null && pin.Connection==null)
-                {
-                    movingStart = mousepos;
-                    connectingPin = pin;
+                if (pin != null)
+                {                    
+                        movingStart = mousepos;
+                        connectingPin = pin;                       
                 }
                 else //filter right click
                 {
@@ -445,16 +491,21 @@ namespace gep
                 if (mousepos == movingStart) //pin right click
                 {
                     ContextMenu menu = new ContextMenu();
-                    if (connectingPin.Direction==PinDirection.Output)
+                    if (connectingPin.Direction == PinDirection.Output)
                         menu.MenuItems.Add("Render pin", this.RenderPin);
                     if (connectingPin.HasPropertyPage())
                         menu.MenuItems.Add("Property page", this.ShowPropertyPage);
                     menu.MenuItems.Add("Scan interfaces", this.ScanInterfaces);
                     menu.MenuItems.Add("Show matching filters", this.ShowMatchingFilters);
-                    
+
                     IAMStreamConfig isc = connectingPin.IPin as IAMStreamConfig;
                     if (isc != null)
                         menu.MenuItems.Add("IAMStreamConfig::SetFormat", this.ConfigStream);
+                    if ((connectingPin.IPin as IMemInputPin) != null)
+                    {
+                        menu.MenuItems.Add("See allocator properties", this.ShowAllocatorProperties);
+                        menu.MenuItems.Add("See allocator requirements", this.ShowAllocatorRequirements);
+                    }
                     menu.Show(this, eLocation);
                     return;
                 }
@@ -474,7 +525,7 @@ namespace gep
                     graph.Connect(outpin, inpin, false);
                 }
             }
-            connectingPin = null;
+            connectingPin = null;            
             otherPin = null;
             Invalidate();
         }
@@ -548,7 +599,7 @@ namespace gep
                     }
                 }
             }
-            if (connectingPin != null)
+            if (connectingPin != null && connectingPin.Connection==null)
             {
                 otherPin = null;
                 Filter f = graph.FilterInPoint(mousepos);
