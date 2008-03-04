@@ -412,27 +412,25 @@ namespace gep
             {
                 sb.AppendLine("CComPtr<IBaseFilter> CreateFilter(WCHAR* displayName)");
                 sb.AppendLine("{");
-                sb.AppendLine("    IBindCtx *pBindCtx;");
+                sb.AppendLine("    CComPtr<IBindCtx> pBindCtx;");
                 sb.AppendLine("    HRESULT hr = CreateBindCtx(0, &pBindCtx);");
                 sb.AppendLine("    if (hrcheck(hr, \"Can't create bind context\"))");
                 sb.AppendLine("        return NULL;");
                 sb.AppendLine();
                 sb.AppendLine("    ULONG chEaten = 0;");
-                sb.AppendLine("    IMoniker *pMoniker = 0;");
+                sb.AppendLine("    CComPtr<IMoniker> pMoniker;");
                 sb.AppendLine("    hr = MkParseDisplayName(pBindCtx, displayName, &chEaten, &pMoniker);");
-                sb.AppendLine("    pBindCtx->Release();");
                 sb.AppendLine("    if (hrcheck(hr, \"Can't create parse display name of the filter\"))");
                 sb.AppendLine("        return NULL;");
                 sb.AppendLine();
-                sb.AppendLine("    IBaseFilter *pFilter = NULL;");
+                sb.AppendLine("    CComPtr<IBaseFilter> pFilter;");
                 sb.AppendLine("    if (SUCCEEDED(hr))");
                 sb.AppendLine("    {");
                 sb.AppendLine("        hr = pMoniker->BindToObject(pBindCtx, NULL, IID_IBaseFilter, (void**)&pFilter);");
-                sb.AppendLine("        pMoniker->Release();");
                 sb.AppendLine("        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
                 sb.AppendLine("            return NULL;");
                 sb.AppendLine("    }");
-                sb.AppendLine("    return CComPtr<IBaseFilter>(pFilter);");
+                sb.AppendLine("    return pFilter;");
                 sb.AppendLine("}");
                 sb.AppendLine();
             }
