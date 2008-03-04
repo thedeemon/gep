@@ -6,6 +6,10 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
+
 
 namespace gep
 {
@@ -100,7 +104,9 @@ namespace gep
                 item.Text = "Register";
                 item.Click += buyToolStripButton_Click;
                 helpToolStripMenuItem.DropDownItems.Add(item);
-            }            
+            }
+
+            LoadFavorites(nrk);
         }
 
         private void newToolStripButton_Click(object sender, EventArgs e)
@@ -202,6 +208,29 @@ namespace gep
             autoLayoutFiltersToolStripMenuItem.Checked = autoArrange;
         }
 
+        List<FilterPropsKernel> favlist = new List<FilterPropsKernel>();
+
+        void LoadFavorites(RegistryKey rk) //rk must be open
+        {
+            string[] ss = (string[])rk.GetValue("favorites");
+            List<string> slist = new List<string>(ss);
+            FilterPropsKernel fk = FilterPropsKernel.FromList(slist);
+            while (fk != null)
+            {
+                favlist.Add(fk);
+                AddToFavorites(fk.MkFilterProps());
+                fk = FilterPropsKernel.FromList(slist);
+            }           
+        }
+
+        void SaveFavorites(RegistryKey rk) //rk must be open
+        {
+            List<string> slist = new List<string>();
+            foreach (FilterPropsKernel fk in favlist)
+                fk.SaveTo(slist);            
+            rk.SetValue("favorites", slist.ToArray());
+        }
+
         public void AddToFavorites(FilterProps fp)
         {
             foreach (ToolStripItem it in favoritesToolStripMenuItem.DropDownItems)
@@ -214,7 +243,7 @@ namespace gep
                     activeGraphForm.AddFilter(fp);
             };
             favoritesToolStripMenuItem.DropDownItems.Add(item);
-
+            favlist.Add(fp.Kernel);
         }
 
         private void OnClearFavorites(object sender, EventArgs e)
@@ -224,6 +253,7 @@ namespace gep
             items[1] = favoritesToolStripMenuItem.DropDownItems[1];
             favoritesToolStripMenuItem.DropDownItems.Clear();
             favoritesToolStripMenuItem.DropDownItems.AddRange(items);
+            favlist.Clear();
         }
 
         private void OnSaveImage(object sender, EventArgs e)
@@ -294,6 +324,7 @@ namespace gep
             {
                 int v = suggestURLs ? 1 : 0;
                 rk.SetValue("suggestURL", v);
+                SaveFavorites(rk);
             }
         }
 

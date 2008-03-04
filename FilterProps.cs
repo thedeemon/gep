@@ -243,6 +243,47 @@ namespace gep
 
         }
 
+        public FilterPropsKernel Kernel
+        {
+            get { return new FilterPropsKernel(name, longname, guid, catguid); }
+        }
+
+    }
+
+    class FilterPropsKernel
+    {
+        string name;
+        string longname;
+        string guid;
+        string catguid;
+
+        public FilterPropsKernel(string _name, string _longname, string _guid, string _catguid)
+        {
+            name = _name; longname = _longname; guid = _guid; catguid = _catguid;
+        }
+
+        public FilterProps MkFilterProps()
+        {
+            FilterProps fp =  new FilterProps(name, longname, guid, catguid);
+            fp.MakeFileName();
+            return fp;
+        }
+
+        public void SaveTo(List<string> slist)
+        {
+            slist.Add(name);
+            slist.Add(longname);
+            slist.Add(guid);
+            slist.Add(catguid);
+        }
+
+        public static FilterPropsKernel FromList(List<string> slist)
+        {
+            if (slist.Count < 4) return null;
+            FilterPropsKernel fk = new FilterPropsKernel(slist[0], slist[1], slist[2], slist[3]);
+            slist.RemoveRange(0, 4);
+            return fk;
+        }
     }
 
 
