@@ -790,6 +790,7 @@ namespace gep
             sb.AppendLine("                        }");
             sb.AppendLine("                        mediaEvent.FreeEventParams(ev, p1, p2);");
             sb.AppendLine("                    }");
+            sb.AppendLine("                    // stop after 10 seconds");
             sb.AppendLine("                    n++;");
             sb.AppendLine("                    if (n > 20)");
             sb.AppendLine("                    {");

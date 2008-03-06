@@ -432,6 +432,22 @@ namespace gep
             ReloadGraph();
         }
 
+        public void AddSourceFilter(string filename)
+        {
+            IBaseFilter ifilter = null;
+            try
+            {
+                int hr = graphBuilder.AddSourceFilter(filename, filename, out ifilter);
+                DsError.ThrowExceptionForHR(hr);
+            }
+            catch (COMException e)
+            {
+                ShowCOMException(e, "Can't add source filter for " + filename);
+                return;
+            }
+            ReloadGraph();            
+        }
+
         public void RenderPin(Pin pin)
         {
             try

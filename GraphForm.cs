@@ -116,6 +116,17 @@ namespace gep
             Invalidate();
         }
 
+        public void AddSourceFilter(object sender, System.EventArgs e)
+        {
+            OpenFileDialog fd = new OpenFileDialog();
+            fd.DefaultExt = "*.*";
+            if (fd.ShowDialog() != DialogResult.OK)
+                return;
+            graph.AddSourceFilter(fd.FileName);
+            RecalcScrolls();
+            Invalidate();
+        }
+
         private void RenderPin(object sender, System.EventArgs e)
         {
             if (connectingPin != null)
@@ -396,10 +407,11 @@ namespace gep
             {
                 ContextMenu menu = new ContextMenu();
                 menu.MenuItems.Add("Render file...", this.RenderFile);
+                menu.MenuItems.Add("Add source filter...", this.AddSourceFilter);
                 menu.MenuItems.Add("Load graph...", this.LoadGraph);
                 if (savedFileName != null)
                     menu.MenuItems.Add("Save graph", this.SaveGraph);
-                menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);
+                menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);                
                 menu.Show(this, eLocation);
             }
         }
