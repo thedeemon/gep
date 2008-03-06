@@ -879,9 +879,9 @@ namespace gep
             sliding = false;
         }
 
-        public void GenerateCode()
-        {
-            graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]]);
+        public void GenerateCode(lang lng)
+        {            
+            graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]], lng);
         }
 
         private void GraphForm_MouseLeave(object sender, EventArgs e)
@@ -927,6 +927,12 @@ namespace gep
             e.Graphics.DrawImageUnscaled(img_slider, start+pos-5, 4);
         }
 
+    }
+
+    public enum lang
+    {
+        CPP = 1,
+        CS = 2
     }
 
 }//namespace

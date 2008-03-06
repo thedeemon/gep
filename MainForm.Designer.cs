@@ -47,6 +47,7 @@ namespace gep
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoLayoutFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.suggestURLsForSourcesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.favoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFavoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -61,7 +62,8 @@ namespace gep
             this.buyToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.status = new System.Windows.Forms.StatusStrip();
             this.status_label = new System.Windows.Forms.ToolStripStatusLabel();
-            this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.mainmenu.SuspendLayout();
             this.maintoolbar.SuspendLayout();
             this.status.SuspendLayout();
@@ -174,10 +176,12 @@ namespace gep
             // 
             // generateCodeToolStripMenuItem
             // 
+            this.generateCodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cToolStripMenuItem,
+            this.cToolStripMenuItem1});
             this.generateCodeToolStripMenuItem.Name = "generateCodeToolStripMenuItem";
             this.generateCodeToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.generateCodeToolStripMenuItem.Text = "Generate code";
-            this.generateCodeToolStripMenuItem.Click += new System.EventHandler(this.OnGenCode);
             // 
             // saveGraphAsImageToolStripMenuItem
             // 
@@ -221,6 +225,13 @@ namespace gep
             this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources";
             this.suggestURLsForSourcesToolStripMenuItem.Click += new System.EventHandler(this.OnSuggestURLs);
+            // 
+            // useClockToolStripMenuItem
+            // 
+            this.useClockToolStripMenuItem.Name = "useClockToolStripMenuItem";
+            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.useClockToolStripMenuItem.Text = "Use clock";
+            this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
             // 
             // favoritesToolStripMenuItem
             // 
@@ -348,12 +359,19 @@ namespace gep
             this.status_label.Size = new System.Drawing.Size(71, 17);
             this.status_label.Text = "status string";
             // 
-            // useClockToolStripMenuItem
+            // cToolStripMenuItem
             // 
-            this.useClockToolStripMenuItem.Name = "useClockToolStripMenuItem";
-            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.useClockToolStripMenuItem.Text = "Use clock";
-            this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
+            this.cToolStripMenuItem.Name = "cToolStripMenuItem";
+            this.cToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cToolStripMenuItem.Text = "C++";
+            this.cToolStripMenuItem.Click += new System.EventHandler(this.OnGenCode);
+            // 
+            // cToolStripMenuItem1
+            // 
+            this.cToolStripMenuItem1.Name = "cToolStripMenuItem1";
+            this.cToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.cToolStripMenuItem1.Text = "C#";
+            this.cToolStripMenuItem1.Click += new System.EventHandler(this.OnGenCodeCS);
             // 
             // MainForm
             // 
@@ -418,6 +436,8 @@ namespace gep
         private System.Windows.Forms.ToolStripMenuItem renderURLToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem suggestURLsForSourcesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useClockToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem1;
     }
 }
 

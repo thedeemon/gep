@@ -156,7 +156,7 @@ namespace gep
         private void OnGenCode(object sender, EventArgs e)
         {
             if (activeGraphForm != null)
-                activeGraphForm.GenerateCode();
+                activeGraphForm.GenerateCode(lang.CPP);
         }
 
         string lasthint;
@@ -335,6 +335,12 @@ namespace gep
                 activeGraphForm.UseClock = !activeGraphForm.UseClock;
                 useClockToolStripMenuItem.Checked = activeGraphForm.UseClock;
             }
+        }
+
+        private void OnGenCodeCS(object sender, EventArgs e)
+        {
+            if (activeGraphForm != null)
+                activeGraphForm.GenerateCode(lang.CS);
         }
 
     }//class

@@ -899,9 +899,14 @@ namespace gep
         }
 
 
-        public void GenerateCode(GraphForm.ShowCodeDel shcode)
+        public void GenerateCode(GraphForm.ShowCodeDel shcode, lang lng)
         {
-            CodeGenCPP cg = new CodeGenCPP();
+            CodeGenBase cg = null;
+            switch (lng)
+            {
+                case lang.CPP: cg = new CodeGenCPP(); break;
+                case lang.CS: cg = new CodeGenCS(); break;
+            }
             cg.History = history;
             string code = cg.GenCode();
             Form cf = shcode(code);//new GenerateCodeGfxForm(code);
