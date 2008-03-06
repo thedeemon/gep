@@ -739,6 +739,11 @@ namespace gep
             sb.AppendLine("        {");
             sb.AppendLine("            int hr = 0;");
             sb.AppendLine();
+            sb.AppendLine("            //graph builder");
+            sb.AppendLine("            ICaptureGraphBuilder2 pBuilder = (ICaptureGraphBuilder2)new CaptureGraphBuilder2();");
+            sb.AppendLine("            hr = pBuilder.SetFiltergraph(pGraph);");
+            sb.AppendLine("            checkHR(hr, \"Can't SetFiltergraph\");");
+            sb.AppendLine();
             sb.Append(sb_def);
             sb.AppendLine();
             sb.Append(sb_bld);
