@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
+using Microsoft.Win32;
 using DirectShowLib;
 
 namespace gep
@@ -24,11 +25,46 @@ namespace gep
         public abstract string GenCode();
 
         public bool needCreateFilterProc = false;
-        protected History history;
         public History History { set { history = value; } }
+
+        public CodeSnippet[] snippets;
+        public void SaveTemplates()
+        {
+            if (snippets == null) return;
+            string keyname = Program.mainform.keyname;
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyname, true);
+            if (rk == null)
+                rk = Registry.CurrentUser.CreateSubKey(keyname);
+            if (rk != null)
+            {
+                string lang = ToString()+".";
+                foreach(CodeSnippet snp in snippets)
+                    rk.SetValue(lang + snp.Codename, snp.Text);                
+            }
+            rk.Close();            
+        }
+
+        public void LoadTemplates()
+        {
+            string keyname = Program.mainform.keyname;
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyname);
+            if (rk == null)
+                return;
+            string lang = ToString() + ".";
+            foreach (CodeSnippet snp in snippets)
+            {
+                string s = (string)rk.GetValue(lang + snp.Codename);
+                if (s != null) snp.Text = s;
+            }
+            rk.Close();
+        }
+
+        protected History history;
         protected Dictionary<string, string> known = new Dictionary<string, string>(); // guid => CLSID_Shit
         protected List<string> srcFileNames = new List<string>();
         protected List<string> dstFileNames = new List<string>();
+
+
     }
 
 
@@ -264,6 +300,11 @@ namespace gep
         public CodeGenCPP()
         {
             InitGuidsTable();
+        }
+
+        public override string ToString()
+        {
+            return "C++";
         }
 
         public override string DefineAddFilterDS(HIAddFilterDS hi)
@@ -586,89 +627,190 @@ namespace gep
 
     class CodeGenCS : CodeGenBase
     {
+        CodeSnippet connectTpl, insertTpl, defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl;
+        CodeSnippet addFiltMonTpl, setSrcFileTpl, setDstFileTpl;
+
+        public override string ToString()
+        {
+            return "C#";
+        }
+
         public CodeGenCS()
         {
             InitGuidsTable();
+
+            defineDsTpl = new CodeSnippet("Define CLSID for a custom DirectShow filter", "defineDsTpl",
+                "            Guid $clsname = new Guid(\"$guid\"); //$file\r\n",
+                "$clsname - name of variable to hold Guid\r\n" +
+                "$guid - GUID digits\r\n" +
+                "$file - name of file containing the filter\r\n");
+            defineDsTpl.SetVars(new string[] {
+                "$clsname", "CLSID_DivXDecoderFilter",
+                "$guid", "{78766964-0000-0010-8000-00AA00389B71}",
+                "$file", "divxdec.ax"
+            });
+
+            addFiltDsKnownTpl = new CodeSnippet("Create a standard DirectShow filter", "addFiltDsKnownTpl",
+                "            //add $name\r\n" +
+                "            IBaseFilter $var = new $clsname();\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable to hold IBaseFilter\r\n" +
+                "$clsname - name of DirectShowLib class for this filter");
+            addFiltDsKnownTpl.SetVars(new string[] {
+                "$name", "DV Splitter",
+                "$var", "pDVSplitter",
+                "$clsname", "DVSplitter"
+            });
+
+            addFiltDsUnknownTpl = new CodeSnippet("Create a custom DirectShow filter", "addFiltDsUnknownTpl",
+                            "            //add $name\r\n" +
+                            "            IBaseFilter $var = (IBaseFilter)Activator.CreateInstance(Type.GetTypeFromCLSID($clsname));\r\n",
+                            "$name - name of the filter\r\n" +
+                            "$var - variable to hold IBaseFilter\r\n" +
+                            "$clsname - name of Guid variable with GUID for this filter");
+            addFiltDsUnknownTpl.SetVars(new string[] {
+                "$name", "DivX Decoder Filter",
+                "$var", "pDivXDecoderFilter",
+                "$clsname", "CLSID_DivXDecoderFilter"
+            });
+
+            insertTpl = new CodeSnippet("Insert filter to graph", "insertTpl",
+                "            hr = pGraph.AddFilter($var, \"$name\");\r\n" +
+                "            checkHR(hr, \"Can't add $name to graph\");\r\n",
+                "$var - variable holding IBaseFilter\r\n" +
+                "$name - name of the filter");
+            insertTpl.SetVars(new string[] {
+                "$name", "DivX Decoder Filter",
+                "$var", "pDivXDecoderFilter"                
+            });
+
+            setSrcFileTpl = new CodeSnippet("Set source file to IFileSourceFilter", "setSrcFileTpl",
+                "            //set source filename\r\n" +
+                "            IFileSourceFilter $srcvar = $var as IFileSourceFilter;\r\n" +
+                "            if ($srcvar == null)\r\n" +
+                "                checkHR(unchecked((int)0x80004002), \"Can't get IFileSourceFilter\");\r\n" +
+                "            hr = $srcvar.Load($filename, null);\r\n" +
+                "            checkHR(hr, \"Can't load file\");\r\n",
+                "$srcvar - variable of type IFileSourceFilter\r\n" +
+                "$var - variable holding IBaseFilter\r\n" +
+                "$filename - variable holding name of file to open");
+            setSrcFileTpl.SetVars(new string[] {
+                "$srcvar", "pFileSourceAsync_src",
+                "$var", "pFileSourceAsync",
+                "$filename", "srcFile1"
+            });
+
+            setDstFileTpl = new CodeSnippet("Set destination file to IFileSinkFilter", "setDstFileTpl",
+                "            //set destination filename\r\n" +
+                "            IFileSinkFilter $dstvar = $var as IFileSinkFilter;\r\n" +
+                "            if ($dstvar == null)\r\n" +
+                "                checkHR(unchecked((int)0x80004002), \"Can't get IFileSinkFilter\");\r\n" +
+                "            hr = $dstvar.SetFileName($filename, null);\r\n" +
+                "            checkHR(hr, \"Can't set filename\");\r\n",
+                "$dstvar - variable of type IFileSinkFilter\r\n" +
+                "$var - variable holding IBaseFilter\r\n" +
+                "$filename - variable holding name of file to open");
+            setDstFileTpl.SetVars(new string[] {
+                "$dstvar", "pFilewriter_sink",
+                "$var", "pFilewriter",
+                "$filename", "dstFile1"
+            });
+
+            addFiltMonTpl = new CodeSnippet("Create a filter by display name", "addFiltMonTpl",
+                "            //add $name\r\n" +
+                "            IBaseFilter $var = CreateFilter(@\"$displayname\");\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable holding IBaseFilter\r\n" +
+                "$displayname - display name of the filter\r\n");
+            addFiltMonTpl.SetVars(new string[] {
+                "$name", "Fraps Video Decompressor",
+                "$var", "pFrapsVideoDecompressor",
+                "$displayname", @"@device:cm:{33D9A760-90C8-11D0-BD43-00A0C911CE86}\fps1"
+            });
+
+            connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
+                "            //connect $pair\r\n" +
+                "            hr = pBuilder.RenderStream(null, MediaType.$majortype, $var1, null, $var2);\r\n" +
+                "            checkHR(hr, \"Can't connect $pair\");\r\n\r\n",
+                "$pair - names of connecting filters\r\n" +
+                "$majortype - major media type of connection\r\n" +
+                "$var1, $var2 - variables holding IBaseFilter of connecting filters");
+            connectTpl.SetVars(new string[] {
+                "$pair", "File Source (Async.) and AVI Splitter",
+                "$majortype", "Stream",
+                "$var1", "pFileSourceAsync",
+                "$var2", "pAVISplitter"
+            });
+
+            snippets = new CodeSnippet[] { 
+                defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, setSrcFileTpl, setDstFileTpl,
+                insertTpl, connectTpl                
+            };
+
+            LoadTemplates();
         }
 
         public override string DefineAddFilterDS(HIAddFilterDS hi)
         {
-            StringBuilder sb = new StringBuilder();
-            string guid = hi.CLSID, s;
-            if (known.TryGetValue(guid, out s))
+            string s;
+            if (known.TryGetValue(hi.CLSID, out s))
             {
                 hi.clsname = s;
                 return ""; //no need to define
             }
-            sb.Append("            Guid ");
-            sb.Append(hi.clsname);
-            sb.Append(" = new Guid(\"");
-            sb.Append(guid);
-            sb.Append("\"); //"); 
-            sb.Append(hi.FileName); 
-            sb.AppendLine();
-            return sb.ToString();
+            return defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.clsname, "$guid", hi.CLSID, "$file", hi.FileName
+            });
         }
 
         public override string BuildAddFilterDS(HIAddFilterDS hi)
         {
-            StringBuilder sb2 = new StringBuilder();
-            sb2.AppendLine("            //add " + hi.Name);
-            sb2.Append("            IBaseFilter " + hi.var + " = ");
-            string s;
+            string create, s;
             if (known.TryGetValue(hi.CLSID, out s))
             {
-                sb2.AppendLine("new " + s + "();");
+                create = addFiltDsKnownTpl.GenerateWith(new string[] {
+                    "$name", hi.Name, "$var", hi.var, "$clsname", s
+                });
             }
             else
             {
-                sb2.AppendLine("(IBaseFilter)Activator.CreateInstance(Type.GetTypeFromCLSID(" + hi.clsname + "));");
+                create = addFiltDsUnknownTpl.GenerateWith(new string[] {
+                    "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname
+                });
             }
-            sb2.AppendLine(Insert(hi));
-            return sb2.ToString();
+            return create + Insert(hi);
         }
 
         string Insert(HistoryItem hi)
         {
-            StringBuilder sb3 = new StringBuilder();
-            sb3.AppendLine("            hr = pGraph.AddFilter(" + hi.var + ", \"" + hi.Name + "\");");
-            sb3.AppendLine("            checkHR(hr, \"Can't add " + hi.Name + " to graph\");");
+            string ins = insertTpl.GenerateWith(new string[] {
+                "$var", hi.var, "$name", hi.Name
+            });
+            string setfname = "";
             if (hi.srcFileName != null)
             {
-                string srcvar = hi.var + "_src";
                 srcFileNames.Add(hi.srcFileName);
                 int n = srcFileNames.Count;
-                string srcfnvar = "srcFile" + n.ToString();
-	            sb3.AppendLine("            //set source filename");
-                sb3.AppendLine("            IFileSourceFilter " + srcvar + " = " + hi.var + " as IFileSourceFilter;");
-                sb3.AppendLine("            if (" + srcvar + " == null)");
-                sb3.AppendLine("                checkHR(unchecked((int)0x80004002), \"Can't get IFileSourceFilter\");");
-                sb3.AppendLine("            hr = " + srcvar + ".Load(" + srcfnvar + ", null);");
-                sb3.AppendLine("            checkHR(hr, \"Can't load file\");");
+                setfname = setSrcFileTpl.GenerateWith(new string[] {
+                    "$srcvar", hi.var + "_src",  "$var", hi.var, "$filename", "srcFile" + n.ToString()
+                });
             }
             if (hi.dstFileName != null)
             {
-                string dstvar = hi.var + "_sink";
                 dstFileNames.Add(hi.dstFileName);
                 int n = dstFileNames.Count;
-                string dstfnvar = "dstFile" + n.ToString();
-                sb3.AppendLine("            //set destination filename");
-                sb3.AppendLine("            IFileSinkFilter " + dstvar + " = " + hi.var + " as IFileSinkFilter;");
-                sb3.AppendLine("            if (" + dstvar + " == null)");
-                sb3.AppendLine("                checkHR(unchecked((int)0x80004002), \"Can't get IFileSinkFilter\");");
-                sb3.AppendLine("            hr = " + dstvar + ".SetFileName(" + dstfnvar + ", null);");
-                sb3.AppendLine("            checkHR(hr, \"Can't set filename\");");
+                setfname = setDstFileTpl.GenerateWith(new string[] {
+                    "$dstvar", hi.var + "_sink",  "$var", hi.var, "$filename", "dstFile" + n.ToString()
+                });
             }
-            return sb3.ToString();
+            return ins + setfname + "\r\n";
         }
 
         public override string BuildAddFilterMon(HIAddFilterMon hi)
         {
-            StringBuilder sb2 = new StringBuilder();
-            sb2.AppendLine("            //add " + hi.Name);
-            sb2.AppendLine("            IBaseFilter " + hi.var + " = CreateFilter(@\"" + hi.DisplayName + "\");");
-            sb2.AppendLine(Insert(hi));
-            return sb2.ToString();
+            return addFiltMonTpl.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName
+            }) + Insert(hi);
         }
 
         public override string Connect(HIConnect hi)
@@ -677,13 +819,10 @@ namespace gep
             HistoryItem h2 = history.FindByRealName(hi.filter2);
             string var1 = (h1 != null) ? h1.var : "?";
             string var2 = (h2 != null) ? h2.var : "?";
-            StringBuilder sb = new StringBuilder();
             string pair = h1.Name + " and " + h2.Name;
-            sb.AppendLine("            //connect " + pair);
-            sb.AppendLine("            hr = pBuilder.RenderStream(null, MediaType." + hi.majortype + ", " + var1 + ", null, " + var2 + ");");
-            sb.AppendLine("            checkHR(hr, \"Can't connect " + pair + "\");");
-            sb.AppendLine();
-            return sb.ToString();
+            return connectTpl.GenerateWith(new string[] {
+                "$pair", pair, "$majortype", hi.majortype, "$var1", var1, "$var2", var2
+            });
         }
 
         public override string GenCode()

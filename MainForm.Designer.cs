@@ -41,6 +41,8 @@ namespace gep
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.saveGraphAsImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -48,6 +50,7 @@ namespace gep
             this.autoLayoutFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.suggestURLsForSourcesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.codeTemplatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.favoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFavoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -62,8 +65,6 @@ namespace gep
             this.buyToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.status = new System.Windows.Forms.StatusStrip();
             this.status_label = new System.Windows.Forms.ToolStripStatusLabel();
-            this.cToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.mainmenu.SuspendLayout();
             this.maintoolbar.SuspendLayout();
             this.status.SuspendLayout();
@@ -183,6 +184,20 @@ namespace gep
             this.generateCodeToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.generateCodeToolStripMenuItem.Text = "Generate code";
             // 
+            // cToolStripMenuItem
+            // 
+            this.cToolStripMenuItem.Name = "cToolStripMenuItem";
+            this.cToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
+            this.cToolStripMenuItem.Text = "C++";
+            this.cToolStripMenuItem.Click += new System.EventHandler(this.OnGenCode);
+            // 
+            // cToolStripMenuItem1
+            // 
+            this.cToolStripMenuItem1.Name = "cToolStripMenuItem1";
+            this.cToolStripMenuItem1.Size = new System.Drawing.Size(98, 22);
+            this.cToolStripMenuItem1.Text = "C#";
+            this.cToolStripMenuItem1.Click += new System.EventHandler(this.OnGenCodeCS);
+            // 
             // saveGraphAsImageToolStripMenuItem
             // 
             this.saveGraphAsImageToolStripMenuItem.Name = "saveGraphAsImageToolStripMenuItem";
@@ -207,7 +222,8 @@ namespace gep
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.autoLayoutFiltersToolStripMenuItem,
             this.suggestURLsForSourcesToolStripMenuItem,
-            this.useClockToolStripMenuItem});
+            this.useClockToolStripMenuItem,
+            this.codeTemplatesToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "Options";
@@ -232,6 +248,13 @@ namespace gep
             this.useClockToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.useClockToolStripMenuItem.Text = "Use clock";
             this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
+            // 
+            // codeTemplatesToolStripMenuItem
+            // 
+            this.codeTemplatesToolStripMenuItem.Name = "codeTemplatesToolStripMenuItem";
+            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.codeTemplatesToolStripMenuItem.Text = "Code templates...";
+            this.codeTemplatesToolStripMenuItem.Click += new System.EventHandler(this.OnCodeTemplates);
             // 
             // favoritesToolStripMenuItem
             // 
@@ -359,20 +382,6 @@ namespace gep
             this.status_label.Size = new System.Drawing.Size(71, 17);
             this.status_label.Text = "status string";
             // 
-            // cToolStripMenuItem
-            // 
-            this.cToolStripMenuItem.Name = "cToolStripMenuItem";
-            this.cToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.cToolStripMenuItem.Text = "C++";
-            this.cToolStripMenuItem.Click += new System.EventHandler(this.OnGenCode);
-            // 
-            // cToolStripMenuItem1
-            // 
-            this.cToolStripMenuItem1.Name = "cToolStripMenuItem1";
-            this.cToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
-            this.cToolStripMenuItem1.Text = "C#";
-            this.cToolStripMenuItem1.Click += new System.EventHandler(this.OnGenCodeCS);
-            // 
             // MainForm
             // 
             this.AllowDrop = true;
@@ -438,6 +447,7 @@ namespace gep
         private System.Windows.Forms.ToolStripMenuItem useClockToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem codeTemplatesToolStripMenuItem;
     }
 }
 

@@ -77,7 +77,7 @@
       <DependentUpon>GenerateCodeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.cs">
-      <SubType>Form</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.Designer.cs">
       <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>
@@ -190,6 +190,10 @@
       <SubType>Designer</SubType>
       <DependentUpon>SampleGrabberForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="TemplatesForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>TemplatesForm.cs</DependentUpon>
+    </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
@@ -227,6 +231,12 @@
     </Compile>
     <Compile Include="SampleGrabberForm.Designer.cs">
       <DependentUpon>SampleGrabberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TemplatesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TemplatesForm.Designer.cs">
+      <DependentUpon>TemplatesForm.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

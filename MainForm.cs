@@ -51,7 +51,7 @@ namespace gep
         public Filterz filterz;
         public PropertiesForm propform;
         public string email, code;
-        string keyname = @"Software\Dee Mon\GraphEditPlus";
+        public string keyname = @"Software\Dee Mon\GraphEditPlus";
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -341,6 +341,12 @@ namespace gep
         {
             if (activeGraphForm != null)
                 activeGraphForm.GenerateCode(lang.CS);
+        }
+
+        private void OnCodeTemplates(object sender, EventArgs e)
+        {
+            TemplatesForm tf = new TemplatesForm();
+            tf.ShowDialog();
         }
 
     }//class
