@@ -727,6 +727,8 @@ namespace gep
             mediaControl = null;
             mediaSeeking = null;
             mediaEvent = null;
+            //Marshal.FreeHGlobal(evpar1);
+            //Marshal.FreeHGlobal(evpar2);
             Marshal.ReleaseComObject(graphBuilder);
             graphBuilder = null;
             if (rot_entry != null)
@@ -821,33 +823,6 @@ namespace gep
                 }
                 foreach (Filter f in filters)
                     f.UpdateState();
-
-                try
-                {
-                    EventCode ev;
-                    IntPtr p1 = Marshal.AllocHGlobal(4);
-                    IntPtr p2 = Marshal.AllocHGlobal(4);
-                    if (mediaEvent.GetEvent(out ev, out p1, out p2, 10) == 0) //got event
-                    {
-                        if (ev == EventCode.Complete)
-                            mediaControl.Stop();
-                        if (ev == EventCode.ErrorAbort)
-                        {
-                            int hr = Marshal.ReadInt32(p1);                            
-                            DsError.ThrowExceptionForHR(hr);
-                        }
-                    }
-                    mediaEvent.FreeEventParams(ev, p1, p2);
-                    Marshal.FreeHGlobal(p1);
-                    Marshal.FreeHGlobal(p2);
-                }
-                catch (COMException ex)
-                {
-                    if (ex.ErrorCode != unchecked((int)0x80070006)) //E_HANDLE
-                        ShowCOMException(ex, "An error occured in the graph"); 
-                }
-
-
             }
             catch
             { }
@@ -953,5 +928,99 @@ namespace gep
                 //MessageBox.Show(e.Message, "Error disconnecting pin");
             }
         }
+
+        LinkedList<GraphEvent> eventlog = new LinkedList<GraphEvent>();
+
+        public void SetEventWindow(IntPtr hwnd)
+        {
+            try
+            {
+                IMediaEventEx me = graphBuilder as IMediaEventEx;
+                if (me != null)
+                {
+                    int hr = me.SetNotifyWindow(hwnd, GraphForm.WM_GRAPHEVENT, IntPtr.Zero);
+                    DsError.ThrowExceptionForHR(hr);
+                }
+            }
+            catch (COMException ex)
+            {
+                ShowCOMException(ex, "Can't set notification window for graph events");
+            }
+        }
+
+        public void OnGraphEvent()
+        {
+            try
+            {
+                IntPtr evpar1;
+                IntPtr evpar2;// = Marshal.AllocHGlobal(4);
+                EventCode ev;                
+                if (mediaEvent.GetEvent(out ev, out evpar1, out evpar2, 10) == 0) //got event
+                {
+                    int ip1 = (int)evpar1; //Marshal.ReadInt32(evpar1);
+                    int ip2 = (int)evpar2; //Marshal.ReadInt32(evpar2);
+                    lock (eventlog)
+                    {
+                        eventlog.AddLast(new GraphEvent(ev, ip1, ip2));
+                    }
+                    if (ev == EventCode.Complete || ev == EventCode.UserAbort)
+                        mediaControl.Stop();
+                    if (ev == EventCode.ErrorAbort)
+                    {
+                        int hr = ip1;
+                        DsError.ThrowExceptionForHR(hr);
+                    }
+                }
+                mediaEvent.FreeEventParams(ev, evpar1, evpar2);                
+            }
+            catch (COMException ex)
+            {
+                if (ex.ErrorCode != unchecked((int)0x80070006)) //E_HANDLE
+                    ShowCOMException(ex, "An error occured in the graph");
+            }
+        }
+
+        public string GetEventLog()
+        {
+            StringBuilder sb = new StringBuilder();
+            lock (eventlog)
+            {
+                foreach (GraphEvent ge in eventlog)
+                {
+                    ge.AddDescription(sb);
+                }
+            }
+            return sb.ToString();
+        }
+
+        public void ClearEventLog()
+        {
+            lock (eventlog)
+            {
+                eventlog.Clear();
+            }
+        }
+
     } //class
+
+    class GraphEvent
+    {
+        public EventCode eventcode;        
+        public long param1, param2;
+        public DateTime time;
+
+        public GraphEvent(EventCode evcode, long par1, long par2)
+        {
+            eventcode = evcode; param1 = par1; param2 = par2;
+            time = DateTime.Now;
+        }
+
+        public void AddDescription(StringBuilder sb)
+        {
+            sb.AppendFormat("{0:T}.{1:D3}: ", time, time.Millisecond);
+            sb.Append(eventcode.ToString());
+            sb.AppendFormat(" ({0}), param1={1} (0x{1:X}), param2={2} (0x{2:X})", (int)eventcode, param1, param2);
+            sb.AppendLine();
+        }
+    }
 }//namespace

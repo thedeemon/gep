@@ -59,6 +59,12 @@
     <Compile Include="EditFilterForm.Designer.cs">
       <DependentUpon>EditFilterForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="EventLogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EventLogForm.Designer.cs">
+      <DependentUpon>EventLogForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Field.cs" />
     <Compile Include="FieldsToProperties.cs" />
     <Compile Include="Filter.cs" />
@@ -77,7 +83,7 @@
       <DependentUpon>GenerateCodeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.cs">
-      <SubType>Component</SubType>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.Designer.cs">
       <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>
@@ -132,6 +138,10 @@
     <EmbeddedResource Include="EditFilterForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>EditFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EventLogForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>EventLogForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Filterz.resx">
       <SubType>Designer</SubType>

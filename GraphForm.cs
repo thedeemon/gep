@@ -127,6 +127,13 @@ namespace gep
             Invalidate();
         }
 
+        public void ShowEventLog(object sender, System.EventArgs e)
+        {
+            EventLogForm ef = new EventLogForm(graph);
+            ef.MdiParent = MdiParent;
+            ef.Show();
+        }
+
         private void RenderPin(object sender, System.EventArgs e)
         {
             if (connectingPin != null)
@@ -411,7 +418,8 @@ namespace gep
                 menu.MenuItems.Add("Load graph...", this.LoadGraph);
                 if (savedFileName != null)
                     menu.MenuItems.Add("Save graph", this.SaveGraph);
-                menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);                
+                menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);
+                menu.MenuItems.Add("See events log...", this.ShowEventLog);
                 menu.Show(this, eLocation);
             }
         }
@@ -806,6 +814,7 @@ namespace gep
             };
             regtimer.Start();
             toolStripHeight = toolStrip.Size.Height;
+            graph.SetEventWindow(Handle);
             timer.Interval = 1000;
             timer.Tick += OnTimer;
             timer.Start();
@@ -912,7 +921,20 @@ namespace gep
             return bmp;
         }
 
-    }//class
+        public const int WM_GRAPHEVENT = 0x8000 + 1350;
+
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case WM_GRAPHEVENT:
+                    graph.OnGraphEvent();
+                    break;
+            }
+            base.WndProc(ref m);
+        }
+
+    }// GraphForm class
 
     class SickToolStripRenderer : ToolStripProfessionalRenderer
     {
@@ -938,7 +960,6 @@ namespace gep
             e.Graphics.DrawRectangle(Pens.Black, start, 9, w, 6);
             e.Graphics.DrawImageUnscaled(img_slider, start+pos-5, 4);
         }
-
     }
 
     public enum lang
