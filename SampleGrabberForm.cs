@@ -123,6 +123,7 @@ namespace gep
                     sb.Append("pSample==NULL!");
                 sb.Append(Environment.NewLine);
             }
+            Marshal.ReleaseComObject(pSample);
             return 0;
         }
 
