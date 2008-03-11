@@ -127,11 +127,17 @@ namespace gep
             Invalidate();
         }
 
+        public EventLogForm eventlogform;
+
         public void ShowEventLog(object sender, System.EventArgs e)
         {
-            EventLogForm ef = new EventLogForm(graph);
-            ef.MdiParent = MdiParent;
-            ef.Show();
+            if (eventlogform == null)
+            {
+                eventlogform = new EventLogForm(graph);
+                eventlogform.MdiParent = MdiParent;
+                eventlogform.Show();
+            }
+            else eventlogform.BringToFront();
         }
 
         private void RenderPin(object sender, System.EventArgs e)
@@ -785,6 +791,8 @@ namespace gep
 
         private void GraphForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (eventlogform != null)
+                eventlogform.Close();
             graph.Close();
             //graph.Dispose();
             Program.mainform.ActiveGraphForm = null;

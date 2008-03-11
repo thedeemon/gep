@@ -43,5 +43,10 @@ namespace gep
         {
             Refresh(null, null);
         }
+
+        private void OnClosing(object sender, FormClosingEventArgs e)
+        {
+            graph.Form.eventlogform = null;
+        }
     }
 }

@@ -79,6 +79,7 @@ namespace gep
             this.Controls.Add(this.textBox);
             this.Name = "EventLogForm";
             this.Text = "EventLogForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.Load += new System.EventHandler(this.OnLoad);
             this.ResumeLayout(false);
             this.PerformLayout();
