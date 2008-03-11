@@ -226,7 +226,12 @@ namespace gep
                 vw.get_Caption(out s);
                 string gname = Graph.Form.Text + ": " + name + ": ";
                 vw.put_Caption(gname + s);
-                //vw.put_Owner(Program.mainform.Handle);
+                //vw.SetWindowForeground(OABool.False);
+                //vw.put_AutoShow(OABool.True);
+                //vw.put_Owner(Program.mainform.Handle); hangs
+                WindowStyleEx wex;
+                vw.get_WindowStyleEx(out wex);
+                vw.put_WindowStyleEx(wex | WindowStyleEx.Topmost);
             }
             
         }
