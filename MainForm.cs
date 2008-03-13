@@ -213,6 +213,7 @@ namespace gep
         void LoadFavorites(RegistryKey rk) //rk must be open
         {
             string[] ss = (string[])rk.GetValue("favorites");
+            if (ss == null) return;
             List<string> slist = new List<string>(ss);
             FilterPropsKernel fk = FilterPropsKernel.FromList(slist);
             while (fk != null)

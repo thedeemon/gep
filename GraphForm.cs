@@ -425,7 +425,7 @@ namespace gep
                 if (savedFileName != null)
                     menu.MenuItems.Add("Save graph", this.SaveGraph);
                 menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);
-                menu.MenuItems.Add("See events log...", this.ShowEventLog);
+                menu.MenuItems.Add("See event log...", this.ShowEventLog);
                 menu.Show(this, eLocation);
             }
         }

@@ -17,7 +17,7 @@ namespace gep
         {
             graph = _graph;
             InitializeComponent();
-            Text = "Events log for " + graph.Form.Text;
+            Text = "Event log for " + graph.Form.Text;
             timer.Interval = 1000;
             timer.Tick += OnTimer;
             timer.Start();
