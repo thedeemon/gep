@@ -736,7 +736,7 @@ namespace gep
 
             addFiltDsKnownTpl = new CodeSnippet("Create a standard DirectShow filter", "addFiltDsKnownTpl",
                 "            //add $name\r\n" +
-                "            IBaseFilter $var = new $clsname();\r\n",
+                "            IBaseFilter $var = (IBaseFilter) new $clsname();\r\n",
                 "$name - name of the filter\r\n" +
                 "$var - variable to hold IBaseFilter\r\n" +
                 "$clsname - name of DirectShowLib class for this filter");
