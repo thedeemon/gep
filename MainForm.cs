@@ -244,7 +244,7 @@ namespace gep
                     activeGraphForm.AddFilter(fp);
             };
             favoritesToolStripMenuItem.DropDownItems.Add(item);
-            favlist.Add(fp.Kernel);
+            favlist.Add(fp.Kernel());
         }
 
         private void OnClearFavorites(object sender, EventArgs e)

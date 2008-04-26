@@ -243,9 +243,9 @@ namespace gep
 
         }
 
-        public FilterPropsKernel Kernel
+        public FilterPropsKernel Kernel()
         {
-            get { return new FilterPropsKernel(name, longname, guid, catguid); }
+            return new FilterPropsKernel(name, longname, guid, catguid); 
         }
 
     }
