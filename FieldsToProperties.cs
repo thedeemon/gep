@@ -74,17 +74,11 @@ namespace gep
             return ((ICustomTypeDescriptor)this).GetProperties(null);
         }
 
-        public override string ToString()
-        {
-            return _target.GetType().Name;
-        }
-
         PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
         {
             PropertyDescriptorCollection props = _propCache;
             if (props != null)
                 return props;
-
 
             // Create the property collection and filter if necessary
             props = new PropertyDescriptorCollection(null);
@@ -97,13 +91,14 @@ namespace gep
                 Attribute[] attrs = (Attribute[])field.GetCustomAttributes(typeof(Attribute), true);
                 int n = attrs.Length;
                 PropertyDescriptor fieldDesc;
-                if (field.FieldType.IsPrimitive || field.FieldType.IsEnum)
+                if (field.FieldType.IsPrimitive || field.FieldType.IsEnum || field.FieldType == typeof(Guid)
+                    || field.FieldType == typeof(System.Drawing.Size))
                 {
                     Array.Resize<Attribute>(ref attrs, n + 1);
                     attrs[n] = new ReadOnlyAttribute(true);
                     object fld_value = field.GetValue(_target);
                     string str = fld_value.ToString();
-                    if (fld_value is IFormattable && str.Length > 1) {
+                    if ((field.FieldType != typeof(Guid)) && (fld_value is IFormattable) && (str.Length > 1)) {
                         StringBuilder sb = new StringBuilder();
                         IFormattable frm = (IFormattable)fld_value;
                         string hex = frm.ToString("X", Thread.CurrentThread.CurrentCulture);
@@ -139,6 +134,59 @@ namespace gep
             _propCache = props;
             return props;
         }
+
+        public override string ToString()
+        {
+            //return _target.GetType().Name;
+            Dictionary<string, string> fields = new Dictionary<string, string>();
+            DumpProps(this as ICustomTypeDescriptor, fields, "");
+            StringBuilder sb = new StringBuilder();
+            sb.Append(fval(fields, "{0}", "BmiHeader.Width"));
+            sb.Append(fval(fields, "x{0} ", "BmiHeader.Height"));
+            sb.Append(fval(fields, "{0} bit ", "BmiHeader.BitCount"));
+            sb.Append(fval(fields, "ImgSz={0} ", "BmiHeader.ImageSize"));
+            sb.Append(fval(fields, "TimePerFrame={0} ", "AvgTimePerFrame"));
+            sb.Append(fval(fields, "Aspect={0}", "PictAspectRatioX"));
+            sb.Append(fval(fields, "x{0} ", "PictAspectRatioY"));
+            sb.Append(fval(fields, "{0} Hz ", "nSamplesPerSec"));
+            sb.Append(fval(fields, "{0} bit ", "wBitsPerSample"));
+            sb.Append(fval(fields, "{0} channels ", "nChannels"));
+            sb.Append(fval(fields, "nBlockAlign={0} ", "nBlockAlign"));
+            sb.Append(fval(fields, "Bytes/Sec={0} ", "nAvgBytesPerSec"));
+            sb.Append(fval(fields, "Tag={0} ", "wFormatTag", false));
+            if (sb.Length < 1) sb.Append(_target.GetType().Name);
+            return sb.ToString();
+        }
+
+        string fval(Dictionary<string, string> fields, string fmt, string key, bool strip)
+        {
+            string val;
+            if (fields.TryGetValue(key, out val))
+            {
+                int i = val.IndexOf(' ');
+                if (i >= 0 && strip) val = val.Remove(i);
+                return string.Format(fmt, val);
+            }
+            return "";
+        }
+
+        string fval(Dictionary<string, string> fields, string fmt, string key)
+        {
+            return fval(fields, fmt, key, true);
+        }
+
+        void DumpProps(ICustomTypeDescriptor td, Dictionary<string, string> fields, string prefix)
+        {
+            foreach (PropertyDescriptor pd in td.GetProperties())
+            {
+                object val = pd.GetValue(td);
+                if (val is ICustomTypeDescriptor)
+                    DumpProps(val as ICustomTypeDescriptor, fields, prefix + pd.DisplayName + ".");
+                else
+                    fields.Add(prefix + pd.DisplayName, val.ToString());
+            }
+        }
+
     }
 
     class FieldPropertyDescriptor : PropertyDescriptor

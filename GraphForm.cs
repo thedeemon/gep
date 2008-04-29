@@ -273,9 +273,27 @@ namespace gep
                 IAMStreamConfig isc = connectingPin.IPin as IAMStreamConfig;
                 if (isc != null)
                 {
-                    MediaTypeForm sf = new MediaTypeForm(isc);
-                    sf.ShowDialog();
+                    MediaTypeListForm f = new MediaTypeListForm(isc);
+                    f.ShowDialog();
                 }
+            }
+            connectingPin = null;
+        }
+
+        private void GetStreamCaps(object sender, System.EventArgs e)
+        {
+            try
+            {
+                if (connectingPin != null)
+                    connectingPin.GetStreamCaps();
+            }
+            catch (COMException ex)
+            {
+                Graph.ShowCOMException(ex, "Error getting stream caps");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
             connectingPin = null;
         }
@@ -524,9 +542,11 @@ namespace gep
                     menu.MenuItems.Add("Scan interfaces", this.ScanInterfaces);
                     menu.MenuItems.Add("Show matching filters", this.ShowMatchingFilters);
 
-                    IAMStreamConfig isc = connectingPin.IPin as IAMStreamConfig;
-                    if (isc != null)
+                    if ((connectingPin.IPin as IAMStreamConfig) != null)
+                    {
                         menu.MenuItems.Add("IAMStreamConfig::SetFormat", this.ConfigStream);
+                        menu.MenuItems.Add("IAMStreamConfig::GetStreamCaps", this.GetStreamCaps);
+                    }
                     if ((connectingPin.IPin as IMemInputPin) != null)
                     {
                         menu.MenuItems.Add("See allocator properties", this.ShowAllocatorProperties);

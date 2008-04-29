@@ -12,7 +12,7 @@ namespace gep
     ReadOnlyAttribute(true)]
     class MediaTypeProps
     {
-        AMMediaType mt;
+        protected AMMediaType mt;
 
         protected MediaTypeProps(AMMediaType pmt)
         {
@@ -99,11 +99,13 @@ namespace gep
     class MTProps<T> : MediaTypeProps
     {
         T format;
+        FieldsToPropertiesProxyTypeDescriptor format_ftp;
 
         public MTProps(AMMediaType pmt, IntPtr pFormat)
             : base(pmt)
         {
             format = (T)Marshal.PtrToStructure(pFormat, typeof(T));
+            format_ftp = new FieldsToPropertiesProxyTypeDescriptor(format);
         }
 
         [ReadOnlyAttribute(true),
@@ -111,8 +113,23 @@ namespace gep
         TypeConverterAttribute(typeof(ExpandableObjectConverter))]
         public object Format
         {
-            get { return new FieldsToPropertiesProxyTypeDescriptor(format); }
+            get { return format_ftp; }
         }
-    }
 
-}
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2} {3} {4} {5} SampleSize={6}",
+                DsToString.MediaTypeToString(mt.majorType).Replace('\0', ' '),
+                DsToString.MediaSubTypeToString(mt.subType).Replace('\0', ' '),
+                DsToString.MediaFormatTypeToString(mt.formatType).Replace('\0', ' '),
+                format_ftp.ToString(),
+                (mt.fixedSizeSamples ? "FixedSamples" : "NotFixedSamples"),
+                (mt.temporalCompression ? "TemporalCompression" : "NotTemporalCompression"),
+                mt.sampleSize.ToString());
+        }
+
+
+
+    } // end of class
+
+} // end of namespace

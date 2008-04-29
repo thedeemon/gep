@@ -127,7 +127,38 @@ namespace gep
             }
         }
 
-    }
+        public void GetStreamCaps()
+        {
+            IAMStreamConfig isc = IPin as IAMStreamConfig;
+            if (isc != null)
+            {
+                int count, size;
+                int hr = isc.GetNumberOfCapabilities(out count, out size);
+                DsError.ThrowExceptionForHR(hr);
+                if (size == Marshal.SizeOf(typeof(VideoStreamConfigCaps)))
+                    ShowStreamCaps<VideoStreamConfigCaps>(count, size, isc);
+                else
+                    ShowStreamCaps<AudioStreamConfigCaps>(count, size, isc);
+            } 
+        }
+
+        void ShowStreamCaps<T>(int count, int size, IAMStreamConfig isc)
+        {
+            IntPtr scc = Marshal.AllocHGlobal(size);
+            List<StreamCaps<T>> list = new List<StreamCaps<T>>();
+            for (int i = 0; i < count; i++)
+            {
+                AMMediaType mt;
+                int hr = isc.GetStreamCaps(i, out mt, scc);
+                DsError.ThrowExceptionForHR(hr);
+                object vcaps = Marshal.PtrToStructure(scc, typeof(T));
+                list.Add(new StreamCaps<T>(mt, (T)vcaps));
+            }
+            Program.mainform.propform.SetObject(list.ToArray());
+            Marshal.FreeHGlobal(scc);
+        }
+
+    }// end of class
 
     struct ConStep
     {
