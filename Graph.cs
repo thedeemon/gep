@@ -701,7 +701,7 @@ namespace gep
             }
             catch (COMException e)
             {
-                Graph.ShowCOMException(e, "Error saving graph " + filename);
+                Graph.ShowCOMException(e, "Error loading graph " + filename);
             }
             catch (Exception e)
             {
