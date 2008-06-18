@@ -83,7 +83,7 @@
       <DependentUpon>GenerateCodeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.cs">
-      <SubType>Form</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.Designer.cs">
       <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>
@@ -253,6 +253,7 @@
       <DependentUpon>SampleGrabberForm.cs</DependentUpon>
     </Compile>
     <Compile Include="StreamCaps.cs" />
+    <Compile Include="TempHistory.cs" />
     <Compile Include="TemplatesForm.cs">
       <SubType>Form</SubType>
     </Compile>

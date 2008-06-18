@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using DirectShowLib;
 using System.ComponentModel;
 using System.Reflection;
@@ -92,6 +91,10 @@ namespace gep
 
             return new MediaTypeProps(pmt);
         }
+
+        public virtual List<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums) { return null; }
+
+        public virtual string FormatClass() { return "?"; }
     }//class
 
     [TypeConverterAttribute(typeof(ExpandableObjectConverter)),
@@ -128,7 +131,42 @@ namespace gep
                 mt.sampleSize.ToString());
         }
 
+        public override string FormatClass() { return typeof(T).Name; }
 
+        public override List<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums) 
+        {
+            List<KeyValuePair<string, string>> fields = new List<KeyValuePair<string, string>>();
+            DumpFields(format, fields, "", show_zeroes, cs_enums);
+            return fields;
+        }
+
+        void DumpFields(object o, List<KeyValuePair<string, string>> fields, string prefix, bool show_zeroes, bool cs_enums)
+        {            
+            foreach (FieldInfo field in o.GetType().GetFields())
+            {
+                object val = field.GetValue(o);
+                if (field.FieldType.IsPrimitive)
+                {
+                    string s = val.ToString().ToLowerInvariant();
+                    if (show_zeroes || s!="0")
+                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, s));
+                }
+                else
+                if (field.FieldType.IsEnum)
+                {
+                    string s = val.ToString();
+                    if (!cs_enums || s[0] >= '0' && s[0] <= '9')
+                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, "0x" + Enum.Format(field.FieldType, val, "X")));
+                    else
+                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, field.FieldType.Name + "." + val.ToString()));
+                }
+                else
+                {
+                    fields.Add(new KeyValuePair<string, string>(prefix + field.Name, "new " + field.FieldType.Name + "()"));
+                    DumpFields(val, fields, prefix + field.Name + ".", show_zeroes, cs_enums);
+                }               
+            }
+        }
 
     } // end of class
 

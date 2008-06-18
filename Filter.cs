@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using DirectShowLib;
@@ -43,14 +42,14 @@ namespace gep
         {
             filterProps = fp;
 
-            int hr = 0, eaten;
             IBindCtx bindCtx = null;
             IMoniker moniker = null;
             basefilter = null;
             try
             {
-                hr = NativeMethods.CreateBindCtx(0, out bindCtx);
+                int hr = NativeMethods.CreateBindCtx(0, out bindCtx);
                 Marshal.ThrowExceptionForHR(hr);
+                int eaten;
                 hr = NativeMethods.MkParseDisplayName(bindCtx, fp.DisplayName, out eaten, out moniker);
                 Marshal.ThrowExceptionForHR(hr);
                 Guid guid = typeof(IBaseFilter).GUID;
@@ -139,7 +138,6 @@ namespace gep
         {
             int y1 = coords.Y * graph.cellsize - viewpoint.Y;
             int x1 = coords.X * graph.cellsize - viewpoint.X;
-            int sy = boxsize.Y * graph.cellsize;
             int seldelta = graph.SelectedFilters.Contains(this) ? 50 : 0;
             int seldelta2 = seldelta / 2;
             Rectangle rc = rect;

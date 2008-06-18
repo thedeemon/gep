@@ -259,7 +259,7 @@ namespace gep
             return -1;
         }
 
-        int[] vmcode = new int[] {
+        readonly int[] vmcode = new int[] {
 LE|RR, 144, 149,
 JZ, 13,
 MOV|RR, 150, 127,
@@ -1021,7 +1021,7 @@ MOV|RR, 121, 150,
 RET, 1
         };
 
-        static int[] xorval_code = new int[] {
+        static readonly int[] xorval_code = new int[] {
 LE|RR, 138, 120,
 JZ, 13,
 MOV|RR, 150, 139,

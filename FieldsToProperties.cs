@@ -175,7 +175,7 @@ namespace gep
             return fval(fields, fmt, key, true);
         }
 
-        void DumpProps(ICustomTypeDescriptor td, Dictionary<string, string> fields, string prefix)
+        public void DumpProps(ICustomTypeDescriptor td, Dictionary<string, string> fields, string prefix)
         {
             foreach (PropertyDescriptor pd in td.GetProperties())
             {

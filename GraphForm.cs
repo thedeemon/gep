@@ -274,7 +274,8 @@ namespace gep
                 if (isc != null)
                 {
                     MediaTypeListForm f = new MediaTypeListForm(isc);
-                    f.ShowDialog();
+                    if (f.ShowDialog() == DialogResult.OK)
+                        graph.PinSetFormat(connectingPin, f.selected_mt);
                 }
             }
             connectingPin = null;
@@ -960,6 +961,11 @@ namespace gep
                     break;
             }
             base.WndProc(ref m);
+        }
+
+        public void LayoutFilters()
+        {
+            graph.LayoutFiltersAndPaths();
         }
 
     }// GraphForm class

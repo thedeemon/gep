@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using DirectShowLib;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using Microsoft.Win32;
 using System.Diagnostics;
 using System.Threading;
 
@@ -56,7 +51,7 @@ namespace gep
                     mon[0].GetDisplayName(null, null, out name);
                     string sg = name.Substring(name.Length - 38, 38).ToUpperInvariant();
 
-                    object bagObj = null;
+                    object bagObj;
                     Guid propertyBagId = typeof(IPropertyBag).GUID;
                     mon[0].BindToStorage(null, null, ref propertyBagId, out bagObj);
                     IPropertyBag bag = (IPropertyBag)bagObj;

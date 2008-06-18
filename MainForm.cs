@@ -206,6 +206,9 @@ namespace gep
         {
             autoArrange = !autoArrange;
             autoLayoutFiltersToolStripMenuItem.Checked = autoArrange;
+            if (autoArrange && activeGraphForm != null)
+                activeGraphForm.LayoutFilters();
+
         }
 
         List<FilterPropsKernel> favlist = new List<FilterPropsKernel>();

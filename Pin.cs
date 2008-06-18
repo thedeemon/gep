@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using DirectShowLib;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace gep
 {
@@ -95,15 +93,13 @@ namespace gep
 
         public void ShowPropertyPage(IntPtr parent)
         {
-            int hr = 0;
-            
             if (ipin == null)
                 throw new ArgumentNullException("ipin");
 
             if (HasPropertyPage())
-            {               
+            {
                 DsCAUUID caGuid;
-                hr = (ipin as ISpecifyPropertyPages).GetPages(out caGuid);
+                int hr = (ipin as ISpecifyPropertyPages).GetPages(out caGuid);
                 DsError.ThrowExceptionForHR(hr);
 
                 try
@@ -130,19 +126,17 @@ namespace gep
         public void GetStreamCaps()
         {
             IAMStreamConfig isc = IPin as IAMStreamConfig;
-            if (isc != null)
-            {
-                int count, size;
-                int hr = isc.GetNumberOfCapabilities(out count, out size);
-                DsError.ThrowExceptionForHR(hr);
-                if (size == Marshal.SizeOf(typeof(VideoStreamConfigCaps)))
-                    ShowStreamCaps<VideoStreamConfigCaps>(count, size, isc);
-                else
-                    ShowStreamCaps<AudioStreamConfigCaps>(count, size, isc);
-            } 
+            if (isc == null) return;
+            int count, size;
+            int hr = isc.GetNumberOfCapabilities(out count, out size);
+            DsError.ThrowExceptionForHR(hr);
+            if (size == Marshal.SizeOf(typeof(VideoStreamConfigCaps)))
+                ShowStreamCaps<VideoStreamConfigCaps>(count, size, isc);
+            else
+                ShowStreamCaps<AudioStreamConfigCaps>(count, size, isc);
         }
 
-        void ShowStreamCaps<T>(int count, int size, IAMStreamConfig isc)
+        static void ShowStreamCaps<T>(int count, int size, IAMStreamConfig isc)
         {
             IntPtr scc = Marshal.AllocHGlobal(size);
             List<StreamCaps<T>> list = new List<StreamCaps<T>>();

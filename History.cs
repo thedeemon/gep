@@ -4,6 +4,7 @@ using System.Collections;
 using System.Text;
 using Microsoft.Win32;
 using DirectShowLib;
+using System.Reflection;
 
 namespace gep
 {
@@ -21,6 +22,7 @@ namespace gep
         public abstract string DefineAddFilterDS(HIAddFilterDS hi);
         public abstract string BuildAddFilterDS(HIAddFilterDS hi);
         public abstract string BuildAddFilterMon(HIAddFilterMon hi);
+        public abstract string SetFormat(HISetFormat hi);
 
         public string Connect(HIConnect hi)
         {
@@ -36,7 +38,7 @@ namespace gep
 
         public abstract string GenCode();
 
-        public bool needCreateFilterProc = false;
+        public bool needCreateFilterProc = false, needGetPin = false;
         public History History { set { history = value; } }
 
         public CodeSnippet[] snippets;
@@ -88,7 +90,7 @@ namespace gep
                 srcFileNames.Add(hi.srcFileName);
                 int n = srcFileNames.Count;
                 setfname = setSrcFileTpl.GenerateWith(new string[] {
-                    "$srcvar", hi.var + "_src",  "$var", hi.var, "$filename", "srcFile" + n.ToString()
+                    "$srcvar", hi.var + "_src",  "$var", hi.var, "$filename", "srcFile" + n
                 });
             }
             if (hi.dstFileName != null)
@@ -96,7 +98,7 @@ namespace gep
                 dstFileNames.Add(hi.dstFileName);
                 int n = dstFileNames.Count;
                 setfname = setDstFileTpl.GenerateWith(new string[] {
-                    "$dstvar", hi.var + "_sink",  "$var", hi.var, "$filename", "dstFile" + n.ToString()
+                    "$dstvar", hi.var + "_sink",  "$var", hi.var, "$filename", "dstFile" + n
                 });
             }
             return ins + setfname + "\r\n";
@@ -159,7 +161,7 @@ namespace gep
         public HIConnect(string _filter1, string _pin1, string _filter2, string _pin2, Guid type)
         {
             filter1 = _filter1; filter2 = _filter2; pin1 = _pin1; pin2 = _pin2;
-            majortype = DsToString.MediaTypeToString(type);
+            majortype = DsToString.MediaTypeToString(type);            
         }
 
         public override string Define(CodeGenBase cg)
@@ -174,10 +176,35 @@ namespace gep
 
     }
 
+    class HISetFormat : HistoryItem
+    {
+        public AMMediaType mt;
+        public string filter, pin;
+
+        public HISetFormat(string _filter, string _pin, AMMediaType _mt, History h)
+        {
+            filter = _filter; pin = _pin; mt = _mt;
+            string dummy;
+            h.MakeVarName("mt", out dummy, out var);  
+        }
+
+        public override string Define(CodeGenBase cg)
+        {
+            cg.needGetPin = true;
+            return "";
+        }
+
+        public override string Build(CodeGenBase cg)
+        {
+            return cg.SetFormat(this);
+        }
+    }
+
     
     class History
     {
         List<HistoryItem> history = new List<HistoryItem>();
+        List<TempHistoryItem> temp = new List<TempHistoryItem>();
 
         public IEnumerable Items
         {
@@ -188,9 +215,12 @@ namespace gep
             }
         }
 
-        public HistoryItem FindByRealName(string realname)
+        public HistoryItem FindByRealName(string realname) 
         {
             foreach (HistoryItem i in history)
+                if (i.RealName == realname)
+                    return i;
+            foreach (HistoryItem i in TempHistoryItem.hitems(temp))
                 if (i.RealName == realname)
                     return i;
             return null;
@@ -204,10 +234,12 @@ namespace gep
                 history.Add(new HIAddFilterMon(fp.Name, fp.DisplayName, realname, srcFileName, dstFileName, this));
         }
 
-        public void AddFilterIfNew(FilterProps fp, string realname, string srcfilename, string dstfilename)
+        public void AddFilterIfNew(FilterProps fp, string realname, string srcfilename, string dstfilename, Filter f)
         {
             if (FindByRealName(realname) == null)
-                history.Add(new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcfilename, dstfilename, this));
+                temp.Add(new THIAddFilterDS(
+                    new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcfilename, dstfilename, this),
+                    f));
         }
 
         /*public void Connect(Pin p1, Pin p2) //not used?
@@ -215,34 +247,47 @@ namespace gep
             history.Add(new HIConnect(p1.Filter.Name, p1.Name, p2.Filter.Name, p2.Name));
         }*/
 
-        public void ConnectIfNew(Pin p1, Pin p2)
+        public void ConnectIfNew(Pin p1, Pin p2, PinConnection con)
         {
             AMMediaType mt = new AMMediaType();
             p1.IPin.ConnectionMediaType(mt);
             Guid type = mt.majorType;
             DsUtils.FreeAMMediaType(mt);
 
-            if (FindConnection(p1,p2) < 0)
-                history.Add(new HIConnect(p1.Filter.Name, p1.Name, p2.Filter.Name, p2.Name, type));
+            if (!HasConnection(p1,p2, history) && !HasConnection(p1,p2, TempHistoryItem.hitems(temp)))
+                temp.Add(new THIConnect(
+                    new HIConnect(p1.Filter.Name, p1.Name, p2.Filter.Name, p2.Name, type), con));
         }
 
         public void RemoveConnection(Pin p1, Pin p2)
         {
-            int i = FindConnection(p1, p2);
+            int i = FindConnection(p1, p2, history);
             if (i >= 0) history.RemoveAt(i);
         }
 
-        int FindConnection(Pin p1, Pin p2)
+        int FindConnection(Pin p1, Pin p2, List<HistoryItem> lst)
         {
-            for (int i = 0; i < history.Count; i++)
+            for (int i = 0; i < lst.Count; i++)
             {
-                HistoryItem hi = history[i];
+                HistoryItem hi = lst[i];
                 HIConnect hc = hi as HIConnect;
                 if (hc != null && hc.filter1 == p1.Filter.Name && hc.filter2 == p2.Filter.Name
                                && hc.pin1 == p1.Name && hc.pin2 == p2.Name)
                     return i;
             }
             return -1;
+        }
+
+        bool HasConnection(Pin p1, Pin p2, IEnumerable<HistoryItem> lst)
+        {
+            foreach (HistoryItem hi in lst)
+            {
+                HIConnect hc = hi as HIConnect;
+                if (hc != null && hc.filter1 == p1.Filter.Name && hc.filter2 == p2.Filter.Name
+                               && hc.pin1 == p1.Name && hc.pin2 == p2.Name)
+                    return true;
+            }
+            return false;
         }
 
         public void RemoveFilter(string realname)
@@ -278,55 +323,67 @@ namespace gep
 
         public void SortConnections()
         {
-            foreach (HistoryItem hi in history) //init weights
-            {
-                HIConnect hc = hi as HIConnect;
-                if (hc != null)
-                    hc.weight = 1;
-            }
-            int i;
-            for (i = 0; i < history.Count-1; i++) //calc weights
-            {
-                HIConnect hc = history[i] as HIConnect;
-                if (hc != null)
-                {
-                    for (int j = i + 1; j < history.Count; j++)
-                    {
-                        HIConnect hc2 = history[j] as HIConnect;
-                        if (hc2 != null)
-                        {
-                            if (hc2.filter2 == hc.filter1)
-                                hc.weight = Math.Max(hc.weight, hc2.weight + 1);
-                        }
-                    }
-                }
-            }
-            i = 0; //sort
-            while (i < history.Count - 1) 
-            {
-                HIConnect hc = history[i] as HIConnect;
-                int k = -1;
-                if (hc != null)
-                {                    
-                    for (int j = i + 1; j < history.Count; j++)
-                    {
-                        HIConnect hc2 = history[j] as HIConnect;
-                        if (hc2 != null)
-                        {
-                            if (hc2.weight < hc.weight)
-                                k = j;    
-                        }
-                    }
-                    if (k >= 0) //somethin found
-                    {
-                        history.RemoveAt(i);
-                        history.Insert(k, hc);
-                    }
-                }
-                if (k < 0) i++; //no moves done, go next                    
-            }
+            //foreach (HistoryItem hi in history) //init weights
+            //{
+            //    HIConnect hc = hi as HIConnect;
+            //    if (hc != null)
+            //        hc.weight = 1;
+            //}
+            //int i;
+            //for (i = 0; i < history.Count-1; i++) //calc weights
+            //{
+            //    HIConnect hc = history[i] as HIConnect;
+            //    if (hc != null)
+            //    {
+            //        for (int j = i + 1; j < history.Count; j++)
+            //        {
+            //            HIConnect hc2 = history[j] as HIConnect;
+            //            if (hc2 != null)
+            //            {
+            //                if (hc2.filter2 == hc.filter1)
+            //                    hc.weight = Math.Max(hc.weight, hc2.weight + 1);
+            //            }
+            //        }
+            //    }
+            //}
+            //i = 0; //sort
+            //while (i < history.Count - 1) 
+            //{
+            //    HIConnect hc = history[i] as HIConnect;
+            //    int k = -1;
+            //    if (hc != null)
+            //    {                    
+            //        for (int j = i + 1; j < history.Count; j++)
+            //        {
+            //            HIConnect hc2 = history[j] as HIConnect;
+            //            if (hc2 != null)
+            //            {
+            //                if (hc2.weight < hc.weight)
+            //                    k = j;    
+            //            }
+            //        }
+            //        if (k >= 0) //somethin found
+            //        {
+            //            history.RemoveAt(i);
+            //            history.Insert(k, hc);
+            //        }
+            //    }
+            //    if (k < 0) i++; //no moves done, go next                    
+            //}
         }
 
+        public void SetFormat(Pin pin, AMMediaType mt)
+        {
+            history.Add(new HISetFormat(pin.Filter.Name, pin.Name, mt, this));
+        }
+
+        public void CommitAdded(Graph graph) //sort items in temp and add to history
+        {
+            temp.ForEach(delegate(TempHistoryItem thi) { thi.CalcOrder(); });
+            temp.Sort();
+            history.AddRange(TempHistoryItem.hitems(temp));
+            temp.Clear();
+        }
 
     }
 
@@ -504,6 +561,85 @@ namespace gep
             }) + Insert(hi);
         }
 
+        public override string SetFormat(HISetFormat hi)
+        {
+            HistoryItem fhi = history.FindByRealName(hi.filter);
+            string fvar = (fhi != null) ? fhi.var : "?";
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("    AM_MEDIA_TYPE {0};\r\n", hi.var);
+            sb.AppendFormat("    ZeroMemory(&{0}, sizeof(AM_MEDIA_TYPE));\r\n", hi.var);
+            sb.AppendFormat("    {0}.majortype = MEDIATYPE_{1};\r\n", hi.var, DsToString.MediaTypeToString(hi.mt.majorType));
+            sb.AppendFormat("    {0}.subtype = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
+            string fmtype = CodeSnippet.Translate("FORMAT_" + DsToString.MediaFormatTypeToString(hi.mt.formatType), new string[] {
+                "WaveEx", "WaveFormatEx",
+                "Mpeg", "MPEG",
+                "FORMAT_Null", "GUID_NULL"
+            });
+            sb.AppendFormat("    {0}.formattype = {1};\r\n", hi.var, fmtype);
+            sb.AppendFormat("    {0}.bFixedSizeSamples = {1};\r\n", hi.var, hi.mt.fixedSizeSamples.ToString().ToUpperInvariant());
+            sb.AppendFormat("    {0}.cbFormat = {1};\r\n", hi.var, hi.mt.formatSize);
+            sb.AppendFormat("    {0}.lSampleSize = {1};\r\n", hi.var, hi.mt.sampleSize);
+            sb.AppendFormat("    {0}.bTemporalCompression = {1};\r\n", hi.var, hi.mt.temporalCompression.ToString().ToUpperInvariant());
+            string fmtvar = hi.var.Replace("pmt", "format");
+            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(hi.mt);
+            string fmt_struct = mtp.FormatClass().ToUpperInvariant();
+            sb.AppendFormat("    {1} {0};\r\n", fmtvar, fmt_struct);
+            sb.AppendFormat("    ZeroMemory(&{0}, sizeof({1}));\r\n", fmtvar, fmt_struct);
+            foreach (KeyValuePair<string, string> p in FormatFieldsFilter(mtp.FormatFields(false, false)))
+                sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            sb.AppendFormat("    {0}.pbFormat = (BYTE*)&{1};\r\n", hi.var, fmtvar);
+            string iscvar = hi.var.Replace("pmt", "isc");
+            sb.AppendFormat("    CComQIPtr<IAMStreamConfig, &IID_IAMStreamConfig> {0}(GetPin({1}, L\"{2}\"));\r\n", iscvar, fvar, hi.pin);
+            sb.AppendFormat("    hr = {1}->SetFormat(&{0});\r\n", hi.var, iscvar);
+            sb.Append("    CHECK_HR(hr, \"Can't set format\");\r\n");
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
+        IEnumerable<KeyValuePair<string, string>> FormatFieldsFilter(IEnumerable<KeyValuePair<string, string>> e)
+        {
+            string[] dict = new string[] {
+                    "AvgTimePerFrame", "AvgTimePerFrame", //vih2
+                    "BitErrorRate", "dwBitErrorRate",
+                    "BitRate", "dwBitRate",
+                    "BmiHeader", "bmiHeader",
+                    "ControlFlags", "dwControlFlags",
+                    "CopyProtectFlags", "dwCopyProtectFlags",
+                    "InterlaceFlags", "dwInterlaceFlags",
+                    "PictAspectRatioX", "dwPictAspectRatioX",
+                    "PictAspectRatioY", "dwPictAspectRatioY",
+                    "Reserved2", "dwReserved2",
+                    "SrcRect", "rcSource",
+                    "TargetRect", "rcTarget",
+
+                    "BitCount", "biBitCount", //bmih
+                    "ClrImportant", "biClrImportant",
+                    "ClrUsed", "biClrUsed",
+                    "Compression", "biCompression",
+                    "Height", "biHeight",
+                    ".ImageSize", ".biSizeImage",
+                    "Planes", "biPlanes",
+                    ".Size", ".biSize",
+                    "Width", "biWidth",
+                    "XPelsPerMeter", "biXPelsPerMeter",
+                    "YPelsPerMeter", "biYPelsPerMeter"  
+            };
+
+            foreach (KeyValuePair<string, string> p in e)
+                if (!p.Value.StartsWith("new"))
+                    yield return new KeyValuePair<string, string>(CodeSnippet.Translate(p.Key, dict), p.Value);
+        }
+
+        public static string MediaSubTypeToString(Guid guid)
+        {
+            foreach (FieldInfo m in typeof(MediaSubType).GetFields())
+            {
+                if ((Guid)m.GetValue(null) == guid)
+                    return "MEDIASUBTYPE_" + m.Name.ToUpperInvariant();
+            }
+            return "...// Guid for (\"" + Graph.GuidToString(guid) + "\")";
+        }
+
         public override string GenCode()
         {
             StringBuilder sb = new StringBuilder();
@@ -557,6 +693,33 @@ namespace gep
                 sb.AppendLine("}");
                 sb.AppendLine();
             }
+            if (needGetPin)
+            {
+                sb.AppendLine("CComPtr<IPin> GetPin(IBaseFilter *pFilter, LPCOLESTR pinname)");
+                sb.AppendLine("{");
+                sb.AppendLine("    CComPtr<IEnumPins>  pEnum;");
+                sb.AppendLine("    CComPtr<IPin>       pPin;");
+                sb.AppendLine();
+                sb.AppendLine("    HRESULT hr = pFilter->EnumPins(&pEnum);");
+                sb.AppendLine("    if (hrcheck(hr, \"Can't enumerate pins.\"))");
+                sb.AppendLine("        return NULL;");
+                sb.AppendLine();
+                sb.AppendLine("    while(pEnum->Next(1, &pPin, 0) == S_OK)");
+                sb.AppendLine("    {");
+                sb.AppendLine("        PIN_INFO pinfo;");
+                sb.AppendLine("        pPin->QueryPinInfo(&pinfo);");
+                sb.AppendLine("        BOOL found = !wcsicmp(pinname, pinfo.achName);");
+                sb.AppendLine("        if (pinfo.pFilter) pFilter->Release();");
+                sb.AppendLine("        if (found)");
+                sb.AppendLine("            return pPin;");
+                sb.AppendLine("        pPin.Release();");
+                sb.AppendLine("    }");
+                sb.AppendLine("    printf(\"Pin not found!\\n\");");
+                sb.AppendLine("    return NULL;  ");
+                sb.AppendLine("}");
+                sb.AppendLine();
+            }
+
             sb.AppendLine(sb_def.ToString());
 
             history.SortConnections();
@@ -882,6 +1045,45 @@ namespace gep
             }) + Insert(hi);
         }
 
+        public override string SetFormat(HISetFormat hi)
+        {            
+            HistoryItem fhi = history.FindByRealName(hi.filter);            
+            string fvar = (fhi != null) ? fhi.var : "?";
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("            AMMediaType {0} = new AMMediaType();\r\n", hi.var);
+            sb.AppendFormat("            {0}.majorType = MediaType.{1};\r\n", hi.var, DsToString.MediaTypeToString(hi.mt.majorType));
+            sb.AppendFormat("            {0}.subType = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
+            sb.AppendFormat("            {0}.formatType = FormatType.{1};\r\n", hi.var, DsToString.MediaFormatTypeToString(hi.mt.formatType));
+            sb.AppendFormat("            {0}.fixedSizeSamples = {1};\r\n", hi.var, hi.mt.fixedSizeSamples.ToString().ToLowerInvariant());
+            sb.AppendFormat("            {0}.formatSize = {1};\r\n", hi.var, hi.mt.formatSize);
+            sb.AppendFormat("            {0}.sampleSize = {1};\r\n", hi.var, hi.mt.sampleSize);
+            sb.AppendFormat("            {0}.temporalCompression = {1};\r\n", hi.var, hi.mt.temporalCompression.ToString().ToLowerInvariant());
+            string fmtvar = hi.var.Replace("pmt", "format");
+            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(hi.mt);
+            sb.AppendFormat("            {1} {0} = new {1}();\r\n", fmtvar, mtp.FormatClass());
+            foreach (KeyValuePair<string, string> p in mtp.FormatFields(false, true))
+                sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            sb.AppendFormat("            {0}.formatPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf({1}));\r\n", hi.var, fmtvar);
+            sb.AppendFormat("            Marshal.StructureToPtr({0}, {1}.formatPtr, false);\r\n", fmtvar, hi.var);
+            sb.AppendFormat("            hr = ((IAMStreamConfig)GetPin({0}, \"{1}\")).SetFormat({2});\r\n", fvar, hi.pin, hi.var);
+            sb.AppendFormat("            DsUtils.FreeAMMediaType({0});\r\n", hi.var);
+            sb.Append("            checkHR(hr, \"Can't set format\");\r\n");
+            sb.AppendLine();
+           
+            return sb.ToString();
+        }
+
+        public static string MediaSubTypeToString(Guid guid)
+        {
+            foreach (FieldInfo m in typeof(MediaSubType).GetFields())
+            {
+               if ((Guid)m.GetValue(null) == guid)
+                   return "MediaSubType." + m.Name;
+            }
+            return "new Guid(\"" + Graph.GuidToString(guid) + "\")";
+        }
+
+
         public override string GenCode()
         {
             StringBuilder sb = new StringBuilder();
@@ -1042,6 +1244,29 @@ namespace gep
                 sb.AppendLine();
             }
 
+            if (needGetPin)
+            {
+                sb.AppendLine("        static IPin GetPin(IBaseFilter filter, string pinname)");
+                sb.AppendLine("        {");
+                sb.AppendLine("            IEnumPins epins;");
+                sb.AppendLine("            int hr = filter.EnumPins(out epins);");
+                sb.AppendLine("            checkHR(hr, \"Can't enumerate pins\");");
+                sb.AppendLine("            IntPtr fetched = Marshal.AllocCoTaskMem(4);");
+                sb.AppendLine("            IPin[] pins = new IPin[1];");
+                sb.AppendLine("            while (epins.Next(1, pins, fetched) == 0)");
+                sb.AppendLine("            {");
+                sb.AppendLine("                PinInfo pinfo;");
+                sb.AppendLine("                pins[0].QueryPinInfo(out pinfo);");
+                sb.AppendLine("                bool found = (pinfo.name == pinname);");
+                sb.AppendLine("                DsUtils.FreePinInfo(pinfo);");
+                sb.AppendLine("                if (found)");
+                sb.AppendLine("                    return pins[0];");
+                sb.AppendLine("            }");
+                sb.AppendLine("            checkHR(-1, \"Pin not found\");");
+                sb.AppendLine("            return null;");
+                sb.AppendLine("        }");
+                sb.AppendLine();
+            }
             
             sb.AppendLine("    }");
             sb.AppendLine("} ");

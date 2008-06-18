@@ -15,7 +15,7 @@ namespace gep
         IAMStreamConfig isc;
         int size;
         IntPtr scc = IntPtr.Zero;
-        AMMediaType selected_mt;
+        public AMMediaType selected_mt;
 
         public MediaTypeListForm(IAMStreamConfig _isc)
         {
@@ -59,6 +59,7 @@ namespace gep
                 {
                     int hr = isc.SetFormat(selected_mt);
                     DsError.ThrowExceptionForHR(hr);
+                    DialogResult = DialogResult.OK;
                     Close();
                 }
                 catch (COMException ex)
@@ -74,6 +75,8 @@ namespace gep
 
         private void OnCancel(object sender, EventArgs e)
         {
+            selected_mt = null;
+            DialogResult = DialogResult.Cancel;
             Close();
         }
 

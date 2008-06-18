@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace gep
@@ -146,7 +142,11 @@ namespace gep
 
         public string GenerateWith(string[] vrs)
         {
-            string s = text;
+            return Translate(text, vrs);
+        }
+
+        public static string Translate(string s, string[] vrs)
+        {
             for (int i = 0; i < vrs.Length / 2; i++)
                 s = s.Replace(vrs[i * 2], vrs[i * 2 + 1]);
             return s;

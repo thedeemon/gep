@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 namespace gep
 {
-    class FilterProps
+    class FilterProps : IDisposable
     {
         string name;
         string longname;
@@ -27,7 +27,7 @@ namespace gep
         DateTime cr_time, mod_time;
         FileVersionInfo ver_info;
         bool prepared = false;
-        IntPtr pointer; //to IUnknown
+        IntPtr pointer = IntPtr.Zero; //to IUnknown
 
         public FilterProps(string _name, string _longname, string _guid, string _catguid)
         {
@@ -248,6 +248,18 @@ namespace gep
             return new FilterPropsKernel(name, longname, guid, catguid); 
         }
 
+        public void Dispose()
+        {
+            if (pointer != IntPtr.Zero)
+                Marshal.Release(pointer);
+            pointer = IntPtr.Zero;
+            GC.SuppressFinalize(this);
+        }
+
+        ~FilterProps()
+        {
+            Dispose();
+        }
     }
 
     class FilterPropsKernel

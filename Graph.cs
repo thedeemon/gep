@@ -73,6 +73,11 @@ namespace gep
         void ReloadGraph()
         {
             ReloadFilters();
+            LayoutFiltersAndPaths();
+        }
+
+        public void LayoutFiltersAndPaths()
+        {
             LayoutFilters();
             if (!Program.mainform.autoArrange)
                 LayoutFiltersManual();
@@ -122,11 +127,10 @@ namespace gep
         public void AddFilter(FilterProps fp) //create new IBaseFilter, add it to DS graph and this graph
         {
             Filter f;
-            int hr = 0;
             try
             {
                 f = new Filter(fp);
-                hr = graphBuilder.AddFilter(f.BaseFilter, fp.Name);
+                int hr = graphBuilder.AddFilter(f.BaseFilter, fp.Name);
                 DsError.ThrowExceptionForHR(hr);
             }
             catch (COMException e)
@@ -216,13 +220,13 @@ namespace gep
             return CanPlaceFilter(place, f, 0);
         }
 
-        public void Connect(Pin outpin, Pin inpin) //ipins must be already connected
+        protected void Connect(Pin outpin, Pin inpin) //ipins must be already connected
         {
             PinConnection con = new PinConnection(outpin, inpin);
             List<ConStep> path = CalcPath(outpin, inpin, con.ID);
             con.path = path;
             connections.Add(con);
-            history.ConnectIfNew(outpin, inpin);
+            history.ConnectIfNew(outpin, inpin, con);
         }
 
         public void Connect(Pin outpin, Pin inpin, bool intelligent)
@@ -236,9 +240,16 @@ namespace gep
                 ShowCOMException(e, "Can't connect pins");
                 return;
             }
-            Connect(outpin, inpin);
+            
             if (intelligent)
                 ReloadGraph();
+            else
+            {
+                Connect(outpin, inpin);
+                history.CommitAdded(this);
+                inpin.Filter.ReloadPins();
+                outpin.Filter.ReloadPins();
+            }
         }
 
         public void RemoveConnection(PinConnection con, bool recalcPaths)
@@ -323,7 +334,6 @@ namespace gep
                 if (p == pdst)
                     break;
                 int x = p.X, y = p.Y;
-                int d = field[x, y];
                 int c = cost[x, y];
                 if (p.X>0) 
                     CheckPath(p.X - 1, p.Y, c, 0);
@@ -434,9 +444,9 @@ namespace gep
 
         public void AddSourceFilter(string filename)
         {
-            IBaseFilter ifilter = null;
             try
             {
+                IBaseFilter ifilter;
                 int hr = graphBuilder.AddSourceFilter(filename, filename, out ifilter);
                 DsError.ThrowExceptionForHR(hr);
             }
@@ -488,7 +498,7 @@ namespace gep
                     {
                         ff = new Filter(fs[0]);
                         AddFilterHere(ff, false);
-                        history.AddFilterIfNew(ff.filterProps, ff.Name, ff.srcFileName, ff.dstFileName);
+                        history.AddFilterIfNew(ff.filterProps, ff.Name, ff.srcFileName, ff.dstFileName, ff);
                     } else
                         ff.ReloadPins();
 
@@ -496,30 +506,28 @@ namespace gep
                     {
                         IPin ip = pin.IPin, connected_ipin;
                         hr = ip.ConnectedTo(out connected_ipin);
-                        if (hr == 0)
+                        if (hr != 0) continue;
+                        PinInfo cpi;
+                        connected_ipin.QueryPinInfo(out cpi);
+                        FilterInfo cfi;
+                        cpi.filter.QueryFilterInfo(out cfi);
+                        Filter connected_filter = FindFilterByName(cfi.achName);
+                        if (connected_filter != null)
                         {
-                            PinInfo cpi;
-                            connected_ipin.QueryPinInfo(out cpi);
-                            FilterInfo cfi;
-                            cpi.filter.QueryFilterInfo(out cfi);
-                            Filter connected_filter = FindFilterByName(cfi.achName);
-                            if (connected_filter != null)
+                            Pin cp = connected_filter.FindPinByName(connected_filter.Name + "." + cpi.name);
+                            if (cp != null)
                             {
-                                Pin cp = connected_filter.FindPinByName(connected_filter.Name + "." + cpi.name);
-                                if (cp != null)
-                                {
-                                    string con_uniqname = (pin.Direction == PinDirection.Input) ?
-                                        cp.UniqName + "-" + pin.UniqName : pin.UniqName + "-" + cp.UniqName;
-                                    PinConnection con = FindConnectionByName(con_uniqname);
-                                    if (con == null)
-                                        if (pin.Direction == PinDirection.Input)
-                                            Connect(cp, pin);
-                                        else
-                                            Connect(pin, cp);
-                                }
+                                string con_uniqname = (pin.Direction == PinDirection.Input) ?
+                                       cp.UniqName + "-" + pin.UniqName : pin.UniqName + "-" + cp.UniqName;
+                                PinConnection con = FindConnectionByName(con_uniqname);
+                                if (con == null)
+                                    if (pin.Direction == PinDirection.Input)
+                                        Connect(cp, pin);
+                                    else
+                                        Connect(pin, cp);
                             }
-                            DsUtils.FreePinInfo(cpi);
                         }
+                        DsUtils.FreePinInfo(cpi);
                     }
                 }
                 Marshal.FreeHGlobal(fetched);
@@ -531,9 +539,10 @@ namespace gep
                 ShowCOMException(e, "Error while enumerating filters in the graph");
                 return;
             }
+            history.CommitAdded(this);
         }
 
-        Filter FindFilterByName(string name)
+        public Filter FindFilterByName(string name)
         {
             return filters.Find(delegate(Filter t) { return t.OrgName == name; });
         }
@@ -550,7 +559,7 @@ namespace gep
             connections.Clear();
         }
 
-        void LayoutFilters()
+        public void LayoutFilters()
         {
             DynArray<List<Filter>> grid = new DynArray<List<Filter>>();
             DynArray<int> colWidths = new DynArray<int>();
@@ -592,7 +601,7 @@ namespace gep
             foreach (Filter f in filters)
                 PlaceFilter(f, false);
 
-            Point pos = new Point(1, 1);
+            Point pos;
             foreach (Filter f in filters)
                 if (filter_positions.TryGetValue(f.Name, out pos))
                 {
@@ -686,7 +695,7 @@ namespace gep
             }
             catch (COMException e)
             {
-                Graph.ShowCOMException(e, "Error saving graph "+filename);
+                ShowCOMException(e, "Error saving graph "+filename);
             }
         }
 
@@ -701,7 +710,7 @@ namespace gep
             }
             catch (COMException e)
             {
-                Graph.ShowCOMException(e, "Error loading graph " + filename);
+                ShowCOMException(e, "Error loading graph " + filename);
             }
             catch (Exception e)
             {
@@ -999,6 +1008,11 @@ namespace gep
             {
                 eventlog.Clear();
             }
+        }
+
+        public void PinSetFormat(Pin pin, AMMediaType mt)
+        {
+            history.SetFormat(pin, mt);
         }
 
     } //class
