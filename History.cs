@@ -20,6 +20,8 @@ namespace gep
     abstract class CodeGenBase
     {
         public abstract string DefineAddFilterDS(HIAddFilterDS hi);
+        public abstract string DefineSetFormat(HISetFormat hi);
+        public abstract string DefineConnect(HIConnect hi);
         public abstract string BuildAddFilterDS(HIAddFilterDS hi);
         public abstract string BuildAddFilterMon(HIAddFilterMon hi);
         public abstract string SetFormat(HISetFormat hi);
@@ -106,6 +108,25 @@ namespace gep
             }
             return ins + setfname + "\r\n";
         }
+
+        protected static string xguid(string guid)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("0x"); sb.Append(guid.Substring(1, 8));
+            sb.Append(", 0x"); sb.Append(guid.Substring(10, 4));
+            sb.Append(", 0x"); sb.Append(guid.Substring(15, 4));
+            sb.Append(", 0x"); sb.Append(guid.Substring(20, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(22, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(25, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(27, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(29, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(31, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(33, 2));
+            sb.Append(", 0x"); sb.Append(guid.Substring(35, 2));
+            return sb.ToString();
+        }
+
+        public abstract string MediaTypeToString(Guid guid);
     }
 
 
@@ -160,16 +181,18 @@ namespace gep
         public string filter1, filter2, pin1, pin2;
         public int weight = 1;
         public string majortype;
+        public Guid majortypeguid;
 
         public HIConnect(string _filter1, string _pin1, string _filter2, string _pin2, Guid type)
         {
             filter1 = _filter1; filter2 = _filter2; pin1 = _pin1; pin2 = _pin2;
-            majortype = DsToString.MediaTypeToString(type);            
+            majortypeguid = type;
         }
 
         public override string Define(CodeGenBase cg)
         {
-            return "";
+            majortype = cg.MediaTypeToString(majortypeguid);
+            return cg.DefineConnect(this);
         }
 
         public override string Build(CodeGenBase cg)
@@ -194,7 +217,7 @@ namespace gep
         public override string Define(CodeGenBase cg)
         {
             cg.needGetPin = true;
-            return "";
+            return cg.DefineSetFormat(this);
         }
 
         public override string Build(CodeGenBase cg)
@@ -218,7 +241,7 @@ namespace gep
             }
         }
 
-        public HistoryItem FindByRealName(string realname) 
+        public HistoryItem FindByRealName(string realname) //finds a filter
         {
             foreach (HistoryItem i in history)
                 if (i.RealName == realname)
@@ -281,7 +304,7 @@ namespace gep
             return -1;
         }
 
-        bool HasConnection(Pin p1, Pin p2, IEnumerable<HistoryItem> lst)
+        static bool HasConnection(Pin p1, Pin p2, IEnumerable<HistoryItem> lst)
         {
             foreach (HistoryItem hi in lst)
             {
@@ -293,14 +316,13 @@ namespace gep
             return false;
         }
 
-        public void RemoveFilter(string realname)
+        public void RemoveFilter(string realname) //deletes filter with given realname and all setformats on it
         {
-            for (int i = 0; i < history.Count;i++ )
-                if (history[i].RealName == realname)
-                {
-                    history.RemoveAt(i);
-                    break;
-                }
+            history.RemoveAll(delegate(HistoryItem hi)
+                                  {
+                                      if (hi is HISetFormat) return ((HISetFormat) hi).filter == realname;
+                                      return hi.RealName == realname;
+                                  });
         }
 
         Dictionary<string, int> vars = new Dictionary<string, int>();
@@ -433,14 +455,14 @@ namespace gep
             
             connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
                 "    //connect $pair\r\n" +
-                "    hr = pBuilder->RenderStream(NULL, &MEDIATYPE_$majortype, $var1, NULL, $var2);\r\n" +
+                "    hr = pBuilder->RenderStream(NULL, &$majortype, $var1, NULL, $var2);\r\n" +
                 "    CHECK_HR(hr, \"Can't connect $pair\");\r\n\r\n",
                 "$pair - names of connecting filters\r\n" +
                 "$majortype - major media type of connection\r\n" +
                 "$var1, $var2 - variables holding IBaseFilter of connecting filters");
             connectTpl.SetVars(new string[] {
                 "$pair", "File Source (Async.) and AVI Splitter",
-                "$majortype", "Stream",
+                "$majortype", "MEDIATYPE_Stream",
                 "$var1", "pFileSourceAsync",
                 "$var2", "pAVISplitter"
             });
@@ -491,6 +513,19 @@ namespace gep
             return "C++";
         }
 
+        private int lastguidnum = 0;
+        Dictionary<string, string> guidnames = new Dictionary<string, string>();
+
+        string GuidName(string guid) // guid must be "{123.."
+        {
+            if (guidnames.ContainsKey(guid))
+                return guidnames[guid];
+            lastguidnum++;
+            string s = string.Format("GUID{0}", lastguidnum);
+            guidnames.Add(guid, s);
+            return s;
+        }
+
         public override string DefineAddFilterDS(HIAddFilterDS hi)
         {            
             string guid = hi.CLSID, s;
@@ -499,21 +534,28 @@ namespace gep
                 hi.clsname = s;
                 return ""; //no need to define
             }
-            StringBuilder sb = new StringBuilder();
-            sb.Append("0x"); sb.Append(guid.Substring(1, 8));
-            sb.Append(", 0x"); sb.Append(guid.Substring(10, 4));
-            sb.Append(", 0x"); sb.Append(guid.Substring(15, 4));
-            sb.Append(", 0x"); sb.Append(guid.Substring(20, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(22, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(25, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(27, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(29, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(31, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(33, 2));
-            sb.Append(", 0x"); sb.Append(guid.Substring(35, 2));
             return defineDsTpl.GenerateWith(new string[] {
-                "$clsname", hi.clsname, "$guid", hi.CLSID, "$file", hi.FileName, "$xguid", sb.ToString()
+                "$clsname", hi.clsname, "$guid", hi.CLSID, "$file", hi.FileName, "$xguid", xguid(guid)
             });
+        }
+
+        string DefineIfNotKnown(string guidname, string known_prefix, string guid)
+        {
+            if (guidname.StartsWith(known_prefix)) return "";
+            return defineDsTpl.GenerateWith(new string[] {
+                "$clsname", guidname, "$guid", guid, "$file", "", "$xguid", xguid(guid)
+            }); 
+        }
+
+        public override string DefineSetFormat(HISetFormat hi)
+        {
+            return DefineIfNotKnown(MediaSubTypeToString(hi.mt.subType), "MEDIASUBTYPE", Graph.GuidToString(hi.mt.subType)) +
+                DefineIfNotKnown(MediaTypeToString(hi.mt.majorType), "MEDIATYPE", Graph.GuidToString(hi.mt.majorType));
+        }
+
+        public override string DefineConnect(HIConnect hi)
+        {
+            return DefineIfNotKnown(hi.majortype, "MEDIATYPE", Graph.GuidToString(hi.majortypeguid));
         }
 
         public override string BuildAddFilterDS(HIAddFilterDS hi)
@@ -537,7 +579,7 @@ namespace gep
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("    AM_MEDIA_TYPE {0};\r\n", hi.var);
             sb.AppendFormat("    ZeroMemory(&{0}, sizeof(AM_MEDIA_TYPE));\r\n", hi.var);
-            sb.AppendFormat("    {0}.majortype = MEDIATYPE_{1};\r\n", hi.var, DsToString.MediaTypeToString(hi.mt.majorType));
+            sb.AppendFormat("    {0}.majortype = {1};\r\n", hi.var, MediaTypeToString(hi.mt.majorType));
             sb.AppendFormat("    {0}.subtype = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
             string fmtype = CodeSnippet.Translate("FORMAT_" + DsToString.MediaFormatTypeToString(hi.mt.formatType), new string[] {
                 "WaveEx", "WaveFormatEx",
@@ -599,14 +641,20 @@ namespace gep
                     yield return new KeyValuePair<string, string>(CodeSnippet.Translate(p.Key, dict), p.Value);
         }
 
-        public static string MediaSubTypeToString(Guid guid)
+        public string MediaSubTypeToString(Guid guid)
         {
-            foreach (FieldInfo m in typeof(MediaSubType).GetFields())
-            {
-                if ((Guid)m.GetValue(null) == guid)
+            foreach (FieldInfo m in typeof (MediaSubType).GetFields())
+                if ((Guid) m.GetValue(null) == guid)
                     return "MEDIASUBTYPE_" + m.Name.ToUpperInvariant();
-            }
-            return "...// Guid for (\"" + Graph.GuidToString(guid) + "\")";
+            return GuidName(Graph.GuidToString(guid));
+        }
+
+        public override string MediaTypeToString(Guid guid)
+        {
+            foreach (FieldInfo m in typeof (MediaType).GetFields())
+                if ((Guid) m.GetValue(null) == guid)
+                    return "MEDIATYPE_" + m.Name.ToUpperInvariant();
+            return GuidName(Graph.GuidToString(guid));
         }
 
         public override string GenCode(bool useDirectConnect)
@@ -947,14 +995,14 @@ namespace gep
 
             connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
                 "            //connect $pair\r\n" +
-                "            hr = pBuilder.RenderStream(null, MediaType.$majortype, $var1, null, $var2);\r\n" +
+                "            hr = pBuilder.RenderStream(null, $majortype, $var1, null, $var2);\r\n" +
                 "            checkHR(hr, \"Can't connect $pair\");\r\n\r\n",
                 "$pair - names of connecting filters\r\n" +
                 "$majortype - major media type of connection\r\n" +
                 "$var1, $var2 - variables holding IBaseFilter of connecting filters");
             connectTpl.SetVars(new string[] {
                 "$pair", "File Source (Async.) and AVI Splitter",
-                "$majortype", "Stream",
+                "$majortype", "MediaType.Stream",
                 "$var1", "pFileSourceAsync",
                 "$var2", "pAVISplitter"
             });
@@ -968,7 +1016,7 @@ namespace gep
                 "$pin1, $pin2 - names of connecting pins");
             connectDirectTpl.SetVars(new string[] {
                 "$pair", "File Source (Async.) and AVI Splitter",
-                "$majortype", "Stream",
+                "$majortype", "MediaType.Stream",
                 "$var1", "pFileSourceAsync",
                 "$var2", "pAVISplitter",
                 "$pin1", "Output",
@@ -1006,6 +1054,16 @@ namespace gep
             });
         }
 
+        public override string DefineSetFormat(HISetFormat hi)
+        {
+            return "";
+        }
+
+        public override string DefineConnect(HIConnect hi)
+        {
+            return "";
+        }
+
         public override string BuildAddFilterDS(HIAddFilterDS hi)
         {
             string create, s;
@@ -1037,7 +1095,7 @@ namespace gep
             string fvar = (fhi != null) ? fhi.var : "?";
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("            AMMediaType {0} = new AMMediaType();\r\n", hi.var);
-            sb.AppendFormat("            {0}.majorType = MediaType.{1};\r\n", hi.var, DsToString.MediaTypeToString(hi.mt.majorType));
+            sb.AppendFormat("            {0}.majorType = {1};\r\n", hi.var, MediaTypeToString(hi.mt.majorType));
             sb.AppendFormat("            {0}.subType = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
             sb.AppendFormat("            {0}.formatType = FormatType.{1};\r\n", hi.var, DsToString.MediaFormatTypeToString(hi.mt.formatType));
             sb.AppendFormat("            {0}.fixedSizeSamples = {1};\r\n", hi.var, hi.mt.fixedSizeSamples.ToString().ToLowerInvariant());
@@ -1061,14 +1119,19 @@ namespace gep
 
         public static string MediaSubTypeToString(Guid guid)
         {
-            foreach (FieldInfo m in typeof(MediaSubType).GetFields())
-            {
-               if ((Guid)m.GetValue(null) == guid)
-                   return "MediaSubType." + m.Name;
-            }
+            foreach (FieldInfo m in typeof (MediaSubType).GetFields())
+                if ((Guid) m.GetValue(null) == guid)
+                    return "MediaSubType." + m.Name;
             return "new Guid(\"" + Graph.GuidToString(guid) + "\")";
         }
 
+        public override string MediaTypeToString(Guid guid)
+        {
+            foreach (FieldInfo m in typeof (MediaType).GetFields())
+                if ((Guid) m.GetValue(null) == guid)
+                    return "MediaType." + m.Name;
+            return "new Guid(\"" + Graph.GuidToString(guid) + "\")";
+        }
 
         public override string GenCode(bool useDirectConnect)
         {
