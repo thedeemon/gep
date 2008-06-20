@@ -31,14 +31,17 @@ namespace gep
             string var1 = (h1 != null) ? h1.var : "?";
             string var2 = (h2 != null) ? h2.var : "?";
             string pair = h1.Name + " and " + h2.Name;
-            return connectTpl.GenerateWith(new string[] {
-                "$pair", pair, "$majortype", hi.majortype, "$var1", var1, "$var2", var2
-            });
+            return directConnect ? connectDirectTpl.GenerateWith(new string[] {
+                   "$pair", pair, "$majortype", hi.majortype, "$var1", var1, "$var2", var2, "$pin1", hi.pin1, "$pin2", hi.pin2
+                   }) 
+                   : connectTpl.GenerateWith(new string[] {
+                   "$pair", pair, "$majortype", hi.majortype, "$var1", var1, "$var2", var2
+                   });
         }
 
-        public abstract string GenCode();
+        public abstract string GenCode(bool useDirectConnect);
 
-        public bool needCreateFilterProc = false, needGetPin = false;
+        public bool needCreateFilterProc = false, needGetPin = false, directConnect = true;
         public History History { set { history = value; } }
 
         public CodeSnippet[] snippets;
@@ -77,7 +80,7 @@ namespace gep
         protected Dictionary<string, string> known = new Dictionary<string, string>(); // guid => CLSID_Shit
         protected List<string> srcFileNames = new List<string>();
         protected List<string> dstFileNames = new List<string>();
-        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl;
+        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl;
 
         protected string Insert(HistoryItem hi)
         {
@@ -321,56 +324,7 @@ namespace gep
                 vars[var] = 1;
         }
 
-        public void SortConnections()
-        {
-            //foreach (HistoryItem hi in history) //init weights
-            //{
-            //    HIConnect hc = hi as HIConnect;
-            //    if (hc != null)
-            //        hc.weight = 1;
-            //}
-            //int i;
-            //for (i = 0; i < history.Count-1; i++) //calc weights
-            //{
-            //    HIConnect hc = history[i] as HIConnect;
-            //    if (hc != null)
-            //    {
-            //        for (int j = i + 1; j < history.Count; j++)
-            //        {
-            //            HIConnect hc2 = history[j] as HIConnect;
-            //            if (hc2 != null)
-            //            {
-            //                if (hc2.filter2 == hc.filter1)
-            //                    hc.weight = Math.Max(hc.weight, hc2.weight + 1);
-            //            }
-            //        }
-            //    }
-            //}
-            //i = 0; //sort
-            //while (i < history.Count - 1) 
-            //{
-            //    HIConnect hc = history[i] as HIConnect;
-            //    int k = -1;
-            //    if (hc != null)
-            //    {                    
-            //        for (int j = i + 1; j < history.Count; j++)
-            //        {
-            //            HIConnect hc2 = history[j] as HIConnect;
-            //            if (hc2 != null)
-            //            {
-            //                if (hc2.weight < hc.weight)
-            //                    k = j;    
-            //            }
-            //        }
-            //        if (k >= 0) //somethin found
-            //        {
-            //            history.RemoveAt(i);
-            //            history.Insert(k, hc);
-            //        }
-            //    }
-            //    if (k < 0) i++; //no moves done, go next                    
-            //}
-        }
+        
 
         public void SetFormat(Pin pin, AMMediaType mt)
         {
@@ -491,6 +445,21 @@ namespace gep
                 "$var2", "pAVISplitter"
             });
 
+            connectDirectTpl = new CodeSnippet("Connect two filters directly", "connectDirectTpl",
+                "    //connect $pair\r\n" +
+                "    hr = pGraph->ConnectDirect(GetPin($var1, L\"$pin1\"), GetPin($var2, L\"$pin2\"), NULL);\r\n" +
+                "    CHECK_HR(hr, \"Can't connect $pair\");\r\n\r\n",
+                "$pair - names of connecting filters\r\n" +
+                "$var1, $var2 - variables holding IBaseFilter of connecting filters\r\n"+
+                "$pin1, $pin2 - names of connecting pins");
+            connectDirectTpl.SetVars(new string[] {
+                "$pair", "File Source (Async.) and AVI Splitter",
+                "$var1", "pFileSourceAsync",
+                "$var2", "pAVISplitter",
+                "$pin1", "Output",
+                "$pin2", "input pin"
+            });
+
             checkTpl = new CodeSnippet("Check HRESULT for errors", "checkTpl",
             "BOOL hrcheck(HRESULT hr, TCHAR* errtext)\r\n" +
             "{\r\n" +
@@ -510,7 +479,7 @@ namespace gep
 
             snippets = new CodeSnippet[] { 
                 defineDsTpl, addFiltDsTpl, addFiltMonTpl, setSrcFileTpl, setDstFileTpl,
-                insertTpl, connectTpl, checkTpl               
+                insertTpl, connectTpl, connectDirectTpl, checkTpl                
             };
 
             LoadTemplates();
@@ -640,7 +609,7 @@ namespace gep
             return "...// Guid for (\"" + Graph.GuidToString(guid) + "\")";
         }
 
-        public override string GenCode()
+        public override string GenCode(bool useDirectConnect)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("//Don't forget to change project settings:");
@@ -654,7 +623,10 @@ namespace gep
             sb.AppendLine("#include <initguid.h>");
             sb.AppendLine();
             sb.AppendLine(checkTpl.Generate());
-       
+
+            if (useDirectConnect) needGetPin = true;
+            directConnect = useDirectConnect;
+
             StringBuilder sb_def = new StringBuilder();
             Dictionary<string, bool> defined = new Dictionary<string, bool>(); //guid => define_guid text
             foreach (HistoryItem hi in history.Items)
@@ -721,8 +693,6 @@ namespace gep
             }
 
             sb.AppendLine(sb_def.ToString());
-
-            history.SortConnections();
 
             StringBuilder sb_bld = new StringBuilder();
             foreach (HistoryItem hi in history.Items)
@@ -989,6 +959,22 @@ namespace gep
                 "$var2", "pAVISplitter"
             });
 
+            connectDirectTpl = new CodeSnippet("Connect two filters directly", "connectDirectTpl",
+                "            //connect $pair\r\n" +
+                "            hr = pGraph.ConnectDirect(GetPin($var1, \"$pin1\"), GetPin($var2, \"$pin2\"), null);\r\n" +
+                "            checkHR(hr, \"Can't connect $pair\");\r\n\r\n",
+                "$pair - names of connecting filters\r\n" +
+                "$var1, $var2 - variables holding IBaseFilter of connecting filters\r\n" +
+                "$pin1, $pin2 - names of connecting pins");
+            connectDirectTpl.SetVars(new string[] {
+                "$pair", "File Source (Async.) and AVI Splitter",
+                "$majortype", "Stream",
+                "$var1", "pFileSourceAsync",
+                "$var2", "pAVISplitter",
+                "$pin1", "Output",
+                "$pin2", "input pin"
+            });
+
             checkTpl = new CodeSnippet("Check HRESULT for errors", "checkTpl",
             "        static void checkHR(int hr, string msg)\r\n" +
             "        {\r\n" +
@@ -1001,7 +987,7 @@ namespace gep
 
             snippets = new CodeSnippet[] { 
                 defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, setSrcFileTpl, setDstFileTpl,
-                insertTpl, connectTpl, checkTpl                
+                insertTpl, connectTpl, connectDirectTpl, checkTpl
             };
 
             LoadTemplates();
@@ -1084,7 +1070,7 @@ namespace gep
         }
 
 
-        public override string GenCode()
+        public override string GenCode(bool useDirectConnect)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("//Don't forget to add reference to DirectShowLib in your project.");
@@ -1100,6 +1086,8 @@ namespace gep
             sb.AppendLine("    {");
             sb.AppendLine(checkTpl.Generate());
 
+            if (useDirectConnect) needGetPin = true;
+            directConnect = useDirectConnect;
             //define 
             StringBuilder sb_def = new StringBuilder();
             Dictionary<string, bool> defined = new Dictionary<string, bool>();
@@ -1112,8 +1100,6 @@ namespace gep
                     defined.Add(def, true);
                 }
             }
-
-            history.SortConnections();
 
             StringBuilder sb_bld = new StringBuilder();
             foreach (HistoryItem hi in history.Items)

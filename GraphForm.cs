@@ -438,13 +438,13 @@ namespace gep
             else //out of filter right click
             {
                 ContextMenu menu = new ContextMenu();
-                menu.MenuItems.Add("Render file...", this.RenderFile);
-                menu.MenuItems.Add("Add source filter...", this.AddSourceFilter);
-                menu.MenuItems.Add("Load graph...", this.LoadGraph);
+                menu.MenuItems.Add("Render file...", RenderFile);
+                menu.MenuItems.Add("Add source filter...", AddSourceFilter);
+                menu.MenuItems.Add("Load graph...", LoadGraph);
                 if (savedFileName != null)
-                    menu.MenuItems.Add("Save graph", this.SaveGraph);
-                menu.MenuItems.Add("Save graph as...", this.SaveGraphAs);
-                menu.MenuItems.Add("See event log...", this.ShowEventLog);
+                    menu.MenuItems.Add("Save graph", SaveGraph);
+                menu.MenuItems.Add("Save graph as...", SaveGraphAs);
+                menu.MenuItems.Add("See event log...", ShowEventLog);
                 menu.Show(this, eLocation);
             }
         }
@@ -519,7 +519,7 @@ namespace gep
             {
                 Rectangle rc = new Rectangle(Math.Min(mousepos.X, movingStart.X), Math.Min(mousepos.Y, movingStart.Y),
                     Math.Abs(mousepos.X - movingStart.X), Math.Abs(mousepos.Y - movingStart.Y));
-                if (Control.ModifierKeys != Keys.Shift)
+                if (ModifierKeys != Keys.Shift)
                     graph.ClearFiltersSelection();
                 graph.SelectSeveralFilters(rc);
                 selecting = false;
@@ -537,21 +537,21 @@ namespace gep
                 {
                     ContextMenu menu = new ContextMenu();
                     if (connectingPin.Direction == PinDirection.Output)
-                        menu.MenuItems.Add("Render pin", this.RenderPin);
+                        menu.MenuItems.Add("Render pin", RenderPin);
                     if (connectingPin.HasPropertyPage())
-                        menu.MenuItems.Add("Property page", this.ShowPropertyPage);
-                    menu.MenuItems.Add("Scan interfaces", this.ScanInterfaces);
-                    menu.MenuItems.Add("Show matching filters", this.ShowMatchingFilters);
+                        menu.MenuItems.Add("Property page", ShowPropertyPage);
+                    menu.MenuItems.Add("Scan interfaces", ScanInterfaces);
+                    menu.MenuItems.Add("Show matching filters", ShowMatchingFilters);
 
                     if ((connectingPin.IPin as IAMStreamConfig) != null)
                     {
-                        menu.MenuItems.Add("IAMStreamConfig::SetFormat", this.ConfigStream);
-                        menu.MenuItems.Add("IAMStreamConfig::GetStreamCaps", this.GetStreamCaps);
+                        menu.MenuItems.Add("IAMStreamConfig::SetFormat", ConfigStream);
+                        menu.MenuItems.Add("IAMStreamConfig::GetStreamCaps", GetStreamCaps);
                     }
                     if ((connectingPin.IPin as IMemInputPin) != null)
                     {
-                        menu.MenuItems.Add("See allocator properties", this.ShowAllocatorProperties);
-                        menu.MenuItems.Add("See allocator requirements", this.ShowAllocatorRequirements);
+                        menu.MenuItems.Add("See allocator properties", ShowAllocatorProperties);
+                        menu.MenuItems.Add("See allocator requirements", ShowAllocatorRequirements);
                     }
                     menu.Show(this, eLocation);
                     return;
@@ -931,7 +931,8 @@ namespace gep
 
         public void GenerateCode(lang lng)
         {            
-            graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]], lng);
+            graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]], lng,
+                Program.mainform.useDirectConnect);
         }
 
         private void GraphForm_MouseLeave(object sender, EventArgs e)

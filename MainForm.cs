@@ -91,6 +91,10 @@ namespace gep
             suggestURLs = sugg_url > 0;
             suggestURLsForSourcesToolStripMenuItem.Checked = suggestURLs;
 
+            int useDirCon = (int) nrk.GetValue("useDirectConnect", 1);
+            useDirectConnect = useDirCon > 0;
+            useDirectConnectMenuItem.Checked = useDirectConnect;
+
             if (filetoopen == null)
                 OnNewGraph(null, null);
             else
@@ -328,17 +332,18 @@ namespace gep
             {
                 int v = suggestURLs ? 1 : 0;
                 rk.SetValue("suggestURL", v);
+
+                v = useDirectConnect ? 1 : 0;
+                rk.SetValue("useDirectConnect", v);
                 SaveFavorites(rk);
             }
         }
 
         private void OnUseClock(object sender, EventArgs e)
         {
-            if (activeGraphForm != null)
-            {
-                activeGraphForm.UseClock = !activeGraphForm.UseClock;
-                useClockToolStripMenuItem.Checked = activeGraphForm.UseClock;
-            }
+            if (activeGraphForm == null) return;
+            activeGraphForm.UseClock = !activeGraphForm.UseClock;
+            useClockToolStripMenuItem.Checked = activeGraphForm.UseClock;
         }
 
         private void OnGenCodeCS(object sender, EventArgs e)
@@ -351,6 +356,14 @@ namespace gep
         {
             TemplatesForm tf = new TemplatesForm();
             tf.ShowDialog();
+        }
+
+        public bool useDirectConnect = true; // in code generation
+
+        private void OnUseDirectConnect(object sender, EventArgs e)
+        {
+            useDirectConnect = !useDirectConnect;
+            useDirectConnectMenuItem.Checked = useDirectConnect;
         }
 
     }//class

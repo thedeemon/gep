@@ -899,7 +899,7 @@ namespace gep
         }
 
 
-        public void GenerateCode(GraphForm.ShowCodeDel shcode, lang lng)
+        public void GenerateCode(GraphForm.ShowCodeDel shcode, lang lng, bool useDirectConnect)
         {
             CodeGenBase cg = null;
             switch (lng)
@@ -908,9 +908,8 @@ namespace gep
                 case lang.CS: cg = new CodeGenCS(); break;
             }
             cg.History = history;
-            string code = cg.GenCode();
-            Form cf = shcode(code);//new GenerateCodeGfxForm(code);
-            //cf.MdiParent = Program.mainform;
+            string code = cg.GenCode(useDirectConnect);
+            Form cf = shcode(code);
             cf.Text = "Generated code for " + myform.Text;
             cf.ShowDialog();
         }

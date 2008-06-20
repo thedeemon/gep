@@ -21,22 +21,18 @@ namespace gep
         private void OnSelChange(object sender, EventArgs e)
         {
             CodeSnippet snp = (CodeSnippet)snippetsList.SelectedItem;
-            if (snp != null)
-            {
-                templateText.Text = snp.Text;
-                variablesText.Text = snp.Description;
-                exampleText.Text = snp.Generate();
-            }
+            if (snp == null) return;
+            templateText.Text = snp.Text;
+            variablesText.Text = snp.Description;
+            exampleText.Text = snp.Generate();
         }
 
         private void OnTemplateChanged(object sender, EventArgs e)
         {
             CodeSnippet snp = (CodeSnippet)snippetsList.SelectedItem;
-            if (snp != null)
-            {
-                snp.Text = templateText.Text;
-                exampleText.Text = snp.Generate();
-            }
+            if (snp == null) return;
+            snp.Text = templateText.Text;
+            exampleText.Text = snp.Generate();
         }
 
         private void OnOK(object sender, EventArgs e)
@@ -67,17 +63,13 @@ namespace gep
         private void OnLangChange(object sender, EventArgs e)
         {
             CodeGenBase cg = (CodeGenBase)languageCombo.SelectedItem;
-            if (cg != null)
-            {
-                snippetsList.Items.Clear();
-                foreach (CodeSnippet snp in cg.snippets)
-                {
-                    snippetsList.Items.Add(snp);
-                }
-                templateText.Clear();
-                variablesText.Clear();
-                exampleText.Clear();
-            }
+            if (cg == null) return;
+            snippetsList.Items.Clear();
+            foreach (CodeSnippet snp in cg.snippets)
+                snippetsList.Items.Add(snp);
+            templateText.Clear();
+            variablesText.Clear();
+            exampleText.Clear();
         }
     }
 

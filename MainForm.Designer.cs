@@ -51,6 +51,7 @@ namespace gep
             this.suggestURLsForSourcesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.codeTemplatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.useDirectConnectMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.favoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFavoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -223,7 +224,8 @@ namespace gep
             this.autoLayoutFiltersToolStripMenuItem,
             this.suggestURLsForSourcesToolStripMenuItem,
             this.useClockToolStripMenuItem,
-            this.codeTemplatesToolStripMenuItem});
+            this.codeTemplatesToolStripMenuItem,
+            this.useDirectConnectMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "Options";
@@ -231,30 +233,37 @@ namespace gep
             // autoLayoutFiltersToolStripMenuItem
             // 
             this.autoLayoutFiltersToolStripMenuItem.Name = "autoLayoutFiltersToolStripMenuItem";
-            this.autoLayoutFiltersToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.autoLayoutFiltersToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
             this.autoLayoutFiltersToolStripMenuItem.Text = "AutoArrange filters";
             this.autoLayoutFiltersToolStripMenuItem.Click += new System.EventHandler(this.OnAutoArrage);
             // 
             // suggestURLsForSourcesToolStripMenuItem
             // 
             this.suggestURLsForSourcesToolStripMenuItem.Name = "suggestURLsForSourcesToolStripMenuItem";
-            this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
             this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources";
             this.suggestURLsForSourcesToolStripMenuItem.Click += new System.EventHandler(this.OnSuggestURLs);
             // 
             // useClockToolStripMenuItem
             // 
             this.useClockToolStripMenuItem.Name = "useClockToolStripMenuItem";
-            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
             this.useClockToolStripMenuItem.Text = "Use clock";
             this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
             // 
             // codeTemplatesToolStripMenuItem
             // 
             this.codeTemplatesToolStripMenuItem.Name = "codeTemplatesToolStripMenuItem";
-            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
             this.codeTemplatesToolStripMenuItem.Text = "Code templates...";
             this.codeTemplatesToolStripMenuItem.Click += new System.EventHandler(this.OnCodeTemplates);
+            // 
+            // useDirectConnectMenuItem
+            // 
+            this.useDirectConnectMenuItem.Name = "useDirectConnectMenuItem";
+            this.useDirectConnectMenuItem.Size = new System.Drawing.Size(274, 22);
+            this.useDirectConnectMenuItem.Text = "Use direct connect in code generation";
+            this.useDirectConnectMenuItem.Click += new System.EventHandler(this.OnUseDirectConnect);
             // 
             // favoritesToolStripMenuItem
             // 
@@ -282,8 +291,8 @@ namespace gep
             this.windowsToolStripMenuItem.Name = "windowsToolStripMenuItem";
             this.windowsToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
             this.windowsToolStripMenuItem.Text = "Windows";
-            this.windowsToolStripMenuItem.DropDownClosed += new System.EventHandler(this.windowsToolStripMenuItem_DropDownClosed);
             this.windowsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.windowsToolStripMenuItem_DropDownOpening);
+            this.windowsToolStripMenuItem.DropDownClosed += new System.EventHandler(this.windowsToolStripMenuItem_DropDownClosed);
             // 
             // helpToolStripMenuItem
             // 
@@ -397,8 +406,8 @@ namespace gep
             this.Name = "MainForm";
             this.Text = "GraphEditPlus";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.mainmenu.ResumeLayout(false);
             this.mainmenu.PerformLayout();
             this.maintoolbar.ResumeLayout(false);
@@ -448,6 +457,7 @@ namespace gep
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem codeTemplatesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem useDirectConnectMenuItem;
     }
 }
 
