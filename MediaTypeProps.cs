@@ -92,7 +92,10 @@ namespace gep
             return new MediaTypeProps(pmt);
         }
 
-        public virtual List<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums) { return null; }
+        public virtual List<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums)
+        {
+            return new List<KeyValuePair<string, string>>(); //empty list
+        }
 
         public virtual string FormatClass() { return "?"; }
     }//class
@@ -156,7 +159,7 @@ namespace gep
                 {
                     string s = val.ToString();
                     if (!cs_enums || s[0] >= '0' && s[0] <= '9')
-                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, "0x" + Enum.Format(field.FieldType, val, "X")));
+                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, string.Format("({1}) 0x{0}", Enum.Format(field.FieldType, val, "X"), field.FieldType.Name)));
                     else
                         fields.Add(new KeyValuePair<string, string>(prefix + field.Name, field.FieldType.Name + "." + val.ToString()));
                 }

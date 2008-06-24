@@ -1272,10 +1272,10 @@ namespace gep
                 sb.AppendLine("                moniker.BindToObject(bindCtx, null, ref guid, out obj);");
                 sb.AppendLine("                filter = (IBaseFilter)obj;");
                 sb.AppendLine("            }");
-                sb.AppendLine("            catch");
-                sb.AppendLine("            {");
-                sb.AppendLine("                throw;");
-                sb.AppendLine("            }");
+                //sb.AppendLine("            catch");
+                //sb.AppendLine("            {");
+                //sb.AppendLine("                throw;");
+                //sb.AppendLine("            }");
                 sb.AppendLine("            finally");
                 sb.AppendLine("            {");
                 sb.AppendLine("                if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);");
