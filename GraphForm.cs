@@ -443,6 +443,12 @@ namespace gep
                     menu.MenuItems.Add("Save graph", SaveGraph);
                 menu.MenuItems.Add("Save graph as...", SaveGraphAs);
                 menu.MenuItems.Add("See event log...", ShowEventLog);
+                menu.MenuItems.Add("Arrange filters", delegate
+                {
+                    graph.LayoutFilters();
+                    graph.RecalcPaths();
+                    Invalidate();
+                });
                 menu.Show(this, eLocation);
             }
         }
@@ -963,6 +969,7 @@ namespace gep
         public void LayoutFilters()
         {
             graph.LayoutFiltersAndPaths();
+            Invalidate();
         }
 
     }// GraphForm class
