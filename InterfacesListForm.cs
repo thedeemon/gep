@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 namespace gep
@@ -17,15 +12,17 @@ namespace gep
 
         public void SetList(List<InterfaceInfo> lst)
         {
-            //textBox.Lines = lst.ToArray();
-            //textBox.Select(0, 0);
-            foreach (InterfaceInfo ii in lst)
+            AddNodes(tree.Nodes, lst);
+        }
+
+        static void AddNodes(TreeNodeCollection nodes, IEnumerable<InterfaceInfo> lst)
+        {
+            foreach (InterfaceInfo info in lst)
             {
-                TreeNode nd = tree.Nodes.Add(ii.name);
-                foreach (string mt in ii.methods)
-                    nd.Nodes.Add(mt);
+                TreeNode nd = nodes.Add(info.name);
+                if (info.elements.Count > 0)
+                    AddNodes(nd.Nodes, info.elements);
             }
-            
         }
     }
 }

@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using System.Drawing.Drawing2D;
 using DirectShowLib;
 using System.Runtime.InteropServices;
 
@@ -105,7 +103,7 @@ namespace gep
             mf.Text = Text + " - GraphEditPlus";
         }
 
-        public void RenderFile(object sender, System.EventArgs e)
+        public void RenderFile(object sender, EventArgs e)
         {
             OpenFileDialog fd = new OpenFileDialog();
             fd.DefaultExt = "*.*";
@@ -116,7 +114,7 @@ namespace gep
             Invalidate();
         }
 
-        public void AddSourceFilter(object sender, System.EventArgs e)
+        public void AddSourceFilter(object sender, EventArgs e)
         {
             OpenFileDialog fd = new OpenFileDialog();
             fd.DefaultExt = "*.*";
@@ -129,7 +127,7 @@ namespace gep
 
         public EventLogForm eventlogform;
 
-        public void ShowEventLog(object sender, System.EventArgs e)
+        public void ShowEventLog(object sender, EventArgs e)
         {
             if (eventlogform == null)
             {
@@ -140,7 +138,7 @@ namespace gep
             else eventlogform.BringToFront();
         }
 
-        private void RenderPin(object sender, System.EventArgs e)
+        private void RenderPin(object sender, EventArgs e)
         {
             if (connectingPin != null)
                 graph.RenderPin(connectingPin);
@@ -157,7 +155,7 @@ namespace gep
             Invalidate();
         }
 
-        private void ShowPropertyPage(object sender, System.EventArgs e)
+        private void ShowPropertyPage(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
             {
@@ -172,7 +170,7 @@ namespace gep
             }
         }
 
-        private void ScanInterfaces(object sender, System.EventArgs e)
+        private void ScanInterfaces(object sender, EventArgs e)
         {
             List<InterfaceInfo> lst = null;
             string name = null;
@@ -200,21 +198,21 @@ namespace gep
             }            
         }
 
-        private void VfWConfig(object sender, System.EventArgs e)
+        private void VfWConfig(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
                 (rightClickedFilter.BaseFilter as IAMVfwCompressDialogs).ShowDialog(VfwCompressDialogs.Config, Handle);
             rightClickedFilter = null;
         }
 
-        private void VfWAbout(object sender, System.EventArgs e)
+        private void VfWAbout(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
                 (rightClickedFilter.BaseFilter as IAMVfwCompressDialogs).ShowDialog(VfwCompressDialogs.About, Handle);
             rightClickedFilter = null;
         }
 
-        private void ShowMatchingFilters(object sender, System.EventArgs e)
+        private void ShowMatchingFilters(object sender, EventArgs e)
         {
             if (connectingPin != null)
             {
@@ -225,7 +223,7 @@ namespace gep
             connectingPin = null;
         }
 
-        private void WatchSampleGrabber(object sender, System.EventArgs e)
+        private void WatchSampleGrabber(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
             {
@@ -245,7 +243,7 @@ namespace gep
             rightClickedFilter = null;
         }
 
-        private void SetSGMediaType(object sender, System.EventArgs e)
+        private void SetSGMediaType(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
             {
@@ -259,14 +257,14 @@ namespace gep
             rightClickedFilter = null;
         }
 
-        private void AddToFavorites(object sender, System.EventArgs e)
+        private void AddToFavorites(object sender, EventArgs e)
         {
             if (rightClickedFilter != null)
                 Program.mainform.AddToFavorites(rightClickedFilter.filterProps);
             rightClickedFilter = null;
         }
 
-        private void ConfigStream(object sender, System.EventArgs e)
+        private void ConfigStream(object sender, EventArgs e)
         {
             if (connectingPin != null)
             {
@@ -281,7 +279,7 @@ namespace gep
             connectingPin = null;
         }
 
-        private void GetStreamCaps(object sender, System.EventArgs e)
+        private void GetStreamCaps(object sender, EventArgs e)
         {
             try
             {
@@ -299,7 +297,7 @@ namespace gep
             connectingPin = null;
         }
 
-        private void ShowAllocatorProperties(object sender, System.EventArgs e)
+        private void ShowAllocatorProperties(object sender, EventArgs e)
         {
             if (connectingPin != null)
             {
@@ -319,7 +317,7 @@ namespace gep
             connectingPin = null;
         }
 
-        private void ShowAllocatorRequirements(object sender, System.EventArgs e)
+        private void ShowAllocatorRequirements(object sender, EventArgs e)
         {
             if (connectingPin != null)
             {
@@ -372,7 +370,7 @@ namespace gep
                     movingFilter = filter;
                     movingFilter.movingStartCoords = movingFilter.Coords;
                     graph.PlaceFilter(movingFilter, false); //clear
-                    if (Control.ModifierKeys != Keys.Shift)
+                    if (ModifierKeys != Keys.Shift)
                     {
                         graph.ClearFiltersSelection();
                         Program.mainform.propform.SetObject(movingFilter.filterProps);
@@ -412,26 +410,26 @@ namespace gep
                     rightClickedFilter = filter;
                     ContextMenu menu = new ContextMenu();
                     if (FilterGraphTools.HasPropertyPages(filter.BaseFilter))
-                        menu.MenuItems.Add("Property page", this.ShowPropertyPage);
+                        menu.MenuItems.Add("Property page", ShowPropertyPage);
 
                     IAMVfwCompressDialogs vfw = filter.BaseFilter as IAMVfwCompressDialogs;
                     if (vfw != null)
                     {
                         if (vfw.ShowDialog(VfwCompressDialogs.QueryConfig, Handle) == 0)
-                            menu.MenuItems.Add("VfW compressor: Config", this.VfWConfig);
+                            menu.MenuItems.Add("VfW compressor: Config", VfWConfig);
                         if (vfw.ShowDialog(VfwCompressDialogs.QueryAbout, Handle) == 0)
-                            menu.MenuItems.Add("VfW compressor: About", this.VfWAbout);
+                            menu.MenuItems.Add("VfW compressor: About", VfWAbout);
                     }
 
                     if ((filter.BaseFilter as ISampleGrabber) != null)
                     {
-                        menu.MenuItems.Add("Set media type", this.SetSGMediaType);
-                        menu.MenuItems.Add("Watch grabbed samples", this.WatchSampleGrabber);
+                        menu.MenuItems.Add("Set media type", SetSGMediaType);
+                        menu.MenuItems.Add("Watch grabbed samples", WatchSampleGrabber);
                     }
 
-                    menu.MenuItems.Add("Scan interfaces", this.ScanInterfaces);
+                    menu.MenuItems.Add("Scan interfaces", ScanInterfaces);
                     if (filter.filterProps.DisplayName.Length > 0)
-                        menu.MenuItems.Add("Add to favorites", this.AddToFavorites);
+                        menu.MenuItems.Add("Add to favorites", AddToFavorites);
                     menu.Show(this, eLocation);
                 }
             }
@@ -832,8 +830,7 @@ namespace gep
             zoomCombo.SelectedIndex = i;
 
             regtimer.Interval = 250;
-            regtimer.Tick += delegate(object sender1, EventArgs e1)
-            {
+            regtimer.Tick += delegate{
                 regtimer.Stop();
                 if (RegistryChecker.R[1] < 1 && RegistryChecker.R[93] < 1)
                 {
@@ -853,14 +850,13 @@ namespace gep
         public void SetScale(int _scale) //0..3
         {
             graph.cellsize = (_scale + 1) * 4;
-
             Invalidate();
         }
 
         private void OnZoomChanged(object sender, EventArgs e)
         {
             SetScale(zoomCombo.SelectedIndex);            
-            this.Focus();
+            Focus();
         }
 
         private void OnPlay(object sender, EventArgs e)

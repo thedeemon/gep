@@ -185,10 +185,12 @@ namespace gep
             Close();
         }
 
+/*
         private void contentsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //todo: show help..
         }
+*/
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -246,7 +248,7 @@ namespace gep
                     return;
             ToolStripMenuItem item = new ToolStripMenuItem();
             item.Text = fp.Name;
-            item.Click += delegate(object sender, EventArgs e) {
+            item.Click += delegate{
                 if (activeGraphForm != null)
                     activeGraphForm.AddFilter(fp);
             };
@@ -291,7 +293,7 @@ namespace gep
                 ToolStripMenuItem item = new ToolStripMenuItem();
                 item.Text = f.Text;
                 Form ff = f;
-                item.Click += delegate(object s, EventArgs a) { ff.BringToFront(); };
+                item.Click += delegate { ff.BringToFront(); };
                 windowsToolStripMenuItem.DropDownItems.Add(item);
             }
         }
@@ -325,9 +327,8 @@ namespace gep
 
         private void OnClosing(object sender, FormClosingEventArgs e)
         {
-            RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyname, true);
-            if (rk == null)
-                rk = Registry.CurrentUser.CreateSubKey(keyname);
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyname, true) ??
+                             Registry.CurrentUser.CreateSubKey(keyname);
             if (rk != null)
             {
                 int v = suggestURLs ? 1 : 0;

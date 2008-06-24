@@ -27,22 +27,19 @@ namespace gep
     class InterfaceInfo
     {
         public string name;
-        public List<string> methods;
+        public List<InterfaceInfo> elements;
 
         public InterfaceInfo(string _name)
         {
             name = _name;
-            methods = new List<string>();
+            elements = new List<InterfaceInfo>();
         }
     }
     /// <summary>
     /// A collection of methods to do common DirectShow tasks.
     /// </summary>
-
-    sealed class FilterGraphTools
+    static class FilterGraphTools
     {
-        private FilterGraphTools(){}
-
         /// <summary>
         /// Add a filter to a DirectShow Graph using its CLSID
         /// </summary>
@@ -74,7 +71,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static IBaseFilter AddFilterFromClsid(IGraphBuilder graphBuilder, Guid clsid, string name)
         {
-            int hr = 0;
             IBaseFilter filter = null;
 
             if (graphBuilder == null)
@@ -85,7 +81,7 @@ namespace gep
                 Type type = Type.GetTypeFromCLSID(clsid);
                 filter = (IBaseFilter) Activator.CreateInstance(type);
 
-                hr = graphBuilder.AddFilter(filter, name);
+                int hr = graphBuilder.AddFilter(filter, name);
                 DsError.ThrowExceptionForHR(hr);
             }
             catch
@@ -117,7 +113,6 @@ namespace gep
 
         public static IBaseFilter AddFilterByName(IGraphBuilder graphBuilder, Guid deviceCategory, string friendlyName)
         {
-            int hr = 0;
             IBaseFilter filter = null;
 
             if (graphBuilder == null)
@@ -130,7 +125,7 @@ namespace gep
                 if (!devices[i].Name.Equals(friendlyName))
                     continue;
 
-                hr = (graphBuilder as IFilterGraph2).AddSourceFilterForMoniker(devices[i].Mon, null, friendlyName, out filter);
+                int hr = (graphBuilder as IFilterGraph2).AddSourceFilterForMoniker(devices[i].Mon, null, friendlyName, out filter);
                 DsError.ThrowExceptionForHR(hr);
 
                 break;
@@ -158,7 +153,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static IBaseFilter AddFilterByDevicePath(IGraphBuilder graphBuilder, string devicePath, string name)
         {
-            int hr = 0;
             IBaseFilter filter = null;
 #if USING_NET11
 			UCOMIBindCtx bindCtx = null;
@@ -167,16 +161,16 @@ namespace gep
 			IBindCtx bindCtx = null;
 			IMoniker moniker = null;
 #endif
-			int eaten;
 
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
             try
             {
-                hr = NativeMethods.CreateBindCtx(0, out bindCtx);
+                int hr = NativeMethods.CreateBindCtx(0, out bindCtx);
                 Marshal.ThrowExceptionForHR(hr);
 
+                int eaten;
                 hr = NativeMethods.MkParseDisplayName(bindCtx, devicePath, out eaten, out moniker);
                 Marshal.ThrowExceptionForHR(hr);
 
@@ -208,14 +202,13 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static IBaseFilter FindFilterByName(IGraphBuilder graphBuilder, string filterName)
         {
-            int hr = 0;
             IBaseFilter filter = null;
             IEnumFilters enumFilters = null;
 
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
-            hr = graphBuilder.EnumFilters(out enumFilters);
+            int hr = graphBuilder.EnumFilters(out enumFilters);
             if (hr == 0)
             {
                 IBaseFilter[] filters = new IBaseFilter[1];
@@ -257,14 +250,13 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static IBaseFilter FindFilterByClsid(IGraphBuilder graphBuilder, Guid filterClsid)
         {
-            int hr = 0;
             IBaseFilter filter = null;
-            IEnumFilters enumFilters = null;
+            IEnumFilters enumFilters;
 
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
-            hr = graphBuilder.EnumFilters(out enumFilters);
+            int hr = graphBuilder.EnumFilters(out enumFilters);
             if (hr == 0)
             {
                 IBaseFilter[] filters = new IBaseFilter[1];
@@ -313,8 +305,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static bool RenderPin(IGraphBuilder graphBuilder, IBaseFilter source, string pinName)
         {
-            int hr = 0;
-
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
@@ -325,7 +315,7 @@ namespace gep
 
             if (pin != null)
             {
-                hr = graphBuilder.Render(pin);
+                int hr = graphBuilder.Render(pin);
                 Marshal.ReleaseComObject(pin);
 
                 return (hr >= 0);
@@ -345,15 +335,13 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void DisconnectPins(IBaseFilter filter)
         {
-            int hr = 0;
-
             if (filter == null)
                 throw new ArgumentNullException("filter");
 
             IEnumPins enumPins;
             IPin[] pins = new IPin[1];
 
-            hr = filter.EnumPins(out enumPins);
+            int hr = filter.EnumPins(out enumPins);
             DsError.ThrowExceptionForHR(hr);
 
             try
@@ -388,13 +376,12 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void DisconnectAllPins(IGraphBuilder graphBuilder)
         {
-            int hr = 0;
             IEnumFilters enumFilters;
 
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
-            hr = graphBuilder.EnumFilters(out enumFilters);
+            int hr = graphBuilder.EnumFilters(out enumFilters);
             DsError.ThrowExceptionForHR(hr);
 
             try
@@ -427,14 +414,13 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void RemoveAllFilters(IGraphBuilder graphBuilder)
         {
-            int hr = 0;
             IEnumFilters enumFilters;
             ArrayList filtersArray = new ArrayList();
 
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
-            hr = graphBuilder.EnumFilters(out enumFilters);
+            int hr = graphBuilder.EnumFilters(out enumFilters);
             DsError.ThrowExceptionForHR(hr);
 
             try
@@ -453,7 +439,7 @@ namespace gep
 
             foreach(IBaseFilter filter in filtersArray)
             {
-                hr = graphBuilder.RemoveFilter(filter);
+                graphBuilder.RemoveFilter(filter);
                 Marshal.ReleaseComObject(filter);
             }
         }
@@ -471,7 +457,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void SaveGraphFile(IGraphBuilder graphBuilder, string fileName)
         {
-            int hr = 0;
             IStorage storage = null;
 #if USING_NET11
             UCOMIStream stream = null;
@@ -484,7 +469,7 @@ namespace gep
 
             try
             {
-                hr = NativeMethods.StgCreateDocfile(
+                int hr = NativeMethods.StgCreateDocfile(
                     fileName, 
                     STGM.Create | STGM.Transacted | STGM.ReadWrite | STGM.ShareExclusive,
                     0,
@@ -531,7 +516,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void LoadGraphFile(IGraphBuilder graphBuilder, string fileName)
         {
-            int hr = 0;
             IStorage storage = null;
 #if USING_NET11
 			UCOMIStream stream = null;
@@ -547,7 +531,7 @@ namespace gep
                 if (NativeMethods.StgIsStorageFile(fileName) != 0)
                     throw new ArgumentException();
 
-                hr = NativeMethods.StgOpenStorage(
+                int hr = NativeMethods.StgOpenStorage(
                     fileName,
                     null,
                     STGM.Transacted | STGM.Read | STGM.ShareDenyWrite,
@@ -622,7 +606,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void ShowFilterPropertyPage(IBaseFilter filter, IntPtr parent)
         {
-            int hr = 0;
             FilterInfo filterInfo;
             DsCAUUID caGuid;
             object[] objs;
@@ -632,7 +615,7 @@ namespace gep
 
             if (HasPropertyPages(filter))
             {
-                hr = filter.QueryFilterInfo(out filterInfo);
+                int hr = filter.QueryFilterInfo(out filterInfo);
                 DsError.ThrowExceptionForHR(hr);
 
                 if (filterInfo.pGraph != null)
@@ -751,13 +734,11 @@ namespace gep
             if (downFilter == null)
                 throw new ArgumentNullException("downFilter");
 
-            IPin sourcePin, destPin;
-
-            sourcePin = DsFindPin.ByName(upFilter, sourcePinName);
+            IPin sourcePin = DsFindPin.ByName(upFilter, sourcePinName);
             if (sourcePin == null)
                 throw new ArgumentException("The source filter has no pin called : " + sourcePinName, sourcePinName);
 
-            destPin = DsFindPin.ByName(downFilter, destPinName);
+            IPin destPin = DsFindPin.ByName(downFilter, destPinName);
             if (destPin == null)
                 throw new ArgumentException("The downstream filter has no pin called : " + destPinName, destPinName);
 
@@ -789,8 +770,6 @@ namespace gep
         [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode=true)]
         public static void ConnectFilters(IGraphBuilder graphBuilder, IPin sourcePin, IPin destPin, bool useIntelligentConnect)
         {
-            int hr = 0;
-
             if (graphBuilder == null)
                 throw new ArgumentNullException("graphBuilder");
 
@@ -800,6 +779,7 @@ namespace gep
             if (destPin == null)
                 throw new ArgumentNullException("destPin");
 
+            int hr;
             if (useIntelligentConnect)
             {
                 hr = graphBuilder.Connect(sourcePin, destPin);
@@ -1105,18 +1085,42 @@ namespace gep
             IntPtr objectPointer = Marshal.GetIUnknownForObject(scannedObject); 
             foreach (Type t in ifaces)
             {
-                IntPtr pInterface = IntPtr.Zero;
+                IntPtr pInterface;
                 Guid queryInterface = t.GUID;
                 Marshal.QueryInterface(objectPointer, ref queryInterface, out pInterface);
-                if (pInterface != IntPtr.Zero)
+                if (pInterface == IntPtr.Zero) continue;
+                InterfaceInfo ii = new InterfaceInfo(t.Name);
+                MethodInfo[] mtds = t.GetMethods();
+                foreach (MethodInfo mi in mtds)
                 {
-                    InterfaceInfo ii = new InterfaceInfo(t.Name);
-                    MethodInfo[] mtds = t.GetMethods();
-                    foreach (MethodInfo mi in mtds)
-                        ii.methods.Add(mi.ToString());
-                    lst.Add(ii);
-                    Marshal.Release(pInterface);
+                    InterfaceInfo mtd = new InterfaceInfo(mi.ToString());
+                    if (mi.Name.StartsWith("Get") || mi.Name.StartsWith("get_"))
+                    {
+                        ParameterInfo[] pars = mi.GetParameters();
+                        if (Array.TrueForAll(pars, delegate(ParameterInfo pi) { return pi.IsOut; }))
+                        {
+                            if (pars.Length > 0)
+                            {
+                                object[] parvals = new object[pars.Length];
+                                object res = mi.Invoke(scannedObject, parvals);
+                                if (res != null)
+                                    mtd.elements.Add(new InterfaceInfo("returns " + res.ToString()));
+                                for(int i=0;i<pars.Length;i++)
+                                    if (parvals[i]!=null)
+                                        mtd.elements.Add(new InterfaceInfo(pars[i].Name+" = "+parvals[i].ToString()));
+                            }
+                            else
+                            {
+                                object res = mi.Invoke(scannedObject, null);
+                                if (res != null)
+                                    mtd.elements.Add(new InterfaceInfo("returns " + res.ToString()));
+                            }
+                        }
+                    }
+                    ii.elements.Add(mtd);
                 }
+                lst.Add(ii);
+                Marshal.Release(pInterface);
             }
             Marshal.Release(objectPointer);
             return lst;
@@ -1281,10 +1285,8 @@ namespace gep
             );
     }
 
-    internal sealed class NativeMethods
+    internal static class NativeMethods
     {
-        private NativeMethods(){}
-
         [DllImport("ole32.dll")]
 #if USING_NET11
 		public static extern int CreateBindCtx(int reserved, out UCOMIBindCtx ppbc);

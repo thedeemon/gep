@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Drawing.Drawing2D;
 using DirectShowLib;
 using System.Runtime.InteropServices;
 
