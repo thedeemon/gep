@@ -653,7 +653,7 @@ namespace gep
         {
             foreach (FieldInfo m in typeof (MediaType).GetFields())
                 if ((Guid) m.GetValue(null) == guid)
-                    return "MEDIATYPE_" + m.Name.ToUpperInvariant();
+                    return "MEDIATYPE_" + m.Name;
             return GuidName(Graph.GuidToString(guid));
         }
 
@@ -669,6 +669,7 @@ namespace gep
             sb.AppendLine("#include <DShow.h>");
             sb.AppendLine("#include <atlbase.h>");
             sb.AppendLine("#include <initguid.h>");
+            sb.AppendLine("#include <dvdmedia.h>");
             sb.AppendLine();
             sb.AppendLine(checkTpl.Generate());
 

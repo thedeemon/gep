@@ -158,10 +158,18 @@ namespace gep
                 if (field.FieldType.IsEnum)
                 {
                     string s = val.ToString();
-                    if (!cs_enums || s[0] >= '0' && s[0] <= '9')
-                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, string.Format("({1}) 0x{0}", Enum.Format(field.FieldType, val, "X"), field.FieldType.Name)));
+                    string str;
+                    if (cs_enums)
+                    {
+                        if (s[0] >= '0' && s[0] <= '9')
+                            str = string.Format("({1}) 0x{0:X}",  val, field.FieldType.Name);
+                        else
+                            str = field.FieldType.Name + "." + val.ToString();
+                    }
                     else
-                        fields.Add(new KeyValuePair<string, string>(prefix + field.Name, field.FieldType.Name + "." + val.ToString()));
+                        str = string.Format("0x{0:X}", val); // Enum.Format(field.FieldType, val, "X"));
+
+                    fields.Add(new KeyValuePair<string, string>(prefix + field.Name, str));
                 }
                 else
                 {
