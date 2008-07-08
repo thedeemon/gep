@@ -40,10 +40,11 @@ namespace gep
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.catcombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.catcombo.FormattingEnabled = true;
-            this.catcombo.Location = new System.Drawing.Point(2, 2);
+            this.catcombo.Location = new System.Drawing.Point(3, 2);
+            this.catcombo.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.catcombo.MaxDropDownItems = 20;
             this.catcombo.Name = "catcombo";
-            this.catcombo.Size = new System.Drawing.Size(305, 21);
+            this.catcombo.Size = new System.Drawing.Size(405, 24);
             this.catcombo.Sorted = true;
             this.catcombo.TabIndex = 0;
             this.catcombo.SelectedIndexChanged += new System.EventHandler(this.catcombo_SelectedIndexChanged);
@@ -55,9 +56,10 @@ namespace gep
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.filtertree.FullRowSelect = true;
             this.filtertree.HideSelection = false;
-            this.filtertree.Location = new System.Drawing.Point(2, 27);
+            this.filtertree.Location = new System.Drawing.Point(3, 33);
+            this.filtertree.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.filtertree.Name = "filtertree";
-            this.filtertree.Size = new System.Drawing.Size(305, 536);
+            this.filtertree.Size = new System.Drawing.Size(405, 659);
             this.filtertree.TabIndex = 1;
             this.filtertree.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.filtertree_MouseDoubleClick);
             this.filtertree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.filtertree_AfterSelect);
@@ -65,9 +67,10 @@ namespace gep
             // addbtn
             // 
             this.addbtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.addbtn.Location = new System.Drawing.Point(2, 569);
+            this.addbtn.Location = new System.Drawing.Point(3, 700);
+            this.addbtn.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.addbtn.Name = "addbtn";
-            this.addbtn.Size = new System.Drawing.Size(75, 25);
+            this.addbtn.Size = new System.Drawing.Size(100, 31);
             this.addbtn.TabIndex = 2;
             this.addbtn.Text = "Add...";
             this.addbtn.UseVisualStyleBackColor = true;
@@ -76,9 +79,10 @@ namespace gep
             // btnEdit
             // 
             this.btnEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnEdit.Location = new System.Drawing.Point(93, 569);
+            this.btnEdit.Location = new System.Drawing.Point(124, 700);
+            this.btnEdit.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(75, 25);
+            this.btnEdit.Size = new System.Drawing.Size(100, 31);
             this.btnEdit.TabIndex = 3;
             this.btnEdit.Text = "Edit";
             this.btnEdit.UseVisualStyleBackColor = true;
@@ -86,15 +90,16 @@ namespace gep
             // 
             // Filterz
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(309, 597);
+            this.ClientSize = new System.Drawing.Size(412, 735);
             this.ControlBox = false;
             this.Controls.Add(this.btnEdit);
             this.Controls.Add(this.addbtn);
             this.Controls.Add(this.filtertree);
             this.Controls.Add(this.catcombo);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Filterz";
             this.Text = "Filters";
             this.TopMost = true;

@@ -367,5 +367,20 @@ namespace gep
             useDirectConnectMenuItem.Checked = useDirectConnect;
         }
 
+        private void OnDragDrop(object sender, DragEventArgs e)
+        {
+            if (e == null || e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            foreach (string fname in (IEnumerable<string>) e.Data.GetData(DataFormats.FileDrop))
+            {
+                filetoopen = fname;
+                openToolStripMenuItem_Click(null, null);
+            }
+        }
+
+        private void OnDragEnter(object sender, DragEventArgs e)
+        {
+            if (e == null || e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            e.Effect = DragDropEffects.Copy;
+        }
     }//class
 }

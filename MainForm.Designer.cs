@@ -407,6 +407,8 @@ namespace gep
             this.Text = "GraphEditPlus";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.MainForm_Load);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.mainmenu.ResumeLayout(false);
             this.mainmenu.PerformLayout();

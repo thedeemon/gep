@@ -94,7 +94,7 @@ namespace gep
 
         public virtual IEnumerable<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums)
         {
-            System.Windows.Forms.MessageBox.Show("FormatFields in base class");
+            //System.Windows.Forms.MessageBox.Show("FormatFields in base class");
             return new List<KeyValuePair<string, string>>(); //empty list
         }
 

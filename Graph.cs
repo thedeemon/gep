@@ -698,12 +698,15 @@ namespace gep
             }
         }
 
-        public bool LoadGraph(string filename)
+        public delegate void on_graph_load();
+
+        public bool LoadGraph(string filename, on_graph_load onload)
         {
             try
             {
                 Clear();
                 FilterGraphTools.LoadGraphFile(graphBuilder, filename);
+                onload();
                 ReloadGraph();
                 return true;
             }

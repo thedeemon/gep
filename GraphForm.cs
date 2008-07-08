@@ -39,6 +39,7 @@ namespace gep
             ngraphs++;
             Text = "Graph " + ngraphs.ToString();
             RecalcScrolls();
+            slider_start = zoomCombo.Bounds.Right + 12;
             showCode[0] = delegate(string code) { return new GenerateCodeGfxForm(code); };
             showCode[1] = delegate(string code) { return new GenerateCodeForm(code); };
         }
@@ -797,12 +798,11 @@ namespace gep
 
         public void DoLoad(string file)
         {
-            if (graph.LoadGraph(file))
+            if (graph.LoadGraph(file, delegate() { Text = file; }))
             {
                 RecalcScrolls();
                 Invalidate();
                 savedFileName = file;
-                Text = savedFileName;
             }
         }
 

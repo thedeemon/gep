@@ -45,18 +45,18 @@ namespace gep
             // hScrollBar
             // 
             this.hScrollBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.hScrollBar.Location = new System.Drawing.Point(0, 484);
+            this.hScrollBar.Location = new System.Drawing.Point(0, 599);
             this.hScrollBar.Name = "hScrollBar";
-            this.hScrollBar.Size = new System.Drawing.Size(685, 16);
+            this.hScrollBar.Size = new System.Drawing.Size(913, 16);
             this.hScrollBar.TabIndex = 0;
             this.hScrollBar.ValueChanged += new System.EventHandler(this.hScrollBar_ValueChanged);
             // 
             // vScrollBar
             // 
             this.vScrollBar.Dock = System.Windows.Forms.DockStyle.Right;
-            this.vScrollBar.Location = new System.Drawing.Point(669, 0);
+            this.vScrollBar.Location = new System.Drawing.Point(897, 0);
             this.vScrollBar.Name = "vScrollBar";
-            this.vScrollBar.Size = new System.Drawing.Size(16, 484);
+            this.vScrollBar.Size = new System.Drawing.Size(16, 599);
             this.vScrollBar.TabIndex = 1;
             this.vScrollBar.ValueChanged += new System.EventHandler(this.vScrollBar_ValueChanged);
             // 
@@ -74,12 +74,12 @@ namespace gep
             this.btnSlider});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(669, 23);
+            this.toolStrip.Size = new System.Drawing.Size(897, 28);
             this.toolStrip.TabIndex = 2;
             this.toolStrip.Text = "toolStrip1";
             this.toolStrip.MouseUp += new System.Windows.Forms.MouseEventHandler(this.OnToolStripMouseUp);
-            this.toolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnToolStripMouseMove);
             this.toolStrip.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnToolStripMouseDown);
+            this.toolStrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnToolStripMouseMove);
             this.toolStrip.MouseLeave += new System.EventHandler(this.OnToolStripMouseLeave);
             // 
             // btnPlay
@@ -88,7 +88,7 @@ namespace gep
             this.btnPlay.Image = ((System.Drawing.Image)(resources.GetObject("btnPlay.Image")));
             this.btnPlay.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnPlay.Name = "btnPlay";
-            this.btnPlay.Size = new System.Drawing.Size(23, 20);
+            this.btnPlay.Size = new System.Drawing.Size(23, 25);
             this.btnPlay.Text = "toolStripButton1";
             this.btnPlay.ToolTipText = "Run graph";
             this.btnPlay.Click += new System.EventHandler(this.OnPlay);
@@ -99,7 +99,7 @@ namespace gep
             this.btnPause.Image = ((System.Drawing.Image)(resources.GetObject("btnPause.Image")));
             this.btnPause.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnPause.Name = "btnPause";
-            this.btnPause.Size = new System.Drawing.Size(23, 20);
+            this.btnPause.Size = new System.Drawing.Size(23, 25);
             this.btnPause.Text = "toolStripButton2";
             this.btnPause.ToolTipText = "Pause graph";
             this.btnPause.Click += new System.EventHandler(this.OnPause);
@@ -110,7 +110,7 @@ namespace gep
             this.btnStop.Image = ((System.Drawing.Image)(resources.GetObject("btnStop.Image")));
             this.btnStop.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnStop.Name = "btnStop";
-            this.btnStop.Size = new System.Drawing.Size(23, 20);
+            this.btnStop.Size = new System.Drawing.Size(23, 25);
             this.btnStop.Text = "toolStripButton3";
             this.btnStop.ToolTipText = "Stop graph";
             this.btnStop.Click += new System.EventHandler(this.OnStop);
@@ -119,7 +119,7 @@ namespace gep
             // 
             this.labelState.AutoSize = false;
             this.labelState.Name = "labelState";
-            this.labelState.Size = new System.Drawing.Size(50, 20);
+            this.labelState.Size = new System.Drawing.Size(70, 20);
             this.labelState.Text = "Stopped";
             this.labelState.ToolTipText = "Graph state";
             // 
@@ -137,7 +137,7 @@ namespace gep
             this.zoomCombo.AutoSize = false;
             this.zoomCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.zoomCombo.Name = "zoomCombo";
-            this.zoomCombo.Size = new System.Drawing.Size(55, 23);
+            this.zoomCombo.Size = new System.Drawing.Size(72, 28);
             this.zoomCombo.ToolTipText = "Zoom";
             this.zoomCombo.SelectedIndexChanged += new System.EventHandler(this.OnZoomChanged);
             // 
@@ -147,33 +147,34 @@ namespace gep
             this.btnSlider.Image = ((System.Drawing.Image)(resources.GetObject("btnSlider.Image")));
             this.btnSlider.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnSlider.Name = "btnSlider";
-            this.btnSlider.Size = new System.Drawing.Size(23, 20);
+            this.btnSlider.Size = new System.Drawing.Size(23, 25);
             this.btnSlider.Text = "toolStripButton1";
             this.btnSlider.Visible = false;
             // 
             // GraphForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.LightGray;
-            this.ClientSize = new System.Drawing.Size(685, 500);
+            this.ClientSize = new System.Drawing.Size(913, 615);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.vScrollBar);
             this.Controls.Add(this.hScrollBar);
             this.DoubleBuffered = true;
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "GraphForm";
             this.Text = "Graph";
+            this.Load += new System.EventHandler(this.GraphForm_Load);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GraphForm_MouseUp);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.GraphForm_Paint);
             this.SizeChanged += new System.EventHandler(this.GraphForm_SizeChanged);
             this.Activated += new System.EventHandler(this.GraphForm_Activated);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.GraphForm_MouseUp);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GraphForm_MouseDown);
             this.MouseLeave += new System.EventHandler(this.GraphForm_MouseLeave);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GraphForm_FormClosing);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.GraphForm_MouseMove);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphForm_KeyDown);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.GraphForm_MouseDown);
-            this.Load += new System.EventHandler(this.GraphForm_Load);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
