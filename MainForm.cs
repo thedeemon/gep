@@ -69,8 +69,11 @@ namespace gep
             filterz.Location = new Point(0, 0);
             int w = 300, h = (sz.Height-75) / 2;
             filterz.Size = new Size(w, h);
+            //filterz.PerformAutoScale();
+            //filterz.PerformLayout();
             propform.Location = new Point(0, h);
             propform.Size = new Size(w, h);
+            //propform.PerformLayout();
 
             RegistryKey nrk = Registry.CurrentUser.OpenSubKey(keyname);
             RegistryKey ork = Registry.CurrentUser.OpenSubKey(@"Dee Mon\GraphEditPlus");

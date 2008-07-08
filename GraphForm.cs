@@ -996,7 +996,7 @@ namespace gep
             int pos = dur > 0 ? (int)(cur * w / dur) : 0;
             e.Graphics.FillRectangle(Brushes.White, start, 9, w, 6);
             e.Graphics.DrawRectangle(Pens.Black, start, 9, w, 6);
-            e.Graphics.DrawImageUnscaled(img_slider, start+pos-5, 4);
+            e.Graphics.DrawImageUnscaled(img_slider, start+pos-5, 6);
         }
     }
 
