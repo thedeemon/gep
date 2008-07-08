@@ -43,7 +43,7 @@ namespace gep
             showCode[0] = delegate(string code) { return new GenerateCodeGfxForm(code); };
             showCode[1] = delegate(string code) { return new GenerateCodeForm(code); };
         }
-
+         
         public bool IsFromRot { get { return graph.IsFromRot; } }
 
         public bool UseClock

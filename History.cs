@@ -596,8 +596,13 @@ namespace gep
             string fmt_struct = mtp.FormatClass().ToUpperInvariant();
             sb.AppendFormat("    {1} {0};\r\n", fmtvar, fmt_struct);
             sb.AppendFormat("    ZeroMemory(&{0}, sizeof({1}));\r\n", fmtvar, fmt_struct);
-            foreach (KeyValuePair<string, string> p in FormatFieldsFilter(mtp.FormatFields(false, false)))
-                sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            //foreach (KeyValuePair<string, string> p in FormatFieldsFilter(mtp.FormatFields(false, false)))
+            //    sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            mtp.IterFormatFields(false, delegate(string fldname, string fldvalue)
+                {
+                    if (!fldvalue.StartsWith("new"))
+                        sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, CodeSnippet.Translate(fldname, dict), fldvalue);
+                });
             sb.AppendFormat("    {0}.pbFormat = (BYTE*)&{1};\r\n", hi.var, fmtvar);
             string iscvar = hi.var.Replace("pmt", "isc");
             sb.AppendFormat("    CComQIPtr<IAMStreamConfig, &IID_IAMStreamConfig> {0}(GetPin({1}, L\"{2}\"));\r\n", iscvar, fvar, hi.pin);
@@ -607,9 +612,7 @@ namespace gep
             return sb.ToString();
         }
 
-        IEnumerable<KeyValuePair<string, string>> FormatFieldsFilter(IEnumerable<KeyValuePair<string, string>> e)
-        {
-            string[] dict = new string[] {
+        readonly string[] dict = new string[] {
                     "AvgTimePerFrame", "AvgTimePerFrame", //vih2
                     "BitErrorRate", "dwBitErrorRate",
                     "BitRate", "dwBitRate",
@@ -636,10 +639,11 @@ namespace gep
                     "YPelsPerMeter", "biYPelsPerMeter"  
             };
 
-            foreach (KeyValuePair<string, string> p in e)
-                if (!p.Value.StartsWith("new"))
-                    yield return new KeyValuePair<string, string>(CodeSnippet.Translate(p.Key, dict), p.Value);
-        }
+        /*KeyValuePair<string, string> FormatFieldsFilter(KeyValuePair<string, string> p)
+        {
+            if (!p.Value.StartsWith("new"))
+                return new KeyValuePair<string, string>(CodeSnippet.Translate(p.Key, dict), p.Value);
+        }*/
 
         public string MediaSubTypeToString(Guid guid)
         {
@@ -1106,8 +1110,10 @@ namespace gep
             string fmtvar = hi.var.Replace("pmt", "format");
             MediaTypeProps mtp = MediaTypeProps.CreateMTProps(hi.mt);
             sb.AppendFormat("            {1} {0} = new {1}();\r\n", fmtvar, mtp.FormatClass());
-            foreach (KeyValuePair<string, string> p in mtp.FormatFields(false, true))
-                sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            //foreach (KeyValuePair<string, string> p in mtp.FormatFields(false, true))
+            //    sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
+            mtp.IterFormatFields(true, delegate(string fldname, string fldvalue) 
+                { sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, fldname, fldvalue); });
             sb.AppendFormat("            {0}.formatPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf({1}));\r\n", hi.var, fmtvar);
             sb.AppendFormat("            Marshal.StructureToPtr({0}, {1}.formatPtr, false);\r\n", fmtvar, hi.var);
             sb.AppendFormat("            hr = ((IAMStreamConfig)GetPin({0}, \"{1}\")).SetFormat({2});\r\n", fvar, hi.pin, hi.var);

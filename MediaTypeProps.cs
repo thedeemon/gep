@@ -92,10 +92,15 @@ namespace gep
             return new MediaTypeProps(pmt);
         }
 
-        public virtual IEnumerable<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums)
+        /*public virtual IEnumerable<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums)
         {
             //System.Windows.Forms.MessageBox.Show("FormatFields in base class");
             return new List<KeyValuePair<string, string>>(); //empty list
+        }*/
+
+        public delegate void format_fields_del(string fldname, string fldvalue);
+        public virtual void IterFormatFields(bool cs_enums, format_fields_del del)
+        {
         }
 
         public virtual string FormatClass() { return "?"; }
@@ -137,11 +142,20 @@ namespace gep
 
         public override string FormatClass() { return typeof(T).Name; }
 
-        public override IEnumerable<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums) 
+        /*public override IEnumerable<KeyValuePair<string, string>> FormatFields(bool show_zeroes, bool cs_enums) 
         {
             List<KeyValuePair<string, string>> fields = new List<KeyValuePair<string, string>>();
             DumpFields(format, fields, "", show_zeroes, cs_enums);
             return fields;
+        }*/
+
+        //public delegate void format_fields_del(string fldname, string fldvalue);
+        public override void IterFormatFields(bool cs_enums, format_fields_del del)
+        {
+            List<KeyValuePair<string, string>> fields = new List<KeyValuePair<string, string>>();
+            DumpFields(format, fields, "", false, cs_enums);
+            foreach (KeyValuePair<string, string> p in fields)
+                del(p.Key, p.Value);
         }
 
         void DumpFields(object o, List<KeyValuePair<string, string>> fields, string prefix, bool show_zeroes, bool cs_enums)
