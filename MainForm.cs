@@ -375,8 +375,15 @@ namespace gep
             if (e == null || e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             foreach (string fname in (IEnumerable<string>) e.Data.GetData(DataFormats.FileDrop))
             {
-                filetoopen = fname;
-                openToolStripMenuItem_Click(null, null);
+                if (fname.ToLowerInvariant().EndsWith(".grf")) {
+                    filetoopen = fname;
+                    openToolStripMenuItem_Click(null, null);
+                } 
+                else
+                {
+                    if (activeGraphForm == null) OnNewGraph(sender, e);
+                    if (activeGraphForm != null) activeGraphForm.RenderThisFile(fname);
+                }
             }
         }
 

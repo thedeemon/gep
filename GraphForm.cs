@@ -110,7 +110,12 @@ namespace gep
             fd.DefaultExt = "*.*";
             if (fd.ShowDialog() != DialogResult.OK)
                 return;
-            graph.RenderFile(fd.FileName);
+            RenderThisFile(fd.FileName);
+        }
+
+        public void RenderThisFile(string fname)
+        {
+            graph.RenderFile(fname);
             RecalcScrolls();
             Invalidate();
         }

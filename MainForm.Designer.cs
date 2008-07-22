@@ -388,8 +388,7 @@ namespace gep
             // status_label
             // 
             this.status_label.Name = "status_label";
-            this.status_label.Size = new System.Drawing.Size(71, 17);
-            this.status_label.Text = "status string";
+            this.status_label.Size = new System.Drawing.Size(0, 17);
             // 
             // MainForm
             // 
