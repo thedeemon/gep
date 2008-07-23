@@ -16,8 +16,12 @@ namespace gep
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            dolog = args.Length > 0 && args[0] == "log";
             Application.Run(new MainForm(args));
         }
+
+        public static bool DoLog { get { return dolog; } }
+        static bool dolog = false;
 
         public static MainForm mainform;
 

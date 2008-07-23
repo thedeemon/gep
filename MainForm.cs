@@ -19,7 +19,7 @@ namespace gep
         public MainForm(string[] args)
         {
             InitializeComponent();
-            if (args.Length > 0)
+            if (args.Length > 0 && args[0]!="log")
                 filetoopen = args[0];
         }
 

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using DirectShowLib;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace gep
 {
@@ -77,10 +78,12 @@ namespace gep
 
         public void LayoutFiltersAndPaths()
         {
+            log("layout filters and paths..");
             LayoutFilters();
             if (!Program.mainform.autoArrange)
                 LayoutFiltersManual();
             RecalcPaths();
+            log("layout filters: done");
         }
 
         public List<Filter> SelectedFilters
@@ -417,8 +420,20 @@ namespace gep
                 }
         }
 
+        string logfname = Application.StartupPath + "gep_log.txt";
+
+        void log(string s)
+        {
+            if (!Program.DoLog) return;
+            using (StreamWriter w = File.AppendText(logfname))
+            {
+                w.WriteLine(s);
+            }
+        }
+
         public void RenderFile(string filename)
         {
+            logfname = filename.Substring(0, filename.LastIndexOf('\\') + 1) + "gep_log.txt";
             RenderSomething(filename, "Can't render file ");
         }
 
@@ -430,8 +445,10 @@ namespace gep
         void RenderSomething(string filename, string errmsg)
         {
             try {
+                log("graphBuilder.RenderFile " + filename);
                 int hr = graphBuilder.RenderFile(filename, null);
                 DsError.ThrowExceptionForHR(hr);
+                log("RenderFile ok");
             }
             catch (COMException e)
             {
@@ -439,6 +456,7 @@ namespace gep
                 return;
             }
             ReloadGraph();
+            log("Rendering done.");
         }
 
         public void AddSourceFilter(string filename)
@@ -474,6 +492,7 @@ namespace gep
 
         public void ReloadFilters()
         {
+            log("reload filters..");
             IEnumFilters ef;
             ClearFiltersSelection();
             ClearConnections();
@@ -482,6 +501,7 @@ namespace gep
             foreach (Filter f in filters)
                 filter_positions.Add(f.Name, f.Coords);
             filters.Clear();
+            log("realod_filters 1");
             try
             {
                 int hr = graphBuilder.EnumFilters(out ef);
@@ -490,8 +510,10 @@ namespace gep
                 IntPtr fetched = Marshal.AllocHGlobal(4);
                 while ((hr = ef.Next(1, fs, fetched)) == 0)
                 {
+                    log("realod_filters 2");
                     FilterInfo fi;
                     fs[0].QueryFilterInfo(out fi);
+                    log("realod_filters: "+fi.achName);
                     Filter ff = FindFilterByName(fi.achName);
                     if (ff == null) //not found
                     {
@@ -500,9 +522,10 @@ namespace gep
                         history.AddFilterIfNew(ff.filterProps, ff.Name, ff.srcFileName, ff.dstFileName, ff);
                     } else
                         ff.ReloadPins();
-
+                    log("realod_filters 3");
                     foreach (Pin pin in ff.Pins)
                     {
+                        log("realod_filters 4: "+pin.Name);
                         IPin ip = pin.IPin, connected_ipin;
                         hr = ip.ConnectedTo(out connected_ipin);
                         if (hr != 0) continue;
@@ -538,7 +561,9 @@ namespace gep
                 ShowCOMException(e, "Error while enumerating filters in the graph");
                 return;
             }
+            log("realod_filters: almost done");
             history.CommitAdded(this);
+            log("realod_filters: done");
         }
 
         public Filter FindFilterByName(string name)
