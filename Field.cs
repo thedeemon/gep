@@ -64,7 +64,7 @@ namespace gep
         {
             get
             {
-                if (x < sx && y < sy)
+                if (x < sx && y < sy && x>=0 && y>=0)
                     return array[x, y];
                 else
                     return new T();
