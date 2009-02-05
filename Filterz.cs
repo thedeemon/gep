@@ -22,26 +22,38 @@ namespace gep
         public static Dictionary<string, string> friendlyNames = new Dictionary<string, string>(); //guid=>name
         public static RegistryChecker rch = new RegistryChecker();
 
-        private string Catname(Guid g, string dft)
+        /*private string Catname(Guid g, string dft)
         {
             string sg = Graph.GuidToString(g);
             return catnames.ContainsKey(sg) ? catnames[sg] : dft;
-        }
+        }*/
 
-        private string Addcat(Guid g, string dft)
+        private void Addcat(Guid g, string dft_name)
         {
-            string name = Catname(g, dft);
+            string sg = Graph.GuidToString(g);
+            if (!catnames.ContainsKey(sg))
+                catnames.Add(sg, dft_name);
+
+            /*string name = Catname(g, dft);
             catguids.Add(name, g);
             catcombo.Items.Add(name);
-            return name;
+            return name;*/
         }
 
-        private void Filterz_Load(object sender, EventArgs e)
-        { 
+        public void RefreshCategories()
+        {
+            object old_selection = catcombo.SelectedItem;
+
+            //clear values
+            catcombo.Items.Clear();
+            catnames.Clear();
+            catguids.Clear();
+
+            //fill catnames dictionary (guid_string => category_name)
             ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
             IEnumMoniker emon;
             int hr = devenum.CreateClassEnumerator(FilterCategory.ActiveMovieCategories, out emon, 0);
-            
+
             if (0 == hr)
             {
                 IMoniker[] mon = new IMoniker[1];
@@ -58,14 +70,13 @@ namespace gep
                     object nameObj;
                     bag.Read("FriendlyName", out nameObj, null);
                     name = nameObj as string;
-                    catnames.Add(sg, name);                    
+                    catnames.Add(sg, name);
 
                     Marshal.ReleaseComObject(bagObj);
                     Marshal.ReleaseComObject(mon[0]);
                 }
             }
-
-            string s;
+            
             Addcat(FilterCategory.ActiveMovieCategories, "ActiveMovieCategories");
             Addcat(FilterCategory.AMKSAudio, "KS Audio");
             Addcat(FilterCategory.AMKSCapture, "KS Capture");
@@ -96,7 +107,7 @@ namespace gep
             Addcat(FilterCategory.KSDataTransform, "KS Data Transforms");
             Addcat(FilterCategory.KSInterfaceTransform, "KS Interface Transforms");
             Addcat(FilterCategory.KSMixer, "KS Mixers");
-            s = Addcat(FilterCategory.LegacyAmFilterCategory, "DirectShow Filters");
+            Addcat(FilterCategory.LegacyAmFilterCategory, "DirectShow Filters"); //
             Addcat(FilterCategory.LTMMVideoProcessors, "LTMM Video Processors");
             Addcat(FilterCategory.MediaEncoderCategory, "Media Encoders");
             Addcat(FilterCategory.MediaMultiplexerCategory, "Media Multiplexers");
@@ -108,10 +119,38 @@ namespace gep
             Addcat(FilterCategory.VideoInputDevice, "Video Input Devices");
             Addcat(FilterCategory.WDMStreamingEncoderDevices, "WDM Streaming Encoder Devices");
             Addcat(FilterCategory.WDMStreamingMultiplexerDevices, "WDM Streaming Multiplexer Devices");
+
+            //fill combo box and remember guids
+            foreach (KeyValuePair<string, string> p in catnames)
+            {
+                Guid guid = new Guid(p.Key);
+                catguids.Add(p.Value, guid);
+                catcombo.Items.Add(p.Value);
+            }
+
             RegistryChecker rch = new RegistryChecker();
             rch.CalcDays();
-            catcombo.SelectedItem = s;
-            
+            catcombo.SelectedItem = old_selection ?? catnames[Graph.GuidToString(FilterCategory.LegacyAmFilterCategory)];
+        }
+
+        private void Filterz_Load(object sender, EventArgs e)
+        {
+            // Create the ToolTip and associate with the Form container.
+            ToolTip toolTip = new ToolTip();
+
+            // Set up the delays for the ToolTip.
+            toolTip.AutoPopDelay = 5000;
+            toolTip.InitialDelay = 1000;
+            toolTip.ReshowDelay = 500;
+            // Force the ToolTip text to be displayed whether or not the form is active.
+            toolTip.ShowAlways = true;
+
+            // Set up the ToolTip text for the Button and Checkbox.
+            toolTip.SetToolTip(btnAdd, "Register a filter from file");
+            toolTip.SetToolTip(btnEdit, "Change filter's merit or unregister filter");
+            toolTip.SetToolTip(btnRefresh, "Refresh list of categories and filters");
+
+            RefreshCategories();            
             filtertree.Focus();
         }
         
@@ -123,8 +162,16 @@ namespace gep
             Guid cg = catguids[catname];
             int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
             //filtertree.Nodes.Add("_category").Nodes.Add(Graph.GuidToString(cg));
-            if (hr>=0)
-                BuildFilterTree(emon, filtertree, cg);
+            if (hr < 0) return;
+            string old_selection = filtertree.SelectedNode==null ? null : filtertree.SelectedNode.Text;
+            BuildFilterTree(emon, filtertree, cg);
+            if (old_selection != null) 
+                foreach (TreeNode nd in filtertree.Nodes)
+                    if (nd.Text == old_selection)
+                    {
+                        filtertree.SelectedNode = nd;
+                        break;
+                    }            
         }
 
         public static void BuildFilterTree(IEnumMoniker emon, TreeView tree, Guid cg)
@@ -232,6 +279,11 @@ namespace gep
                 ef.MdiParent = MdiParent;
                 ef.Show();
             }
+        }
+
+        private void OnRefreshButton(object sender, EventArgs e)
+        {
+            RefreshCategories();
         }
     }//class
 

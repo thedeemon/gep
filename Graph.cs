@@ -1005,6 +1005,10 @@ namespace gep
                         int hr = ip1;
                         DsError.ThrowExceptionForHR(hr);
                     }
+                    if (ev == EventCode.DeviceLost)
+                    {
+                        Program.mainform.filterz.RefreshCategories();
+                    }
                 }
                 mediaEvent.FreeEventParams(ev, evpar1, evpar2);                
             }
