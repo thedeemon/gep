@@ -28,6 +28,9 @@ namespace gep
             int count;
             try
             {
+                listBox.Items.Add("null (resets to default on some filters)");
+                listBox.Items.Add(MediaTypeProps.CreateMTProps(new AMMediaType()).ToString());
+
                 if (isc.GetNumberOfCapabilities(out count, out size) >= 0)
                 {
                     scc = Marshal.AllocHGlobal(size);
@@ -53,23 +56,20 @@ namespace gep
 
         private void OnOK(object sender, EventArgs e)
         {
-            if (selected_mt != null)
+            try
             {
-                try
-                {
-                    int hr = isc.SetFormat(selected_mt);
-                    DsError.ThrowExceptionForHR(hr);
-                    DialogResult = DialogResult.OK;
-                    Close();
-                }
-                catch (COMException ex)
-                {
-                    Graph.ShowCOMException(ex, "Error trying to SetFormat");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.ToString());
-                }
+                int hr = isc.SetFormat(selected_mt);
+                DsError.ThrowExceptionForHR(hr);
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            catch (COMException ex)
+            {
+                Graph.ShowCOMException(ex, "Error trying to SetFormat");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
 
@@ -85,11 +85,17 @@ namespace gep
             try
             {
                 int i = listBox.SelectedIndex;
-                AMMediaType mt;
-                int hr = isc.GetStreamCaps(i, out mt, scc);
-                DsError.ThrowExceptionForHR(hr);
-                selected_mt = mt;
-                propertyGrid.SelectedObject = MediaTypeProps.CreateMTProps(mt);
+                if (i == 0) selected_mt = null;
+                if (i == 1) selected_mt = new AMMediaType();
+                if (i >= 2)
+                {
+                    AMMediaType mt;
+                    int hr = isc.GetStreamCaps(i-2, out mt, scc);
+                    DsError.ThrowExceptionForHR(hr);
+                    selected_mt = mt;
+                }
+                propertyGrid.SelectedObject = selected_mt != null ?
+                                    MediaTypeProps.CreateMTProps(selected_mt) : null;
             }
             catch (COMException ex)
             {

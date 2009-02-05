@@ -734,7 +734,7 @@ namespace gep
                 sb.AppendLine("        PIN_INFO pinfo;");
                 sb.AppendLine("        pPin->QueryPinInfo(&pinfo);");
                 sb.AppendLine("        BOOL found = !wcsicmp(pinname, pinfo.achName);");
-                sb.AppendLine("        if (pinfo.pFilter) pFilter->Release();");
+                sb.AppendLine("        if (pinfo.pFilter) pinfo.pFilter->Release();");
                 sb.AppendLine("        if (found)");
                 sb.AppendLine("            return pPin;");
                 sb.AppendLine("        pPin.Release();");
@@ -775,6 +775,7 @@ namespace gep
 
             sb.AppendLine();
             sb.AppendLine();
+            sb.AppendLine("//int _tmain(int argc, _TCHAR* argv[]) //use this line in VS2008");
             sb.AppendLine("int main(int argc, char* argv[])");
             sb.AppendLine("{");
             sb.AppendLine("    CoInitialize(NULL);");
