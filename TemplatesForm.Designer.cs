@@ -32,10 +32,10 @@ namespace gep
             this.languageCombo = new System.Windows.Forms.ComboBox();
             this.snippetsList = new System.Windows.Forms.ListBox();
             this.templateText = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.label_template = new System.Windows.Forms.Label();
+            this.label_variables = new System.Windows.Forms.Label();
             this.variablesText = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.label_example = new System.Windows.Forms.Label();
             this.exampleText = new System.Windows.Forms.TextBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
@@ -63,6 +63,8 @@ namespace gep
             // 
             // snippetsList
             // 
+            this.snippetsList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)));
             this.snippetsList.FormattingEnabled = true;
             this.snippetsList.Location = new System.Drawing.Point(15, 42);
             this.snippetsList.Name = "snippetsList";
@@ -82,23 +84,23 @@ namespace gep
             this.templateText.TabIndex = 3;
             this.templateText.TextChanged += new System.EventHandler(this.OnTemplateChanged);
             // 
-            // label2
+            // label_template
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(254, 10);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(54, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Template:";
+            this.label_template.AutoSize = true;
+            this.label_template.Location = new System.Drawing.Point(254, 10);
+            this.label_template.Name = "label_template";
+            this.label_template.Size = new System.Drawing.Size(54, 13);
+            this.label_template.TabIndex = 4;
+            this.label_template.Text = "Template:";
             // 
-            // label3
+            // label_variables
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(254, 139);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "Variables:";
+            this.label_variables.AutoSize = true;
+            this.label_variables.Location = new System.Drawing.Point(254, 139);
+            this.label_variables.Name = "label_variables";
+            this.label_variables.Size = new System.Drawing.Size(53, 13);
+            this.label_variables.TabIndex = 5;
+            this.label_variables.Text = "Variables:";
             // 
             // variablesText
             // 
@@ -113,18 +115,19 @@ namespace gep
             this.variablesText.Size = new System.Drawing.Size(603, 100);
             this.variablesText.TabIndex = 6;
             // 
-            // label4
+            // label_example
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(254, 268);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(50, 13);
-            this.label4.TabIndex = 7;
-            this.label4.Text = "Example:";
+            this.label_example.AutoSize = true;
+            this.label_example.Location = new System.Drawing.Point(254, 268);
+            this.label_example.Name = "label_example";
+            this.label_example.Size = new System.Drawing.Size(50, 13);
+            this.label_example.TabIndex = 7;
+            this.label_example.Text = "Example:";
             // 
             // exampleText
             // 
-            this.exampleText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.exampleText.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.exampleText.BackColor = System.Drawing.SystemColors.Window;
             this.exampleText.Location = new System.Drawing.Point(254, 284);
@@ -148,6 +151,7 @@ namespace gep
             // 
             // btnOk
             // 
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.Location = new System.Drawing.Point(690, 402);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
@@ -158,6 +162,7 @@ namespace gep
             // 
             // btnRestore
             // 
+            this.btnRestore.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRestore.Location = new System.Drawing.Point(526, 402);
             this.btnRestore.Name = "btnRestore";
             this.btnRestore.Size = new System.Drawing.Size(109, 23);
@@ -175,10 +180,10 @@ namespace gep
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.exampleText);
-            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label_example);
             this.Controls.Add(this.variablesText);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.label_variables);
+            this.Controls.Add(this.label_template);
             this.Controls.Add(this.templateText);
             this.Controls.Add(this.snippetsList);
             this.Controls.Add(this.languageCombo);
@@ -197,10 +202,10 @@ namespace gep
         private System.Windows.Forms.ComboBox languageCombo;
         private System.Windows.Forms.ListBox snippetsList;
         private System.Windows.Forms.TextBox templateText;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label_template;
+        private System.Windows.Forms.Label label_variables;
         private System.Windows.Forms.TextBox variablesText;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label_example;
         private System.Windows.Forms.TextBox exampleText;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;

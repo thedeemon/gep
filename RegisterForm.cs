@@ -18,6 +18,12 @@ namespace gep
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            if (!emailTextBox.Text.Contains("@"))
+            {
+                MessageBox.Show("Please enter your email, not your name.");
+                return;
+            }
+
             if (Filterz.rch.CheckCode(emailTextBox.Text, codeTextBox.Text))
             {
                 MessageBox.Show("Thanks!");
