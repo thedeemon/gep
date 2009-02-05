@@ -30,10 +30,10 @@ namespace gep
 
         private string Addcat(Guid g, string dft)
         {
-            string s = Catname(g, dft);
-            catguids.Add(s, g);
-            catcombo.Items.Add(s);
-            return s;
+            string name = Catname(g, dft);
+            catguids.Add(name, g);
+            catcombo.Items.Add(name);
+            return name;
         }
 
         private void Filterz_Load(object sender, EventArgs e)

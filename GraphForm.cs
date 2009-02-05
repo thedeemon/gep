@@ -680,17 +680,16 @@ namespace gep
             StringBuilder sb = new StringBuilder();
             if (movingFilter == null && connectingPin == null) //no acton yet
             {
+                sb.Append("Right click for menu. ");
                 Filter filter = graph.FilterInPoint(mousepos);
                 if (filter != null)
-                {
-                    sb.Append("Right click for menu. ");
+                {                    
                     Pin pin = filter.PinInPoint(mousepos);
                     if (pin != null && pin.Connection == null)
                         sb.Append("Drag with left button down for intelligent connect, with right button for direct connect, left click to see media types. ");
                     else
                         sb.Append("Drag with left button down to move filter, left click to select and see properties. Shift+click to add to selection. ");
-                } else {
-                    sb.Append("Right click for menu. ");
+                } else {                   
                     int con_id = graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
                     if (con_id > 0)
                     {
@@ -702,7 +701,8 @@ namespace gep
                         if (selecting)
                             sb.Append("Release mouse button to select filters in rectangle. ");
                         else
-                            sb.Append("Drag mouse with left button down to select several filters. ");
+                            if (graph.HasFilters)
+                                sb.Append("Drag mouse with left button down to select several filters. ");
                     
                 }
             }
