@@ -17,27 +17,16 @@ namespace gep
             filtertree.Sorted = true;
         }
 
-        private Dictionary<string, string> catnames = new Dictionary<string,string>(); //guid => name
+        public static Dictionary<string, string> catnames = new Dictionary<string,string>(); //guid => name
         private Dictionary<string, Guid> catguids = new Dictionary<string, Guid>();
         public static Dictionary<string, string> friendlyNames = new Dictionary<string, string>(); //guid=>name
         public static RegistryChecker rch = new RegistryChecker();
-
-        /*private string Catname(Guid g, string dft)
-        {
-            string sg = Graph.GuidToString(g);
-            return catnames.ContainsKey(sg) ? catnames[sg] : dft;
-        }*/
 
         private void Addcat(Guid g, string dft_name)
         {
             string sg = Graph.GuidToString(g);
             if (!catnames.ContainsKey(sg))
                 catnames.Add(sg, dft_name);
-
-            /*string name = Catname(g, dft);
-            catguids.Add(name, g);
-            catcombo.Items.Add(name);
-            return name;*/
         }
 
         public void RefreshCategories()
@@ -48,6 +37,7 @@ namespace gep
             catcombo.Items.Clear();
             catnames.Clear();
             catguids.Clear();
+            all_filters = null;
 
             //fill catnames dictionary (guid_string => category_name)
             ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
@@ -140,7 +130,7 @@ namespace gep
 
             // Set up the delays for the ToolTip.
             toolTip.AutoPopDelay = 5000;
-            toolTip.InitialDelay = 1000;
+            toolTip.InitialDelay = 500;
             toolTip.ReshowDelay = 500;
             // Force the ToolTip text to be displayed whether or not the form is active.
             toolTip.ShowAlways = true;
@@ -153,7 +143,10 @@ namespace gep
             RefreshCategories();            
             filtertree.Focus();
         }
-        
+
+        List<FilterProps> current_category_filters;
+        List<FilterProps> all_filters;
+
         private void catcombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
@@ -163,9 +156,52 @@ namespace gep
             int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
             //filtertree.Nodes.Add("_category").Nodes.Add(Graph.GuidToString(cg));
             if (hr < 0) return;
-            string old_selection = filtertree.SelectedNode==null ? null : filtertree.SelectedNode.Text;
-            BuildFilterTree(emon, filtertree, cg);
-            if (old_selection != null) 
+            current_category_filters = GetFiltersFromEnum(emon, cg);
+            ShowSearchedFilters();
+        }
+
+        List<FilterProps> GetAllFilters()
+        {
+            List<FilterProps> list = new List<FilterProps>();
+            try
+            {
+                Application.UseWaitCursor = true;
+                Cursor.Current = Cursors.WaitCursor;
+                ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
+                foreach (KeyValuePair<string, Guid> p in catguids)
+                {
+                    Guid cg = p.Value;
+                    if (cg != FilterCategory.ActiveMovieCategories)
+                    {
+                        IEnumMoniker emon;
+                        int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
+                        if (hr >= 0)
+                            list.AddRange(GetFiltersFromEnum(emon, cg));
+                    }
+                }
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
+                Application.UseWaitCursor = false;
+            }
+            return list;
+        }
+
+        void ShowSearchedFilters()
+        {
+            string old_selection = filtertree.SelectedNode == null ? null : filtertree.SelectedNode.Text;
+            IEnumerable<FilterProps> list;
+
+            if (checkBoxAllCats.Checked)
+            {
+                if (all_filters == null) all_filters = GetAllFilters();
+                list = SearchFilters(textBoxSearch.Text, all_filters);
+            } else            
+                list = SearchFilters(textBoxSearch.Text, current_category_filters);            
+
+            FillFilterTree(filtertree, list);
+            if (old_selection != null)
                 foreach (TreeNode nd in filtertree.Nodes)
                     if (nd.Text == old_selection)
                     {
@@ -176,8 +212,34 @@ namespace gep
 
         public static void BuildFilterTree(IEnumMoniker emon, TreeView tree, Guid cg)
         {
-            tree.Nodes.Clear();
+            FillFilterTree(tree, GetFiltersFromEnum(emon, cg));
+        }
+
+        static void FillFilterTree(TreeView tree, IEnumerable<FilterProps> flist)
+        {
             tree.BeginUpdate();
+            tree.Nodes.Clear();
+            foreach (FilterProps fp in flist)
+            {
+                TreeNode nd = tree.Nodes.Add(fp.Name);
+                nd.Tag = fp;
+                nd.Nodes.Add(fp.DisplayName);
+                nd.Nodes.Add(fp.CLSID);
+                nd.Nodes.Add(fp.MakeFileName());
+            }
+            tree.EndUpdate();
+        }
+
+        static IEnumerable<FilterProps> SearchFilters(string namepart, IEnumerable<FilterProps> list)
+        {
+            string part = namepart.ToLowerInvariant();
+            foreach (FilterProps fp in list)
+                if (fp.Name!=null && fp.Name.ToLowerInvariant().Contains(part)) yield return fp;
+        }
+
+        static List<FilterProps> GetFiltersFromEnum(IEnumMoniker emon, Guid cg)
+        {
+            List<FilterProps> list = new List<FilterProps>();
             if (emon != null)
             {
                 IMoniker[] mon = new IMoniker[1];
@@ -190,11 +252,9 @@ namespace gep
                     object nameObj;
                     bag.Read("FriendlyName", out nameObj, null);
                     string name = nameObj as string;
-                    TreeNode nd = tree.Nodes.Add(name);
 
                     string dispname;
                     mon[0].GetDisplayName(null, null, out dispname);
-                    nd.Nodes.Add(dispname);
                     bag.Read("CLSID", out nameObj, null);
                     string clsid = nameObj as string;
                     if (clsid == null && dispname.Contains(":dmo:"))
@@ -206,20 +266,17 @@ namespace gep
                             clsid = dispname.Substring(st, ed - st + 1);
                         }
                     }
-                    nd.Nodes.Add(clsid);
                     if (clsid != null && !friendlyNames.ContainsKey(clsid))
                         friendlyNames.Add(clsid, name);
 
                     FilterProps fp = new FilterProps(name, dispname, clsid, Graph.GuidToString(cg));
-                    nd.Tag = fp;
-                    string fname = fp.MakeFileName();
-                    nd.Nodes.Add(fname);
+                    list.Add(fp);
 
                     Marshal.ReleaseComObject(bagObj);
                     Marshal.ReleaseComObject(mon[0]);
                 }
             }
-            tree.EndUpdate();
+            return list;
         }
 
         public void RefreshTree()
@@ -284,6 +341,21 @@ namespace gep
         private void OnRefreshButton(object sender, EventArgs e)
         {
             RefreshCategories();
+        }
+
+        private void OnSearchTextChanged(object sender, EventArgs e)
+        {
+            ShowSearchedFilters();
+        }
+
+        private void btnClearSearch_Click(object sender, EventArgs e)
+        {
+            textBoxSearch.Clear();
+        }
+
+        private void OnAllCatsChecked(object sender, EventArgs e)
+        {
+            ShowSearchedFilters();
         }
     }//class
 

@@ -146,6 +146,15 @@ namespace gep
         }
 
         [CategoryAttribute("1) Filter"),
+           ReadOnlyAttribute(true),
+           DescriptionAttribute("Category name.")]
+        public string CategoryName
+        {
+            get { return Filterz.catnames.ContainsKey(catguid) ? Filterz.catnames[catguid] : "?"; }
+        }
+
+
+        [CategoryAttribute("1) Filter"),
         ReadOnlyAttribute(true),
         DescriptionAttribute("Version of the filter.")]
         public string Version
