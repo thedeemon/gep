@@ -126,7 +126,7 @@ namespace gep
                 selectedConnection.Draw(g, true, viewpoint);
         }
 
-        public void AddFilter(FilterProps fp) //create new IBaseFilter, add it to DS graph and this graph
+        public void AddFilter(FilterProps fp, Point? desired_pos) //create new IBaseFilter, add it to DS graph and this graph
         {
             Filter f;
             try
@@ -152,14 +152,20 @@ namespace gep
             if ((f.BaseFilter as IFileSinkFilter) != null)
                 dstfn = f.ChooseDstFileName();
 
-            AddFilterHere(f, true);
+            AddFilterHere(f, true, desired_pos);
             history.AddFilter(fp, f.Name, srcfn, dstfn);
         }
 
-        void AddFilterHere(Filter f, bool recalcPaths)
+        void AddFilterHere(Filter f, bool recalcPaths, Point? desired_pos)
         {
             f.JoinGraph(this, false);
-            f.Coords = FindPlaceForFilter(f);
+            if (desired_pos == null)
+                f.Coords = FindPlaceForFilter(f);
+            else
+            {
+                f.Coords = desired_pos.Value;
+                f.Coords = FindNearPlaceForFilter(f);
+            }
             filters.Add(f);
             PlaceFilter(f, true);
             if (recalcPaths)
@@ -170,19 +176,24 @@ namespace gep
         {
             try
             {
-                if (f.sampleGrabberForm!=null)
+                if (f.sampleGrabberForm != null)
                     f.sampleGrabberForm.Close(); //deletes callback and links to the SG form
                 if (!disconnecting)
                 {
                     f.BaseFilter.Stop();
                     int hr = graphBuilder.RemoveFilter(f.BaseFilter);
-                    DsError.ThrowExceptionForHR(hr);                    
+                    DsError.ThrowExceptionForHR(hr);
                 }
                 Marshal.ReleaseComObject(f.BaseFilter);
             }
             catch (COMException e)
             {
                 ShowCOMException(e, "Error removing filter " + f.Name);
+                return;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while removing filter "+f.Name);
                 return;
             }
             history.RemoveFilter(f.Name);
@@ -518,7 +529,7 @@ namespace gep
                     if (ff == null) //not found
                     {
                         ff = new Filter(fs[0]);
-                        AddFilterHere(ff, false);
+                        AddFilterHere(ff, false, null);
                         history.AddFilterIfNew(ff.filterProps, ff.Name, ff.srcFileName, ff.dstFileName, ff);
                     } else
                         ff.ReloadPins();

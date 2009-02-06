@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Diagnostics;
 using System.Threading;
+using System.Drawing;
 
 namespace gep
 {
@@ -18,7 +19,7 @@ namespace gep
         }
 
         public static Dictionary<string, string> catnames = new Dictionary<string,string>(); //guid => name
-        private Dictionary<string, Guid> catguids = new Dictionary<string, Guid>();
+        private static Dictionary<string, Guid> catguids = new Dictionary<string, Guid>();
         public static Dictionary<string, string> friendlyNames = new Dictionary<string, string>(); //guid=>name
         public static RegistryChecker rch = new RegistryChecker();
 
@@ -125,20 +126,19 @@ namespace gep
 
         private void Filterz_Load(object sender, EventArgs e)
         {
-            // Create the ToolTip and associate with the Form container.
             ToolTip toolTip = new ToolTip();
-
-            // Set up the delays for the ToolTip.
             toolTip.AutoPopDelay = 5000;
             toolTip.InitialDelay = 500;
             toolTip.ReshowDelay = 500;
-            // Force the ToolTip text to be displayed whether or not the form is active.
             toolTip.ShowAlways = true;
-
-            // Set up the ToolTip text for the Button and Checkbox.
             toolTip.SetToolTip(btnAdd, "Register a filter from file");
             toolTip.SetToolTip(btnEdit, "Change filter's merit or unregister filter");
             toolTip.SetToolTip(btnRefresh, "Refresh list of categories and filters");
+            toolTip.SetToolTip(btnClearSearch, "Clear the search field");
+            toolTip.SetToolTip(textBoxSearch, "Enter part of filter name to search");
+            toolTip.SetToolTip(checkBoxAllCats, "Search in all categories");
+            toolTip.SetToolTip(linkSearchForm, "Advanced search");
+            toolTip.SetToolTip(catcombo, "Filter category");
 
             RefreshCategories();            
             filtertree.Focus();
@@ -149,18 +149,21 @@ namespace gep
 
         private void catcombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
-            IEnumMoniker emon;
-            string catname = catcombo.Items[catcombo.SelectedIndex].ToString();
-            Guid cg = catguids[catname];
-            int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
-            //filtertree.Nodes.Add("_category").Nodes.Add(Graph.GuidToString(cg));
-            if (hr < 0) return;
-            current_category_filters = GetFiltersFromEnum(emon, cg);
+            current_category_filters = GetFiltersOfCategory(catcombo.SelectedItem.ToString());
             ShowSearchedFilters();
         }
 
-        List<FilterProps> GetAllFilters()
+        public static List<FilterProps> GetFiltersOfCategory(string cat_name)
+        {
+            ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
+            IEnumMoniker emon;            
+            Guid cg = catguids[cat_name];
+            int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
+            if (hr < 0) return new List<FilterProps>();
+            return GetFiltersFromEnum(emon, cg);
+        }
+
+        public static List<FilterProps> GetAllFilters()
         {
             List<FilterProps> list = new List<FilterProps>();
             try
@@ -215,7 +218,7 @@ namespace gep
             FillFilterTree(tree, GetFiltersFromEnum(emon, cg));
         }
 
-        static void FillFilterTree(TreeView tree, IEnumerable<FilterProps> flist)
+        static public void FillFilterTree(TreeView tree, IEnumerable<FilterProps> flist)
         {
             tree.BeginUpdate();
             tree.Nodes.Clear();
@@ -316,9 +319,22 @@ namespace gep
             FilterProps fp = (FilterProps)nd.Tag;
             if (fp != null)
             {
-                GraphForm gf = Program.mainform.ActiveGraphForm;
-                if (gf != null)
-                    gf.AddFilter(fp);
+                string catname = catcombo.SelectedItem.ToString();
+                if (catguids[catname] == FilterCategory.ActiveMovieCategories)
+                {
+                    foreach (object item in catcombo.Items)
+                        if (item.ToString() == fp.Name)
+                        {
+                            catcombo.SelectedItem = item;
+                            break;
+                        }
+                }
+                else
+                {
+                    GraphForm gf = Program.mainform.ActiveGraphForm;
+                    if (gf != null)
+                        gf.AddFilter(fp);
+                }
             }
         }
 
@@ -355,9 +371,115 @@ namespace gep
 
         private void OnAllCatsChecked(object sender, EventArgs e)
         {
+            int row0height = 22;
+            if (checkBoxAllCats.Checked)
+            {
+                catcombo.Visible = false;
+                tableLayoutPanel1.RowStyles[0].Height = 0;
+                Cursor.Position = new System.Drawing.Point(Cursor.Position.X, Cursor.Position.Y - row0height);
+            }
+            else
+            {
+                tableLayoutPanel1.RowStyles[0].Height = row0height;
+                catcombo.Visible = true;
+                Cursor.Position = new System.Drawing.Point(Cursor.Position.X, Cursor.Position.Y + row0height);
+            }
             ShowSearchedFilters();
         }
-    }//class
+
+        private void OnLinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            List<string> catlist = new List<string>();
+            catlist.AddRange(catnames.Values);
+            catlist.Remove(catnames[Graph.GuidToString(FilterCategory.ActiveMovieCategories)]);
+            catlist.Sort();
+            SearchFilterForm.ShowSearchFilterForm(catlist, checkBoxAllCats.Checked, 
+                textBoxSearch.Text, catcombo.SelectedItem.ToString(), MdiParent);
+        }
+
+        private void OnItemDrag(object sender, ItemDragEventArgs e)
+        {
+            DoDragDrop(e.Item, DragDropEffects.Copy);
+        }
+
+        private void filtertree_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Y < 12 || e.Y > filtertree.Height - 12)
+                Cursor.Current = Cursors.HSplit;
+
+            if (tree_resizing_bottom)
+            {
+                if (e.Y - tree_resizing_bottom_start > 1 && tableLayoutPanel1.RowStyles[4].Height > 1)
+                {
+                    tableLayoutPanel1.RowStyles[4].Height = 0;
+                    tree_resizing_bottom = false;
+                }
+                if (tree_resizing_bottom_start - e.Y > 1 && tableLayoutPanel1.RowStyles[4].Height < 1)
+                {
+                    tableLayoutPanel1.RowStyles[4].Height = 25;
+                    tree_resizing_bottom = false;
+                }
+            }
+
+            if (tree_resizing_top)
+            {
+                if (tree_resizing_top_start - e.Y > 1) //moving up
+                {
+                    if (tableLayoutPanel1.RowStyles[2].Height > 1)
+                        tableLayoutPanel1.RowStyles[2].Height = 0;
+                    else
+                        if (tableLayoutPanel1.RowStyles[1].Height > 1)
+                            tableLayoutPanel1.RowStyles[1].Height = 0;
+                    tree_resizing_top = false;
+                }
+                if (e.Y - tree_resizing_top_start > 1) // moving down
+                {
+                    if (tableLayoutPanel1.RowStyles[1].Height < 1)
+                        tableLayoutPanel1.RowStyles[1].Height = 23;
+                    else
+                        if (tableLayoutPanel1.RowStyles[2].Height < 1)
+                            tableLayoutPanel1.RowStyles[2].Height = 18;
+                    tree_resizing_top = false;
+                }
+            }
+
+            Program.mainform.SetHint("Double click or drag a filter to add to graph");
+        }
+
+        bool tree_resizing_bottom = false;
+        int tree_resizing_bottom_start;
+        bool tree_resizing_top = false;
+        int tree_resizing_top_start;
+
+        private void filtertree_MouseDown(object sender, MouseEventArgs e)
+        {           
+            if (e.Y > filtertree.Height - 12)
+            {
+                tree_resizing_bottom = true;
+                tree_resizing_bottom_start = e.Y;
+            }
+            if (e.Y < 12)
+            {
+                tree_resizing_top = true;
+                tree_resizing_top_start = e.Y;
+            }
+        }
+
+        private void filtertree_MouseLeave(object sender, EventArgs e)
+        {
+            tree_resizing_bottom = false;
+            tree_resizing_top = false;
+            Program.mainform.SetHint("");
+        }
+
+        private void filtertree_MouseUp(object sender, MouseEventArgs e)
+        {
+            tree_resizing_bottom = false;
+            tree_resizing_top = false;
+        }
+
+
+    }//Filterz class
 
     /*
     [ComImport, System.Security.SuppressUnmanagedCodeSecurity,

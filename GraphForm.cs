@@ -92,7 +92,12 @@ namespace gep
 
         public void AddFilter(FilterProps fp)
         {
-            graph.AddFilter(fp);
+            AddFilter(fp, null);
+        }
+
+        private void AddFilter(FilterProps fp, Point? desired_pos)
+        {
+            graph.AddFilter(fp, desired_pos);
             RecalcScrolls();
             Invalidate();
         }
@@ -975,6 +980,32 @@ namespace gep
         {
             graph.LayoutFiltersAndPaths();
             Invalidate();
+        }
+
+        private void OnDragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false))
+                e.Effect = DragDropEffects.Copy;
+        }
+
+        private void OnDragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", false)) {
+                TreeNode nd = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode", false);
+                if (nd == null)
+                    return;
+                while (nd.Parent != null && nd.Tag == null)
+                    nd = nd.Parent;
+                FilterProps fp = (FilterProps)nd.Tag;
+                if (fp != null)
+                {
+                    Point p = PointToClient(new Point(e.X, e.Y));                    
+                    p.X += hScrollBar.Value;
+                    p.Y += vScrollBar.Value - toolStripHeight;
+                    if (p.Y < 0) p.Y = 0;
+                    AddFilter(fp, new Point(p.X / graph.cellsize, p.Y / graph.cellsize));
+                }
+            }
         }
 
     }// GraphForm class

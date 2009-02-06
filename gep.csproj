@@ -211,6 +211,10 @@
       <SubType>Designer</SubType>
       <DependentUpon>SampleGrabberForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SearchFilterForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SearchFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TemplatesForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>TemplatesForm.cs</DependentUpon>
@@ -252,6 +256,12 @@
     </Compile>
     <Compile Include="SampleGrabberForm.Designer.cs">
       <DependentUpon>SampleGrabberForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SearchFilterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SearchFilterForm.Designer.cs">
+      <DependentUpon>SearchFilterForm.cs</DependentUpon>
     </Compile>
     <Compile Include="StreamCaps.cs" />
     <Compile Include="TempHistory.cs" />

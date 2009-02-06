@@ -183,7 +183,12 @@ namespace gep
         DescriptionAttribute("File containing this filter.")]
         public string FileName
         {
-            get { return filename.Length > 0 ? filename.Substring(filename.LastIndexOf('\\') + 1) : ""; }
+            get {
+                if (filename == null)
+                    MakeFileName();                
+                return filename!=null && filename.Length > 0 ? 
+                    filename.Substring(filename.LastIndexOf('\\') + 1) : ""; 
+            }
         }
 
         [CategoryAttribute("2) File"),
@@ -191,7 +196,12 @@ namespace gep
         DescriptionAttribute("Folder with file containing filter.")]
         public string Path
         {
-            get {  return filename.Length > 0 ? filename.Substring(0, filename.LastIndexOf('\\')) : "";  }
+            get {
+                if (filename == null)
+                    MakeFileName();
+                return filename != null && filename.Length > 0 ? 
+                    filename.Substring(0, filename.LastIndexOf('\\')) : "";
+            }
         }
 
         [CategoryAttribute("2) File"),
@@ -228,7 +238,12 @@ namespace gep
         }
 
         public int GetMerit() { return merit; }
-        public string GetFileName() { return filename; }
+        public string GetFileName() 
+        {
+            if (filename == null)
+                MakeFileName();
+            return filename; 
+        }
 
         public void SetMerit(int mr)
         {
