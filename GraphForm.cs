@@ -52,6 +52,8 @@ namespace gep
             set { graph.UseClock = value; }
         }
 
+        public Point ViewPoint { get { return new Point(hScrollBar.Value, vScrollBar.Value - toolStripHeight); } }
+
         private void GraphForm_Paint(object sender, PaintEventArgs e)
         {
             Point viewpoint = new Point(hScrollBar.Value, vScrollBar.Value - toolStripHeight);
@@ -374,6 +376,8 @@ namespace gep
         Point mousepos;
         bool selecting = false;
 
+        public Point MousePos { get { return mousepos; } }
+
         private void OnLButtonDown()
         {
             movingFilter = null;
@@ -404,7 +408,7 @@ namespace gep
             }
             else //no filter clicked
             {
-                int con_id = graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
+                int con_id = HoveredConnectionID();// graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
                 graph.ClearFiltersSelection();
                 if (con_id > 0)
                     graph.SelectConnection(con_id);
@@ -703,27 +707,46 @@ namespace gep
             DescribeActions();
         }
 
+        void AddToAnimated(Animated a, DateTime t)
+        {
+            if (a.OnMouseOver(t) && !animated_objects.Contains(a))
+                animated_objects.Add(a);
+        }
+
+        public int HoveredConnectionID()
+        {
+            return graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
+        }
+
         void DescribeActions()
         {
             StringBuilder sb = new StringBuilder();
-            if (movingFilter == null && connectingPin == null) //no acton yet
+            DateTime t = DateTime.Now;
+            if (movingFilter == null && connectingPin == null) //no action yet
             {
                 sb.Append("Right click for menu. ");
                 Filter filter = graph.FilterInPoint(mousepos);
                 if (filter != null)
                 {                    
                     Pin pin = filter.PinInPoint(mousepos);
-                    if (pin != null && pin.Connection == null)
-                        sb.Append("Drag with left button down for intelligent connect, with right button for direct connect, left click to see media types. ");
-                    else
-                        sb.Append("Drag with left button down to move filter, left click to select and see properties. Shift+click to add to selection. ");
-                } else {                   
-                    int con_id = graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
+                    if (pin != null) 
+                    { 
+                        if (pin.Connection == null)
+                            sb.Append("Drag with left button down for intelligent connect, with right button for direct connect, left click to see media types. ");
+                        else
+                            sb.Append("Drag with left button down to move filter, left click to select and see properties. Shift+click to add to selection. ");
+                        AddToAnimated(pin, t);
+                    }
+                    AddToAnimated(filter, t);
+                } else {
+                    int con_id = HoveredConnectionID();
                     if (con_id > 0)
                     {
                         sb.Append("Left click to see connection mediatype. ");
                         if (graph.SelectedConnection != null && graph.SelectedConnection.ID == con_id)
                             sb.Append("Press Del to remove connection. ");
+                        PinConnection con = graph.ConnectionWithID(con_id);
+                        if (con != null) AddToAnimated(con, t);
                     }
                     else
                         if (selecting)
@@ -745,6 +768,7 @@ namespace gep
                     sb.Append("Move mouse to the pin you want to connect to. ");
             if (RegistryChecker.R[1]==0)
                 sb.AppendFormat("{0} days to evaluate.", RegistryChecker.R[93]);
+            //sb.AppendFormat(" {0} animated", animated_objects.Count);
             Program.mainform.SetHint(sb.ToString());
         }
 
@@ -856,7 +880,9 @@ namespace gep
             Program.mainform.ActiveGraphForm = null;
             Program.mainform.Text = "GraphEditPlus";
         }
+        
         Timer regtimer = new Timer();
+        Timer animation_timer = new Timer();
 
         private void GraphForm_Load(object sender, EventArgs e)
         {
@@ -882,6 +908,9 @@ namespace gep
             graph.SetEventWindow(Handle);
             timer.Interval = 1000;
             timer.Tick += OnTimer;
+            timer.Start();
+            timer.Interval = 50;
+            timer.Tick += OnAnimationTimer;
             timer.Start();
             toolStrip.Renderer = new SickToolStripRenderer(graph);
         }
@@ -919,6 +948,18 @@ namespace gep
             labelState.Text = graph.State;
             labelPosition.Text = graph.Positions;
             Invalidate();
+        }
+
+        List<Animated> animated_objects = new List<Animated>();
+
+        private void OnAnimationTimer(Object myObject, EventArgs myEventArgs)
+        {
+            DateTime t = DateTime.Now;
+            List<Animated> nextlist = new List<Animated>();
+            foreach (Animated anim in animated_objects)
+                if (anim.Animate(t))
+                    nextlist.Add(anim);
+            animated_objects = nextlist;
         }
 
         bool sliding = false;

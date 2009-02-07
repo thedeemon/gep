@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace gep
 {
 
-    class Pin
+    class Pin : Animated
     {
         PinDirection direction;
         public PinDirection Direction { get { return direction; } }
@@ -55,14 +55,19 @@ namespace gep
             DsUtils.FreePinInfo(pinfo);
         }
 
+        Rectangle last_drawn_rect;
+
         public void Draw(Graphics g, int x, int y)
         {
             Rectangle rc = rect;
             rc.X += x;
             rc.Y += y;
+            int delta = animation_state / 2;
             LinearGradientBrush br = new LinearGradientBrush(new Point(0, rc.Top), new Point(0, rc.Bottom),
-                Color.FromArgb(200, 200, 200), Color.FromArgb(100, 100, 100));
+                Color.FromArgb(200+delta, 200+delta, 200), 
+                Color.FromArgb(100+delta, 100+delta, 100));
             g.FillRectangle(br, rc);
+            last_drawn_rect = rc;
             if (direction == PinDirection.Input)
                 g.DrawString(name, pinfont, pinbrush, rc.Right + 1, rc.Top);
             else
@@ -170,14 +175,29 @@ namespace gep
             return null;
         }
 
-    }// end of class
+        protected override bool IsSelected()
+        {
+            return connection != null;
+        }
+
+        protected override void Redraw()
+        {
+            filter.Graph.Form.Invalidate(last_drawn_rect);
+        }
+
+        protected override bool IsHovered()
+        {
+            return filter.PinInPoint(filter.Graph.Form.MousePos) == this;
+        }
+
+    }// end of Pin class
 
     struct ConStep
     {
         public int x, y, dir;
     }
 
-    class PinConnection
+    class PinConnection : Animated
     {
         public Pin[] pins; //outpin, inpin
         public List<ConStep> path;
@@ -199,18 +219,21 @@ namespace gep
             uniqname = outpin.UniqName + "-" + inpin.UniqName;
         }
 
+        Rectangle last_drawn_rectangle;
+
         public void Draw(Graphics g, bool selected, Point viewpoint)
         {
-            //Point p1 = pins[0].Filter.Rect.Location;
-            //Point p2 = pins[1].Filter.Rect.Location;
-            //p1.X += pins[0].Rect.Left + 5;
-            //p1.Y += pins[0].Rect.Top + 5;
-            //p2.X += pins[1].Rect.Left + 5;
-            //p2.Y += pins[1].Rect.Top + 5;
-            //g.DrawLine(Pens.LightGreen, p1, p2);
-
-            Pen pen = selected ? yellowPen : beigePen;
+            bool pen_created = false;
+            Pen pn;
+            if (animation_state > 0) 
+            {
+                pn = new Pen(Color.FromArgb(animation_state*2, 150+animation_state/2, 0));
+                pen_created = true;
+            } else 
+                pn = beigePen;
+            Pen pen = selected ? yellowPen : pn;
             int cellsize = pins[0].Filter.cellsize;
+            int mincx = 10000, maxcx = -10000, mincy = 10000, maxcy = -10000;
             foreach (ConStep cs in path)
             {
                 int hc = cellsize / 2;
@@ -225,10 +248,17 @@ namespace gep
                     case 4: g.DrawArc(pen, cx - cell, cy-cell, cell, cell, 0, 90); break;
                     case 5: g.DrawArc(pen, cx - cell, cy, cell, cell, 270, 90); break;
                     case 6: g.DrawArc(pen, cx, cy, cell, cell, 180, 90); break;
-                    //case 5: g.DrawLine(pen, cx - hc, cy, cx, cy + hc); break;
-                    //case 6: g.DrawLine(pen, cx + hc, cy, cx, cy + hc); break;
                 }
+
+                mincx = Math.Min(mincx, cx);
+                maxcx = Math.Max(maxcx, cx);
+                mincy = Math.Min(mincy, cy);
+                maxcy = Math.Max(maxcy, cy);
             }
+            mincx -= cellsize; mincy -= cellsize;
+            maxcx += cellsize; maxcy += cellsize;
+            last_drawn_rectangle = new Rectangle(mincx, mincy, maxcx - mincx, maxcy - mincy);
+            if (pen_created) pn.Dispose();
         }
 
         public void Disconnect(bool really) //really==true - disconnect ipins
@@ -237,6 +267,21 @@ namespace gep
             pins[1].CompleteConnect(null, really);
             pins = null;
             path = null;
+        }
+
+        protected override bool IsSelected()
+        {
+            return pins[0].Filter.Graph.SelectedConnection == this;
+        }
+
+        protected override void Redraw()
+        {
+            pins[0].Filter.Graph.Form.Invalidate(last_drawn_rectangle);
+        }
+
+        protected override bool IsHovered()
+        {
+            return pins[0].Filter.Graph.Form.HoveredConnectionID() == id;
         }
     }
 

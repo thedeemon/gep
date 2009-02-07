@@ -54,6 +54,7 @@
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
     <Compile Include="amvideo.cs" />
+    <Compile Include="Animated.cs" />
     <Compile Include="EditFilterForm.cs">
       <SubType>Form</SubType>
     </Compile>

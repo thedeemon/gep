@@ -431,6 +431,14 @@ namespace gep
                 }
         }
 
+        public PinConnection ConnectionWithID(int con_id)
+        {
+            foreach (PinConnection con in connections)
+                if (con.ID == con_id)
+                    return con;
+            return null;
+        }
+
         string logfname = Application.StartupPath + "gep_log.txt";
 
         void log(string s)

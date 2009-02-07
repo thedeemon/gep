@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace gep
 {
-    class Filter
+    class Filter : Animated
     {
         //public
         public Point boxsize = new Point(8, 4);        
@@ -134,19 +134,22 @@ namespace gep
             (Image)s_resources.GetObject("btnPlay.Image")
         };
 
+        protected override bool IsSelected()
+        {
+            return graph.SelectedFilters.Contains(this);
+        }
+
         public void Draw(Graphics g, Point viewpoint)
         {
             int y1 = coords.Y * graph.cellsize - viewpoint.Y;
             int x1 = coords.X * graph.cellsize - viewpoint.X;
-            int seldelta = graph.SelectedFilters.Contains(this) ? 50 : 0;
+            int anidelta = animation_state / 4;
+            int seldelta = IsSelected() ? 66 : anidelta;
             int seldelta2 = seldelta / 2;
-            Rectangle rc = rect;
-            Point c = rc.Location;
-            c.X -= viewpoint.X;
-            c.Y -= viewpoint.Y;
-            rc.Location = c;
+            Rectangle rc = MyDrawRectangle(viewpoint);
             LinearGradientBrush br = new LinearGradientBrush(new Point(rc.Left, rc.Top-1), new Point(rc.Left, rc.Bottom+1),
-                Color.FromArgb(100 + seldelta2, 100 + seldelta+seldelta2, 200+seldelta2), Color.FromArgb(50, 50, 100));
+                Color.FromArgb(100 + seldelta2, 100 + seldelta+seldelta2, 200+seldelta2),
+                Color.FromArgb(50 + anidelta, 50 + anidelta, 100));
             g.FillRectangle(br, rc);
 
             Image img = images[(int)filterState];
@@ -424,6 +427,28 @@ namespace gep
         }
 
         public int cellsize { get { return graph.cellsize; }}
+
+        protected override void Redraw()
+        {
+            Rectangle rc = MyDrawRectangle(graph.Form.ViewPoint);
+            graph.Form.Invalidate(rc);
+        }        
+
+        Rectangle MyDrawRectangle(Point viewpoint)
+        {
+            Rectangle rc = rect;
+            Point c = rc.Location;
+            c.X -= viewpoint.X;
+            c.Y -= viewpoint.Y;
+            rc.Location = c;
+            return rc;
+        }
+
+        protected override bool IsHovered()
+        {
+            return graph.FilterInPoint(graph.Form.MousePos) == this;
+        }
+        
 
     }//class
 
