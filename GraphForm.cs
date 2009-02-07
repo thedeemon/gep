@@ -275,6 +275,13 @@ namespace gep
             rightClickedFilter = null;
         }
 
+        private void FindFilterInList(object sender, EventArgs e)
+        {
+            if (rightClickedFilter != null)
+                Program.mainform.filterz.FindFilterInList(rightClickedFilter.filterProps.DisplayName);                
+            rightClickedFilter = null;
+        }
+
         private void ConfigStream(object sender, EventArgs e)
         {
             if (connectingPin != null)
@@ -440,7 +447,10 @@ namespace gep
 
                     menu.MenuItems.Add("Scan interfaces", ScanInterfaces);
                     if (filter.filterProps.DisplayName.Length > 0)
+                    {
                         menu.MenuItems.Add("Add to favorites", AddToFavorites);
+                        menu.MenuItems.Add("Find this filter in the list", FindFilterInList);
+                    }
                     menu.Show(this, eLocation);
                 }
             }

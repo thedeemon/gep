@@ -321,14 +321,7 @@ namespace gep
             {
                 string catname = catcombo.SelectedItem.ToString();
                 if (catguids[catname] == FilterCategory.ActiveMovieCategories)
-                {
-                    foreach (object item in catcombo.Items)
-                        if (item.ToString() == fp.Name)
-                        {
-                            catcombo.SelectedItem = item;
-                            break;
-                        }
-                }
+                    SelectCategory(fp.Name);
                 else
                 {
                     GraphForm gf = Program.mainform.ActiveGraphForm;
@@ -336,6 +329,16 @@ namespace gep
                         gf.AddFilter(fp);
                 }
             }
+        }
+
+        void SelectCategory(string cname)
+        {
+            foreach (object item in catcombo.Items)
+                if (item.ToString() == cname)
+                {
+                    catcombo.SelectedItem = item;
+                    break;
+                }
         }
 
         private void OnEdit(object sender, EventArgs e)
@@ -478,6 +481,41 @@ namespace gep
             tree_resizing_top = false;
         }
 
+        public void FindFilterInList(string dispname)
+        {
+            textBoxSearch.Text = "";
+            if (checkBoxAllCats.Checked)
+                SelectNode(dispname);
+            else
+            {
+                if (!SelectNode(dispname))
+                {
+                    if (all_filters == null)
+                        all_filters = GetAllFilters();
+                    foreach(FilterProps fp in all_filters)
+                        if (fp.DisplayName == dispname)
+                        {
+                            SelectCategory(fp.CategoryName);
+                            break;
+                        }
+                    SelectNode(dispname);                    
+                }
+            }
+        }
+
+        bool SelectNode(string dispname)
+        {
+            foreach (TreeNode nd in filtertree.Nodes)
+            {
+                FilterProps fp = (FilterProps)nd.Tag;
+                if (fp.DisplayName == dispname)
+                {
+                    filtertree.SelectedNode = nd;
+                    return true;
+                }
+            }
+            return false;
+        }
 
     }//Filterz class
 
