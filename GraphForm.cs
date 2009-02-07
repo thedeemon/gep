@@ -974,6 +974,8 @@ namespace gep
         }
 
         public const int WM_GRAPHEVENT = 0x8000 + 1350;
+        const int WM_SYSCOMMAND = 0x0112;
+        const int SC_MAXIMIZE = 0xF030;
 
         protected override void WndProc(ref Message m)
         {
@@ -982,6 +984,13 @@ namespace gep
                 case WM_GRAPHEVENT:
                     graph.OnGraphEvent();
                     break;
+                case WM_SYSCOMMAND:
+                    if ((int)m.WParam == SC_MAXIMIZE) {
+                        MyMaximize();
+                        return;
+                    }
+                    break;
+
             }
             base.WndProc(ref m);
         }
@@ -1016,6 +1025,11 @@ namespace gep
                     AddFilter(fp, new Point(p.X / graph.cellsize, p.Y / graph.cellsize));
                 }
             }
+        }
+
+        void MyMaximize()
+        {
+            Bounds = Program.mainform.MaximumRectangle;
         }
 
     }// GraphForm class

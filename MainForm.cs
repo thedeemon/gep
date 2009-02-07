@@ -392,5 +392,48 @@ namespace gep
             if (e == null || e.Data == null || !e.Data.GetDataPresent(DataFormats.FileDrop)) return;
             e.Effect = DragDropEffects.Copy;
         }
+
+        public Rectangle MaximumRectangle
+        {
+            get  {
+                List<Rectangle> obs = new List<Rectangle>( new Rectangle[] {
+                    filterz.Bounds, propform.Bounds });
+                int maxx = ClientSize.Width - 10, maxy = ClientSize.Height - 80;
+                List<int> xs = new List<int>(new int[] { 0, maxx });
+                List<int> ys = new List<int>(new int[] { 0, maxy });
+                foreach (Rectangle or in obs)
+                {
+                    xs.Add(or.Left); xs.Add(or.Right);
+                    ys.Add(or.Top); ys.Add(or.Bottom);
+                }
+                xs.RemoveAll(delegate(int x) { return x > maxx; });
+                ys.RemoveAll(delegate(int y) { return y > maxy; });
+                xs.Sort(); ys.Sort();
+
+                Rectangle bestrec = new Rectangle(100,100,300,300);
+                int bestarea = 0;
+
+                for(int l=0; l<xs.Count-1; l++)
+                    for(int r=1; r<xs.Count; r++)
+                        for(int t=0; t<ys.Count-1; t++)
+                            for (int b = 1; b < ys.Count; b++)
+                            {
+                                int rcl = xs[l]+2, rcr = xs[r]-2 , rct = ys[t]+2, rcb = ys[b]-2;
+                                Rectangle rc = new Rectangle(Math.Min(rcl, rcr), Math.Min(rct, rcb),
+                                    Math.Abs(rcr-rcl), Math.Abs(rcb-rct));
+                                int area = rc.Width * rc.Height;
+                                if (!obs.Exists(delegate(Rectangle or) { return rc.IntersectsWith(or); })
+                                    && area > bestarea)
+                                {
+                                    bestarea = area;
+                                    bestrec = rc;
+                                }
+                            }
+
+                return bestrec;                
+            }
+        }
     }//class
+
+    
 }
