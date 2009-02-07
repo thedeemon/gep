@@ -159,6 +159,11 @@ namespace gep
             Invalidate();
         }
 
+        private void VoidMenuAction(object sender, EventArgs e)
+        {
+            connectingPin = null;
+        }
+
         public void RenderURL(string url)
         {
             graph.RenderURL(url);
@@ -561,6 +566,14 @@ namespace gep
                 if (mousepos == movingStart) //pin right click
                 {
                     ContextMenu menu = new ContextMenu();
+
+                    string pincat = connectingPin.GetPinCategory();
+                    if (pincat != null)
+                    {
+                        menu.MenuItems.Add("Pin category: " + pincat, VoidMenuAction);
+                        menu.MenuItems.Add("-");
+                    }
+
                     if (connectingPin.Direction == PinDirection.Output)
                         menu.MenuItems.Add("Render pin", RenderPin);
                     if (connectingPin.HasPropertyPage())

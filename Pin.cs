@@ -152,6 +152,24 @@ namespace gep
             Marshal.FreeHGlobal(scc);
         }
 
+        public string GetPinCategory()
+        {
+            if (ipin == null) return null;
+            IKsPropertySet pset = ipin as IKsPropertySet;
+            if (pset == null) return null;
+            IntPtr pGuid = Marshal.AllocHGlobal(16);
+            int ret = 0;
+            pset.Get(PropSetID.Pin, 0, IntPtr.Zero, 0, pGuid, 16, out ret);
+            Guid guid = (Guid) Marshal.PtrToStructure(pGuid, typeof(Guid));
+            Marshal.FreeHGlobal(pGuid);
+
+            foreach (System.Reflection.FieldInfo m in typeof(PinCategory).GetFields())
+                if ((Guid)m.GetValue(null) == guid)
+                    return m.Name;
+
+            return null;
+        }
+
     }// end of class
 
     struct ConStep
