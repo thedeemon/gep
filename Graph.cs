@@ -204,6 +204,19 @@ namespace gep
                 RecalcPaths();
         }
 
+        public AMMediaType SampleGrabberMediaType(string realname) 
+        {
+            Filter flt = filters.Find(delegate(Filter f) { return f.Name == realname; });
+            if (flt != null && flt.BaseFilter!=null && flt.BaseFilter is ISampleGrabber)
+            {
+                ISampleGrabber isg = (ISampleGrabber)flt.BaseFilter;
+                AMMediaType mt = new AMMediaType();
+                if (isg.GetConnectedMediaType(mt) >= 0)
+                    return mt;
+            }
+            return null;
+        }
+
         public Filter FilterInPoint(Point point)
         {
             foreach (Filter f in filters)
@@ -954,7 +967,7 @@ namespace gep
                 case lang.CS: cg = new CodeGenCS(); break;
             }
             cg.History = history;
-            string code = cg.GenCode(useDirectConnect);
+            string code = cg.GenCode(useDirectConnect, this);
             Form cf = shcode(code);
             cf.Text = "Generated code for " + myform.Text;
             cf.ShowDialog();

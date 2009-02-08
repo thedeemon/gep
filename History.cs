@@ -11,7 +11,7 @@ namespace gep
     abstract class HistoryItem
     {
         public abstract string Define(CodeGenBase cg);
-        public abstract string Build(CodeGenBase cg);
+        public abstract string Build(CodeGenBase cg, Graph graph);
 
         public string var, clsname, RealName, Name;
         public string srcFileName, dstFileName;
@@ -22,9 +22,10 @@ namespace gep
         public abstract string DefineAddFilterDS(HIAddFilterDS hi);
         public abstract string DefineSetFormat(HISetFormat hi);
         public abstract string DefineConnect(HIConnect hi);
-        public abstract string BuildAddFilterDS(HIAddFilterDS hi);
-        public abstract string BuildAddFilterMon(HIAddFilterMon hi);
+        public abstract string BuildAddFilterDS(HIAddFilterDS hi, Graph graph);
+        public abstract string BuildAddFilterMon(HIAddFilterMon hi, Graph graph);
         public abstract string SetFormat(HISetFormat hi);
+        protected abstract string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi);
 
         public string Connect(HIConnect hi)
         {
@@ -41,7 +42,7 @@ namespace gep
                    });
         }
 
-        public abstract string GenCode(bool useDirectConnect);
+        public abstract string GenCode(bool useDirectConnect, Graph graph);
 
         public bool needCreateFilterProc = false, needGetPin = false, directConnect = true;
         public History History { set { history = value; } }
@@ -84,7 +85,7 @@ namespace gep
         protected List<string> dstFileNames = new List<string>();
         protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl;
 
-        protected string Insert(HistoryItem hi)
+        protected string Insert(HistoryItem hi, Graph graph)
         {
             string ins = insertTpl.GenerateWith(new string[] {
                 "$var", hi.var, "$name", hi.Name
@@ -106,8 +107,22 @@ namespace gep
                     "$dstvar", hi.var + "_sink",  "$var", hi.var, "$filename", "dstFile" + n
                 });
             }
-            return ins + setfname + "\r\n";
+
+            string setmtype = "";
+            if (hi.RealName != null)
+            {
+                AMMediaType mt = graph.SampleGrabberMediaType(hi.RealName);
+                if (mt != null)
+                {
+                    setmtype = SetSampleGrabberMediaType(mt, hi);
+                    DsUtils.FreeAMMediaType(mt);
+                }
+            }
+
+            return ins + setfname + setmtype + "\r\n";
         }
+
+
 
         protected static string xguid(string guid)
         {
@@ -146,9 +161,9 @@ namespace gep
             return cg.DefineAddFilterDS(this);
         }
 
-        public override string Build(CodeGenBase cg)
+        public override string Build(CodeGenBase cg, Graph graph)
         {
-            return cg.BuildAddFilterDS(this);
+            return cg.BuildAddFilterDS(this, graph);
         }
     }
 
@@ -170,9 +185,9 @@ namespace gep
             return "";
         }
 
-        public override string Build(CodeGenBase cg)
+        public override string Build(CodeGenBase cg, Graph graph)
         {
-            return cg.BuildAddFilterMon(this);
+            return cg.BuildAddFilterMon(this, graph);
         }
     }
 
@@ -195,7 +210,7 @@ namespace gep
             return cg.DefineConnect(this);
         }
 
-        public override string Build(CodeGenBase cg)
+        public override string Build(CodeGenBase cg, Graph graph)
         {
             return cg.Connect(this);
         }
@@ -220,7 +235,7 @@ namespace gep
             return cg.DefineSetFormat(this);
         }
 
-        public override string Build(CodeGenBase cg)
+        public override string Build(CodeGenBase cg, Graph graph)
         {
             return cg.SetFormat(this);
         }
@@ -558,18 +573,47 @@ namespace gep
             return DefineIfNotKnown(hi.majortype, "MEDIATYPE", Graph.GuidToString(hi.majortypeguid));
         }
 
-        public override string BuildAddFilterDS(HIAddFilterDS hi)
+        public override string BuildAddFilterDS(HIAddFilterDS hi, Graph graph)
         {
             return addFiltDsTpl.GenerateWith(new string[] {
                     "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname
-                }) + Insert(hi);
+                }) + Insert(hi, graph);
         }
 
-        public override string BuildAddFilterMon(HIAddFilterMon hi)
+        public override string BuildAddFilterMon(HIAddFilterMon hi, Graph graph)
         {
             return addFiltMonTpl.GenerateWith(new string[] {
                 "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName.Replace("\\","\\\\")
-            }) + Insert(hi);
+            }) + Insert(hi, graph);
+        }
+
+        void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
+        {
+            sb.AppendFormat("    AM_MEDIA_TYPE {0};\r\n", var);
+            sb.AppendFormat("    ZeroMemory(&{0}, sizeof(AM_MEDIA_TYPE));\r\n", var);
+            sb.AppendFormat("    {0}.majortype = {1};\r\n", var, MediaTypeToString(mt.majorType));
+            sb.AppendFormat("    {0}.subtype = {1};\r\n", var, MediaSubTypeToString(mt.subType));
+            string fmtype = CodeSnippet.Translate("FORMAT_" + DsToString.MediaFormatTypeToString(mt.formatType), new string[] {
+                "WaveEx", "WaveFormatEx",
+                "Mpeg", "MPEG",
+                "FORMAT_Null", "GUID_NULL"
+            });
+            sb.AppendFormat("    {0}.formattype = {1};\r\n", var, fmtype);
+            sb.AppendFormat("    {0}.bFixedSizeSamples = {1};\r\n", var, mt.fixedSizeSamples.ToString().ToUpperInvariant());
+            sb.AppendFormat("    {0}.cbFormat = {1};\r\n", var, mt.formatSize);
+            sb.AppendFormat("    {0}.lSampleSize = {1};\r\n", var, mt.sampleSize);
+            sb.AppendFormat("    {0}.bTemporalCompression = {1};\r\n", var, mt.temporalCompression.ToString().ToUpperInvariant());
+            string fmtvar = var.Replace("pmt", "format");
+            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(mt);
+            string fmt_struct = mtp.FormatClass().ToUpperInvariant();
+            sb.AppendFormat("    {1} {0};\r\n", fmtvar, fmt_struct);
+            sb.AppendFormat("    ZeroMemory(&{0}, sizeof({1}));\r\n", fmtvar, fmt_struct);
+            mtp.IterFormatFields(false, delegate(string fldname, string fldvalue)
+                {
+                    if (!fldvalue.StartsWith("new"))
+                        sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, CodeSnippet.Translate(fldname, dict), fldvalue);
+                });
+            sb.AppendFormat("    {0}.pbFormat = (BYTE*)&{1};\r\n", var, fmtvar);
         }
 
         public override string SetFormat(HISetFormat hi)
@@ -577,37 +621,24 @@ namespace gep
             HistoryItem fhi = history.FindByRealName(hi.filter);
             string fvar = (fhi != null) ? fhi.var : "?";
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("    AM_MEDIA_TYPE {0};\r\n", hi.var);
-            sb.AppendFormat("    ZeroMemory(&{0}, sizeof(AM_MEDIA_TYPE));\r\n", hi.var);
-            sb.AppendFormat("    {0}.majortype = {1};\r\n", hi.var, MediaTypeToString(hi.mt.majorType));
-            sb.AppendFormat("    {0}.subtype = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
-            string fmtype = CodeSnippet.Translate("FORMAT_" + DsToString.MediaFormatTypeToString(hi.mt.formatType), new string[] {
-                "WaveEx", "WaveFormatEx",
-                "Mpeg", "MPEG",
-                "FORMAT_Null", "GUID_NULL"
-            });
-            sb.AppendFormat("    {0}.formattype = {1};\r\n", hi.var, fmtype);
-            sb.AppendFormat("    {0}.bFixedSizeSamples = {1};\r\n", hi.var, hi.mt.fixedSizeSamples.ToString().ToUpperInvariant());
-            sb.AppendFormat("    {0}.cbFormat = {1};\r\n", hi.var, hi.mt.formatSize);
-            sb.AppendFormat("    {0}.lSampleSize = {1};\r\n", hi.var, hi.mt.sampleSize);
-            sb.AppendFormat("    {0}.bTemporalCompression = {1};\r\n", hi.var, hi.mt.temporalCompression.ToString().ToUpperInvariant());
-            string fmtvar = hi.var.Replace("pmt", "format");
-            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(hi.mt);
-            string fmt_struct = mtp.FormatClass().ToUpperInvariant();
-            sb.AppendFormat("    {1} {0};\r\n", fmtvar, fmt_struct);
-            sb.AppendFormat("    ZeroMemory(&{0}, sizeof({1}));\r\n", fmtvar, fmt_struct);
-            //foreach (KeyValuePair<string, string> p in FormatFieldsFilter(mtp.FormatFields(false, false)))
-            //    sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
-            mtp.IterFormatFields(false, delegate(string fldname, string fldvalue)
-                {
-                    if (!fldvalue.StartsWith("new"))
-                        sb.AppendFormat("    {0}.{1} = {2};\r\n", fmtvar, CodeSnippet.Translate(fldname, dict), fldvalue);
-                });
-            sb.AppendFormat("    {0}.pbFormat = (BYTE*)&{1};\r\n", hi.var, fmtvar);
+            CreateMediaType(hi.var, hi.mt, sb);
             string iscvar = hi.var.Replace("pmt", "isc");
             sb.AppendFormat("    CComQIPtr<IAMStreamConfig, &IID_IAMStreamConfig> {0}(GetPin({1}, L\"{2}\"));\r\n", iscvar, fvar, hi.pin);
             sb.AppendFormat("    hr = {1}->SetFormat(&{0});\r\n", hi.var, iscvar);
             sb.Append("    CHECK_HR(hr, \"Can't set format\");\r\n");
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
+        protected override string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi)
+        {
+            string mtvar = hi.var + "_pmt";
+            StringBuilder sb = new StringBuilder();
+            CreateMediaType(mtvar, mt, sb);
+            string isgvar = mtvar.Replace("pmt", "isg");
+            sb.AppendFormat("    CComQIPtr<ISampleGrabber, &IID_ISampleGrabber> {0}({1});\r\n", isgvar, hi.var);
+            sb.AppendFormat("    hr = {1}->SetMediaType({0});\r\n", mtvar, isgvar);
+            sb.Append("    CHECK_HR(hr, \"Can't set media type to sample grabber\");\r\n");
             sb.AppendLine();
             return sb.ToString();
         }
@@ -661,7 +692,7 @@ namespace gep
             return GuidName(Graph.GuidToString(guid));
         }
 
-        public override string GenCode(bool useDirectConnect)
+        public override string GenCode(bool useDirectConnect, Graph graph)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("//Don't forget to change project settings:");
@@ -749,7 +780,7 @@ namespace gep
 
             StringBuilder sb_bld = new StringBuilder();
             foreach (HistoryItem hi in history.Items)
-                sb_bld.AppendLine(hi.Build(this));
+                sb_bld.AppendLine(hi.Build(this, graph));
 
             sb.AppendLine();
             sb.Append("HRESULT BuildGraph(IGraphBuilder *pGraph");
@@ -1070,7 +1101,7 @@ namespace gep
             return "";
         }
 
-        public override string BuildAddFilterDS(HIAddFilterDS hi)
+        public override string BuildAddFilterDS(HIAddFilterDS hi, Graph graph)
         {
             string create, s;
             if (known.TryGetValue(hi.CLSID, out s))
@@ -1085,43 +1116,59 @@ namespace gep
                     "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname
                 });
             }
-            return create + Insert(hi);
+            return create + Insert(hi, graph);
         }
 
-        public override string BuildAddFilterMon(HIAddFilterMon hi)
+        public override string BuildAddFilterMon(HIAddFilterMon hi, Graph graph)
         {
             return addFiltMonTpl.GenerateWith(new string[] {
                 "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName
-            }) + Insert(hi);
+            }) + Insert(hi, graph);
+        }
+
+
+        void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
+        {
+            sb.AppendFormat("            AMMediaType {0} = new AMMediaType();\r\n", var);
+            sb.AppendFormat("            {0}.majorType = {1};\r\n", var, MediaTypeToString(mt.majorType));
+            sb.AppendFormat("            {0}.subType = {1};\r\n", var, MediaSubTypeToString(mt.subType));
+            sb.AppendFormat("            {0}.formatType = FormatType.{1};\r\n", var, DsToString.MediaFormatTypeToString(mt.formatType));
+            sb.AppendFormat("            {0}.fixedSizeSamples = {1};\r\n", var, mt.fixedSizeSamples.ToString().ToLowerInvariant());
+            sb.AppendFormat("            {0}.formatSize = {1};\r\n", var, mt.formatSize);
+            sb.AppendFormat("            {0}.sampleSize = {1};\r\n", var, mt.sampleSize);
+            sb.AppendFormat("            {0}.temporalCompression = {1};\r\n", var, mt.temporalCompression.ToString().ToLowerInvariant());
+            string fmtvar = var.Replace("pmt", "format");
+            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(mt);
+            sb.AppendFormat("            {1} {0} = new {1}();\r\n", fmtvar, mtp.FormatClass());
+            mtp.IterFormatFields(true, delegate(string fldname, string fldvalue)
+                { sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, fldname, fldvalue); });
+            sb.AppendFormat("            {0}.formatPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf({1}));\r\n", var, fmtvar);
+            sb.AppendFormat("            Marshal.StructureToPtr({0}, {1}.formatPtr, false);\r\n", fmtvar, var);
         }
 
         public override string SetFormat(HISetFormat hi)
-        {            
-            HistoryItem fhi = history.FindByRealName(hi.filter);            
+        {
+            HistoryItem fhi = history.FindByRealName(hi.filter);
             string fvar = (fhi != null) ? fhi.var : "?";
             StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("            AMMediaType {0} = new AMMediaType();\r\n", hi.var);
-            sb.AppendFormat("            {0}.majorType = {1};\r\n", hi.var, MediaTypeToString(hi.mt.majorType));
-            sb.AppendFormat("            {0}.subType = {1};\r\n", hi.var, MediaSubTypeToString(hi.mt.subType));
-            sb.AppendFormat("            {0}.formatType = FormatType.{1};\r\n", hi.var, DsToString.MediaFormatTypeToString(hi.mt.formatType));
-            sb.AppendFormat("            {0}.fixedSizeSamples = {1};\r\n", hi.var, hi.mt.fixedSizeSamples.ToString().ToLowerInvariant());
-            sb.AppendFormat("            {0}.formatSize = {1};\r\n", hi.var, hi.mt.formatSize);
-            sb.AppendFormat("            {0}.sampleSize = {1};\r\n", hi.var, hi.mt.sampleSize);
-            sb.AppendFormat("            {0}.temporalCompression = {1};\r\n", hi.var, hi.mt.temporalCompression.ToString().ToLowerInvariant());
-            string fmtvar = hi.var.Replace("pmt", "format");
-            MediaTypeProps mtp = MediaTypeProps.CreateMTProps(hi.mt);
-            sb.AppendFormat("            {1} {0} = new {1}();\r\n", fmtvar, mtp.FormatClass());
-            //foreach (KeyValuePair<string, string> p in mtp.FormatFields(false, true))
-            //    sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, p.Key, p.Value);
-            mtp.IterFormatFields(true, delegate(string fldname, string fldvalue) 
-                { sb.AppendFormat("            {0}.{1} = {2};\r\n", fmtvar, fldname, fldvalue); });
-            sb.AppendFormat("            {0}.formatPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf({1}));\r\n", hi.var, fmtvar);
-            sb.AppendFormat("            Marshal.StructureToPtr({0}, {1}.formatPtr, false);\r\n", fmtvar, hi.var);
+            CreateMediaType(hi.var, hi.mt, sb);            
             sb.AppendFormat("            hr = ((IAMStreamConfig)GetPin({0}, \"{1}\")).SetFormat({2});\r\n", fvar, hi.pin, hi.var);
             sb.AppendFormat("            DsUtils.FreeAMMediaType({0});\r\n", hi.var);
             sb.Append("            checkHR(hr, \"Can't set format\");\r\n");
             sb.AppendLine();
-           
+            return sb.ToString();
+        }
+
+
+        protected override string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi)
+        {
+            string mtvar = hi.var + "_pmt";
+            StringBuilder sb = new StringBuilder();
+            CreateMediaType(mtvar, mt, sb);
+            sb.AppendFormat("            hr = ((ISampleGrabber){0}).SetMediaType({1});\r\n", hi.var, mtvar);
+            sb.AppendFormat("            DsUtils.FreeAMMediaType({0});\r\n", mtvar);
+            sb.Append("            checkHR(hr, \"Can't set media type to sample grabber\");\r\n");
+            sb.AppendLine();
             return sb.ToString();
         }
 
@@ -1141,7 +1188,7 @@ namespace gep
             return "new Guid(\"" + Graph.GuidToString(guid) + "\")";
         }
 
-        public override string GenCode(bool useDirectConnect)
+        public override string GenCode(bool useDirectConnect, Graph graph)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("//Don't forget to add reference to DirectShowLib in your project.");
@@ -1174,7 +1221,7 @@ namespace gep
 
             StringBuilder sb_bld = new StringBuilder();
             foreach (HistoryItem hi in history.Items)
-                sb_bld.Append(hi.Build(this));
+                sb_bld.Append(hi.Build(this, graph));
 
             sb.Append("        static void BuildGraph(IGraphBuilder pGraph");
             for (int i = 0; i < srcFileNames.Count; i++)

@@ -21,7 +21,7 @@ namespace gep
             InitializeComponent();
         }
 
-        public MediaTypeForm(IAMStreamConfig isc)
+        public MediaTypeForm(IAMStreamConfig isc)//not used anymore
         {
             streamConfig = isc;
             InitializeComponent();
