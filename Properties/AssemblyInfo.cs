@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GraphEditPlus")]
 [assembly: AssemblyDescription("GraphEditPlus")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Dee Mon")]
+[assembly: AssemblyCompany("Infognition")]
 [assembly: AssemblyProduct("GraphEditPlus")]
-[assembly: AssemblyCopyright("Copyright © Dee Mon 2007-2008")]
+[assembly: AssemblyCopyright("Copyright © 2007-2009 Dee Mon, 2009 Infognition Co. Ltd.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.2.2.0")]
-[assembly: AssemblyFileVersion("1.2.2.0")]
+[assembly: AssemblyVersion("1.3.1.0")]
+[assembly: AssemblyFileVersion("1.3.1.0")]

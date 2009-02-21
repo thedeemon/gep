@@ -18,19 +18,17 @@ namespace gep
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            string url = "http://www.thedeemon.com";
-            Program.OpenBrowser(url);
-            //System.Diagnostics.Process.Start(url);
-            /*Process process = new Process();
-            process.StartInfo.FileName = url;
-            //process.StartInfo.Arguments = url;
-            process.StartInfo.UseShellExecute = true;
-            process.Start();*/
+            Program.OpenBrowser("http://www.thedeemon.com");
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void OnInfognition(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Program.OpenBrowser("http://www.infognition.com");
         }
     }
 }

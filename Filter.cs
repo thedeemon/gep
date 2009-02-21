@@ -194,47 +194,57 @@ namespace gep
 
         public void ReloadName()
         {
-            if (basefilter == null) return;
-            FilterInfo fi;
-            basefilter.QueryFilterInfo(out fi);
-            name = fi.achName;
-            orgname = fi.achName;
-
-            IFileSourceFilter fsrc = basefilter as IFileSourceFilter;
-            if (fsrc != null && fsrc.GetCurFile(out srcfilename, null) == 0 && srcfilename!=null && !name.Contains(srcfilename))
-                name += " " + srcfilename.Substring(srcfilename.LastIndexOf('\\') + 1);
-
-            IFileSinkFilter fdst = basefilter as IFileSinkFilter;
-            if (fdst != null && fdst.GetCurFile(out dstfilename, null) == 0 && dstfilename!=null && !name.Contains(dstfilename))
-                name += " " + dstfilename.Substring(dstfilename.LastIndexOf('\\') + 1);
-
-            string dspname = filterProps.DisplayName;
-            if (dspname != null && dspname.Length > 0)
+            try
             {
-                if (!dispnames.ContainsKey(orgname))
-                    dispnames.Add(orgname, dspname);
-            }
-            else //have no display name
-            {
-                if (dispnames.TryGetValue(orgname, out dspname))
-                    filterProps.DisplayName = dspname;
-            }
+                if (basefilter == null) return;
+                FilterInfo fi;
+                basefilter.QueryFilterInfo(out fi);
+                name = fi.achName;
+                orgname = fi.achName;
 
-            IVideoWindow vw = basefilter as IVideoWindow;
-            if (vw != null)
-            {
-                string s;
-                vw.get_Caption(out s);
-                string gname = Graph.Form.Text + ": " + name + ": ";
-                vw.put_Caption(gname + s);
-                //vw.SetWindowForeground(OABool.False);
-                //vw.put_AutoShow(OABool.True);
-                //vw.put_Owner(Program.mainform.Handle); hangs
-                WindowStyleEx wex;
-                vw.get_WindowStyleEx(out wex);
-                vw.put_WindowStyleEx(wex | WindowStyleEx.Topmost);
+                IFileSourceFilter fsrc = basefilter as IFileSourceFilter;
+                if (fsrc != null && fsrc.GetCurFile(out srcfilename, null) == 0 && srcfilename != null && !name.Contains(srcfilename))
+                    name += " " + srcfilename.Substring(srcfilename.LastIndexOf('\\') + 1);
+
+                IFileSinkFilter fdst = basefilter as IFileSinkFilter;
+                if (fdst != null && fdst.GetCurFile(out dstfilename, null) == 0 && dstfilename != null && !name.Contains(dstfilename))
+                    name += " " + dstfilename.Substring(dstfilename.LastIndexOf('\\') + 1);
+
+                string dspname = filterProps.DisplayName;
+                if (dspname != null && dspname.Length > 0)
+                {
+                    if (!dispnames.ContainsKey(orgname))
+                        dispnames.Add(orgname, dspname);
+                }
+                else //have no display name
+                {
+                    if (dispnames.TryGetValue(orgname, out dspname))
+                        filterProps.DisplayName = dspname;
+                }
+
+                IVideoWindow vw = basefilter as IVideoWindow;
+                if (vw != null)
+                {
+                    string s;
+                    vw.get_Caption(out s);
+                    string gname = Graph.Form.Text + ": " + name + ": ";
+                    vw.put_Caption(gname + s);
+                    //vw.SetWindowForeground(OABool.False);
+                    //vw.put_AutoShow(OABool.True);
+                    //vw.put_Owner(Program.mainform.Handle); hangs
+                    WindowStyleEx wex;
+                    vw.get_WindowStyleEx(out wex);
+                    vw.put_WindowStyleEx(wex | WindowStyleEx.Topmost);
+                }
             }
-            
+            catch (COMException e)
+            {
+                Graph.ShowCOMException(e, "Problem occured while examining filter " + Name);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while examining filter " + Name);
+            }
         }
 
         void RecalcWidth()

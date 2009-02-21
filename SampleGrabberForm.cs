@@ -105,7 +105,13 @@ namespace gep
                     pSample.GetMediaTime(out start, out end);
                     sb.AppendFormat("MediaTime(start={0}, end={1}), ", start, end);
                     int len = pSample.GetActualDataLength();
-                    sb.AppendFormat("data length={0}", len);
+                    sb.AppendFormat("data length={0}, ", len);
+                    bool syncpoint = pSample.IsSyncPoint() == 0;
+                    sb.AppendFormat("keyframe={0}", syncpoint);
+                    if (pSample.IsDiscontinuity() == 0)
+                        sb.Append(", Discontinuity");
+                    if (pSample.IsPreroll() == 0)
+                        sb.Append(", Preroll");
                     int n = Math.Min(len, 8);
                     IntPtr pbuf;
                     if (pSample.GetPointer(out pbuf) == 0)
