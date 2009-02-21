@@ -22,7 +22,8 @@ namespace gep
         public SampleGrabberForm sampleGrabberForm;
 
         //layout info
-        public int stage, weight;
+        public int weight;
+        int stage;
         public bool movedManually = false;
 
         //private/protected

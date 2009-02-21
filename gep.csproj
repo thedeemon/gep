@@ -85,7 +85,7 @@
       <DependentUpon>GenerateCodeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.cs">
-      <SubType>Component</SubType>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="GenerateCodeGfxForm.Designer.cs">
       <DependentUpon>GenerateCodeGfxForm.cs</DependentUpon>

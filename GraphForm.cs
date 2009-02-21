@@ -479,6 +479,7 @@ namespace gep
                     graph.RecalcPaths();
                     Invalidate();
                 });
+                menu.MenuItems.Add("Refresh graph", delegate { graph.ReloadGraph(); Invalidate(); });
                 menu.Show(this, eLocation);
             }
         }
@@ -713,6 +714,11 @@ namespace gep
                 animated_objects.Add(a);
         }
 
+        public void StopAnimation(Animated a)
+        {
+            animated_objects.Remove(a);
+        }
+
         public int HoveredConnectionID()
         {
             return graph.ownersmap[mousepos.X / graph.cellsize, mousepos.Y / graph.cellsize];
@@ -733,10 +739,9 @@ namespace gep
                     { 
                         if (pin.Connection == null)
                             sb.Append("Drag with left button down for intelligent connect, with right button for direct connect, left click to see media types. ");
-                        else
-                            sb.Append("Drag with left button down to move filter, left click to select and see properties. Shift+click to add to selection. ");
                         AddToAnimated(pin, t);
-                    }
+                    } else
+                        sb.Append("Drag with left button down to move filter, left click to select and see properties. Shift+click to add to selection. ");
                     AddToAnimated(filter, t);
                 } else {
                     int con_id = HoveredConnectionID();
@@ -792,7 +797,7 @@ namespace gep
                 if (con != null)
                 {
                     graph.SelectedConnection = null;
-                    graph.RemoveConnection(con, true);
+                    graph.RemoveConnection(con, true);                    
                     Invalidate();
                 }
                 e.Handled = true;

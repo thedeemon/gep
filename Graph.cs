@@ -70,7 +70,7 @@ namespace gep
             ReloadGraph();
         }
 
-        void ReloadGraph()
+        public void ReloadGraph()
         {
             ReloadFilters();
             LayoutFiltersAndPaths();
@@ -196,6 +196,9 @@ namespace gep
                 MessageBox.Show(e.Message, "Exception caught while removing filter "+f.Name);
                 return;
             }
+            Form.StopAnimation(f);
+            foreach (Pin p in f.Pins)
+                Form.StopAnimation(p);
             history.RemoveFilter(f.Name);
             PlaceFilter(f, false);
             f.JoinGraph(null, disconnecting);
@@ -282,6 +285,7 @@ namespace gep
         {
             if (con == null)
                 return;
+            Form.StopAnimation(con);
             history.RemoveConnection(con.pins[0], con.pins[1]);
             con.Disconnect(true);
             connections.Remove(con);
@@ -622,7 +626,7 @@ namespace gep
             int maxst = 0;
             foreach (Filter flt in filters)
             {
-                int st = flt.Stage;
+                int st = Math.Max(flt.Stage, 0);
                 maxst = Math.Max(maxst, st);
                 if (grid[st] == null)
                     grid[st] = new List<Filter>();
