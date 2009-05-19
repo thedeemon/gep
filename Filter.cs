@@ -384,6 +384,10 @@ namespace gep
                     {
                         Graph.ShowCOMException(e, "Can't load file " + fd.FileName);
                     }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message, "Exception caught while loading file " + fd.FileName);
+                    }
                 }
                 else
                     if (Program.mainform.suggestURLs)
@@ -401,6 +405,10 @@ namespace gep
                             catch (COMException e)
                             {
                                 Graph.ShowCOMException(e, "Can't open " + rf.selectedURL);
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show(e.Message, "Exception caught while loading URL " +rf.selectedURL);
                             }
                         }
                     }
@@ -426,6 +434,10 @@ namespace gep
                     catch (COMException e)
                     {
                         Graph.ShowCOMException(e, "Can't create file " + fd.FileName);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message, "Exception caught while setting output file name " + fd.FileName);
                     }
                 }
             }

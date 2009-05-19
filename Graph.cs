@@ -269,7 +269,11 @@ namespace gep
                 ShowCOMException(e, "Can't connect pins");
                 return;
             }
-            
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while connecting pins");
+                return;
+            }
             if (intelligent)
                 ReloadGraph();
             else
@@ -491,6 +495,11 @@ namespace gep
                 ShowCOMException(e, errmsg + filename);
                 return;
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, errmsg + filename);
+                return;
+            }
             ReloadGraph();
             log("Rendering done.");
         }
@@ -508,6 +517,11 @@ namespace gep
                 ShowCOMException(e, "Can't add source filter for " + filename);
                 return;
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Can't add source filter for " + filename);
+                return;
+            }
             ReloadGraph();            
         }
 
@@ -521,6 +535,11 @@ namespace gep
             catch (COMException e)
             {
                 ShowCOMException(e, "Can't render pin");
+                return;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error while rendering pin");
                 return;
             }
             ReloadGraph();
@@ -595,6 +614,11 @@ namespace gep
             catch (COMException e)
             {
                 ShowCOMException(e, "Error while enumerating filters in the graph");
+                return;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error while enumerating filters in the graph");
                 return;
             }
             log("reload_filters: almost done");
@@ -757,6 +781,10 @@ namespace gep
             {
                 ShowCOMException(e, "Error saving graph "+filename);
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception saving graph " + filename);
+            }
         }
 
         public delegate void on_graph_load();
@@ -834,6 +862,10 @@ namespace gep
             {
                 ShowCOMException(e, "Can't run the graph");
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while running the graph");
+            }
         }
 
         public void Pause()
@@ -847,6 +879,10 @@ namespace gep
             {
                 ShowCOMException(e, "Can't pause the graph");
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while pausing the graph");
+            }
         }
 
         public void Stop()
@@ -859,6 +895,10 @@ namespace gep
             catch (COMException e)
             {
                 ShowCOMException(e, "Can't stop the graph");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error while stopping the graph");
             }
         }
 
@@ -948,7 +988,7 @@ namespace gep
                     }
                     catch (Exception e)
                     {
-                        MessageBox.Show(e.ToString(), "Exception caught when setting clock to NULL");
+                        MessageBox.Show(e.Message, "Exception caught when setting clock to NULL");
                     }
                 }
             }
@@ -1017,6 +1057,10 @@ namespace gep
             {
                 ShowCOMException(ex, "Can't set notification window for graph events");
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while setting notification window");
+            }
         }
 
         public void OnGraphEvent()
@@ -1052,6 +1096,10 @@ namespace gep
             {
                 if (ex.ErrorCode != unchecked((int)0x80070006)) //E_HANDLE
                     ShowCOMException(ex, "An error occured in the graph");
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Exception caught while getting a graph event");
             }
         }
 

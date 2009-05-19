@@ -65,6 +65,10 @@ namespace gep
             {
                 Graph.ShowCOMException(ex, "Can't enumerate matching filters");
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Exception caught while enumerating matching filters");
+            }
         }
 
         private void treeView_MouseDoubleClick(object sender, MouseEventArgs e)

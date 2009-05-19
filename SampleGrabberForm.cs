@@ -50,6 +50,10 @@ namespace gep
             {
                 Graph.ShowCOMException(ex, "Can't set callback");
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Exception caught while setting callback for samplegrabber");
+            }
         }
 
         public void AddText(string text)
@@ -71,6 +75,10 @@ namespace gep
             catch (COMException ex)
             {
                 Graph.ShowCOMException(ex, "Can't set callback to null");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Exception caught while setting callback for samplegrabber");
             }
         }
     }//class
