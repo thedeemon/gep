@@ -240,7 +240,7 @@ namespace gep
                 if (fp.Name!=null && fp.Name.ToLowerInvariant().Contains(part)) yield return fp;
         }
 
-        static List<FilterProps> GetFiltersFromEnum(IEnumMoniker emon, Guid cg)
+        static public List<FilterProps> GetFiltersFromEnum(IEnumMoniker emon, Guid cg)
         {
             List<FilterProps> list = new List<FilterProps>();
             if (emon != null)

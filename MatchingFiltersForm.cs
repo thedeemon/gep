@@ -49,17 +49,34 @@ namespace gep
                     }
                 }
                 IFilterMapper2 fm = (IFilterMapper2)new FilterMapper2();
-                IEnumMoniker emon;
+                IEnumMoniker emon, emon_rend; //non-renderers, renderers
                 int hr = 0;
-                if (pin.Direction==PinDirection.Output)
-                    hr = fm.EnumMatchingFilters(out emon, 0, true, Merit.None, true, guids.Count/2, guids.ToArray(), 
+                List<FilterProps> fplist = new List<FilterProps>();
+                if (pin.Direction == PinDirection.Output)
+                {
+                    hr = fm.EnumMatchingFilters(out emon, 0, true, Merit.None, true, guids.Count / 2, guids.ToArray(),
                         null, null, false, false, 0, null, null, null);
+                    DsError.ThrowExceptionForHR(hr);
+                    hr = fm.EnumMatchingFilters(out emon_rend, 0, true, Merit.None, true, guids.Count / 2, guids.ToArray(),
+                        null, null, true, false, 0, null, null, null);
+                    DsError.ThrowExceptionForHR(hr);
+                    fplist.AddRange(Filterz.GetFiltersFromEnum(emon, Guid.Empty));
+                    fplist.AddRange(Filterz.GetFiltersFromEnum(emon_rend, Guid.Empty));
+                }
                 else
+                {
                     hr = fm.EnumMatchingFilters(out emon, 0, true, Merit.None, false, 0, null, null, null, false,
-                        true, guids.Count/2, guids.ToArray(), null, null);
-                DsError.ThrowExceptionForHR(hr);
+                        true, guids.Count / 2, guids.ToArray(), null, null);
+                    DsError.ThrowExceptionForHR(hr);
+                    hr = fm.EnumMatchingFilters(out emon_rend, 0, true, Merit.None, false, 0, null, null, null, true,
+                        true, guids.Count / 2, guids.ToArray(), null, null);
+                    DsError.ThrowExceptionForHR(hr);
+                    fplist.AddRange(Filterz.GetFiltersFromEnum(emon, Guid.Empty));
+                    fplist.AddRange(Filterz.GetFiltersFromEnum(emon_rend, Guid.Empty));
+                }
 
-                Filterz.BuildFilterTree(emon, treeView, Guid.Empty);
+                //Filterz.BuildFilterTree(emon, treeView, Guid.Empty);
+                Filterz.FillFilterTree(treeView, fplist);
             } 
             catch(COMException ex)
             {
