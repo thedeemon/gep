@@ -637,7 +637,7 @@ namespace gep
             CreateMediaType(mtvar, mt, sb);
             string isgvar = mtvar.Replace("pmt", "isg");
             sb.AppendFormat("    CComQIPtr<ISampleGrabber, &IID_ISampleGrabber> {0}({1});\r\n", isgvar, hi.var);
-            sb.AppendFormat("    hr = {1}->SetMediaType({0});\r\n", mtvar, isgvar);
+            sb.AppendFormat("    hr = {1}->SetMediaType(&{0});\r\n", mtvar, isgvar);
             sb.Append("    CHECK_HR(hr, \"Can't set media type to sample grabber\");\r\n");
             sb.AppendLine();
             return sb.ToString();
