@@ -241,7 +241,7 @@ namespace gep
             // 
             this.suggestURLsForSourcesToolStripMenuItem.Name = "suggestURLsForSourcesToolStripMenuItem";
             this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
-            this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources";
+            this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources and sinks";
             this.suggestURLsForSourcesToolStripMenuItem.Click += new System.EventHandler(this.OnSuggestURLs);
             // 
             // useClockToolStripMenuItem

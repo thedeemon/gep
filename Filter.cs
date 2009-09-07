@@ -440,6 +440,29 @@ namespace gep
                         MessageBox.Show(e.Message, "Exception caught while setting output file name " + fd.FileName);
                     }
                 }
+                else
+                    if (Program.mainform.suggestURLs)
+                    {
+                        RenderURLForm rf = new RenderURLForm("Open URL");
+                        rf.ShowDialog();
+                        if (rf.selectedURL != null)
+                        {
+                            try
+                            {
+                                int hr = fdst.SetFileName(rf.selectedURL, null);
+                                DsError.ThrowExceptionForHR(hr);
+                                ret = rf.selectedURL;
+                            }
+                            catch (COMException e)
+                            {
+                                Graph.ShowCOMException(e, "Can't set " + rf.selectedURL);
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show(e.Message, "Exception caught while setting URL " + rf.selectedURL);
+                            }
+                        }
+                    }
             }
             return ret;
         }
