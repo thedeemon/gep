@@ -164,7 +164,7 @@ namespace gep
             else
             {
                 f.Coords = desired_pos.Value;
-                f.Coords = FindNearPlaceForFilter(f);
+                f.Coords = FindNearPlaceForFilter(f, f.Coords);
             }
             filters.Add(f);
             PlaceFilter(f, true);
@@ -234,11 +234,11 @@ namespace gep
             field.FillRect(f.Coords.X, f.Coords.Y, f.boxsize.X, f.boxsize.Y, val);
         }
 
-        public bool CanPlaceFilter(Point place, Filter f, int border)
+        public bool CanPlaceFilter(Point place, Filter f, int xborder, int yborder)
         {
-            if (place.X-border < 0 || place.Y-border < 0) return false;
-            for (int y = -border; y < f.boxsize.Y+border; y++)
-                for (int x = -border; x < f.boxsize.X+border; x++)
+            if (place.X-xborder < 0 || place.Y-yborder < 0) return false;
+            for (int y = -yborder; y < f.boxsize.Y+yborder; y++)
+                for (int x = -xborder; x < f.boxsize.X+xborder; x++)
                     if (field[x + place.X, y + place.Y] >= 10000)
                         return false;
             return true;
@@ -246,7 +246,7 @@ namespace gep
 
         public bool CanPlaceFilter(Point place, Filter f)
         {
-            return CanPlaceFilter(place, f, 0);
+            return CanPlaceFilter(place, f, 0, 0);
         }
 
         protected void Connect(Pin outpin, Pin inpin) //ipins must be already connected
@@ -695,7 +695,7 @@ namespace gep
             foreach (Filter f in filters)
                 if (!filter_positions.TryGetValue(f.Name, out pos))
                 {
-                    f.Coords = FindNearPlaceForFilter(f);
+                    f.Coords = FindNearPlaceForFilter(f, f.Coords);
                     PlaceFilter(f, true);
                 }
         }
@@ -703,25 +703,28 @@ namespace gep
         Point FindPlaceForFilter(Filter f)
         {
             Point bestplace = new Point(1, 1);
-            if (f.HasFreePins(PinDirection.Input)) 
+            if (f.HasFreePins(PinDirection.Input))
             {
                 int maxd = 10000;
                 foreach (Filter ft in filters)
                     if (ft.HasFreePins(PinDirection.Output))
                     {
                         Point place = ft.Coords;
-                        place.X += ft.boxsize.X;
-                        while (!CanPlaceFilter(place, f))
-                            place.X++;
+                        place.X += ft.boxsize.X + 2;
+                        place = FindNearPlaceForFilter(f, place);
+                        //while (!CanPlaceFilter(place, f))
+                        //    place.X++;
                         if (place.X + place.Y < maxd)
                         {
                             bestplace = place;
                             maxd = place.X + place.Y;
                         }
                     }
-                if (maxd < 10000) //found something
-                    bestplace.X += 2;
+                //if (maxd < 10000) //found something
+                //    bestplace.X += 2;
             }
+            else
+                bestplace = FindNearPlaceForFilter(f, bestplace);
             while (!CanPlaceFilter(bestplace, f)) {
                 while (!CanPlaceFilter(bestplace, f))
                     bestplace.Y++;
@@ -730,9 +733,8 @@ namespace gep
             return bestplace;
         }
 
-        Point FindNearPlaceForFilter(Filter f)
+        Point FindNearPlaceForFilter(Filter f, Point orgpos)
         {
-            Point orgpos = f.Coords;
             if (CanPlaceFilter(orgpos, f))
                 return orgpos;
             for (int r = 1; r < 99; r++)
@@ -740,22 +742,22 @@ namespace gep
                 for (int x = -r; x < r; x++)
                 {
                     Point p = new Point(orgpos.X + x, orgpos.Y - r);
-                    if (CanPlaceFilter(p, f, 1)) return p;
+                    if (CanPlaceFilter(p, f, 2, 1)) return p;
                 }
                 for (int y = -r; y < r; y++)
                 {
                     Point p = new Point(orgpos.X + r, orgpos.Y + y);
-                    if (CanPlaceFilter(p, f, 1)) return p;
+                    if (CanPlaceFilter(p, f, 2, 1)) return p;
                 }
                 for (int x = r-1; x >= -r; x--)
                 {
                     Point p = new Point(orgpos.X + x, orgpos.Y + r);
-                    if (CanPlaceFilter(p, f, 1)) return p;
+                    if (CanPlaceFilter(p, f, 2, 1)) return p;
                 }
                 for (int y = r-1; y >= -r; y--)
                 {
                     Point p = new Point(orgpos.X - r, orgpos.Y + y);
-                    if (CanPlaceFilter(p, f, 1)) return p;
+                    if (CanPlaceFilter(p, f, 2, 1)) return p;
                 }                    
             }
             return orgpos;

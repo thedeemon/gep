@@ -73,38 +73,51 @@ namespace gep
         {
             if (prepared)
                 return;
-            string keyname = @"CLSID\" + catguid + @"\Instance\" + guid;
-            using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname))
-            {
-                if (rk != null)
-                {
-                    byte[] bytes = (byte[])rk.GetValue("FilterData");
-                    if (bytes != null && bytes.Length >= 8)
-                    {
-                        version = (((((bytes[3] << 8) + bytes[2]) << 8) + bytes[1]) << 8) + bytes[0];
-                        merit = (((((bytes[7] << 8) + bytes[6]) << 8) + bytes[5]) << 8) + bytes[4];
-                    }
-                }
-            }
-
             try
             {
-                FileInfo fi = new FileInfo(filename);
-                if (fi.Exists)
+                string keyname = @"CLSID\" + catguid + @"\Instance\" + guid;
+                using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname))
                 {
-                    filesize = fi.Length;
-                    cr_time = fi.CreationTime;
-                    mod_time = fi.LastWriteTime;
-                    ver_info = FileVersionInfo.GetVersionInfo(filename);
+                    if (rk != null)
+                    {
+                        byte[] bytes = (byte[])rk.GetValue("FilterData");
+                        if (bytes != null && bytes.Length >= 8)
+                        {
+                            version = (((((bytes[3] << 8) + bytes[2]) << 8) + bytes[1]) << 8) + bytes[0];
+                            merit = (((((bytes[7] << 8) + bytes[6]) << 8) + bytes[5]) << 8) + bytes[4];
+                        }
+                    }
                 }
-                else
+
+                try
+                {
+                    FileInfo fi = new FileInfo(filename);
+                    if (fi.Exists)
+                    {
+                        filesize = fi.Length;
+                        cr_time = fi.CreationTime;
+                        mod_time = fi.LastWriteTime;
+                        ver_info = FileVersionInfo.GetVersionInfo(filename);
+                    }
+                    else
+                        filename += "  (file not found)";
+                }
+                catch
+                {
                     filename += "  (file not found)";
+                }
+                prepared = true;
             }
-            catch
+            catch (COMException e)
             {
-                filename += "  (file not found)";
+                Graph.ShowCOMException(e, "Can't get filter info");
+                return;
             }
-            prepared = true;
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Can't get filter info");
+                return;
+            }
         }
 
         public void SetFilter(Filter f)

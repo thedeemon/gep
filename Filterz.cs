@@ -14,6 +14,11 @@ namespace gep
     {
         public Filterz()
         {
+            dmo_cats.Clear();
+            dmo_cats.Add("DMO Audio Effects", DirectShowLib.DMO.DMOCategory.AudioEffect);
+            dmo_cats.Add("DMO Video Effects", DirectShowLib.DMO.DMOCategory.VideoEffect);
+            dmo_cats.Add("DMO Audio Capture Effects", DirectShowLib.DMO.DMOCategory.AudioCaptureEffect);
+
             InitializeComponent();
             filtertree.Sorted = true;
         }
@@ -22,6 +27,7 @@ namespace gep
         private static Dictionary<string, Guid> catguids = new Dictionary<string, Guid>();
         public static Dictionary<string, string> friendlyNames = new Dictionary<string, string>(); //guid=>name
         public static RegistryChecker rch = new RegistryChecker();
+        private static Dictionary<string, Guid> dmo_cats = new Dictionary<string,Guid>(); 
 
         private void Addcat(Guid g, string dft_name)
         {
@@ -40,32 +46,45 @@ namespace gep
             catguids.Clear();
             all_filters = null;
 
-            //fill catnames dictionary (guid_string => category_name)
-            ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
-            IEnumMoniker emon;
-            int hr = devenum.CreateClassEnumerator(FilterCategory.ActiveMovieCategories, out emon, 0);
-
-            if (0 == hr)
+            try
             {
-                IMoniker[] mon = new IMoniker[1];
-                while (0 == emon.Next(1, mon, IntPtr.Zero))
+                //fill catnames dictionary (guid_string => category_name)
+                ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
+                IEnumMoniker emon;
+                int hr = devenum.CreateClassEnumerator(FilterCategory.ActiveMovieCategories, out emon, 0);
+
+                if (0 == hr)
                 {
-                    string name;
-                    mon[0].GetDisplayName(null, null, out name);
-                    string sg = name.Substring(name.Length - 38, 38).ToUpperInvariant();
+                    IMoniker[] mon = new IMoniker[1];
+                    while (0 == emon.Next(1, mon, IntPtr.Zero))
+                    {
+                        string name;
+                        mon[0].GetDisplayName(null, null, out name);
+                        string sg = name.Substring(name.Length - 38, 38).ToUpperInvariant();
 
-                    object bagObj;
-                    Guid propertyBagId = typeof(IPropertyBag).GUID;
-                    mon[0].BindToStorage(null, null, ref propertyBagId, out bagObj);
-                    IPropertyBag bag = (IPropertyBag)bagObj;
-                    object nameObj;
-                    bag.Read("FriendlyName", out nameObj, null);
-                    name = nameObj as string;
-                    catnames.Add(sg, name);
+                        object bagObj;
+                        Guid propertyBagId = typeof(IPropertyBag).GUID;
+                        mon[0].BindToStorage(null, null, ref propertyBagId, out bagObj);
+                        IPropertyBag bag = (IPropertyBag)bagObj;
+                        object nameObj;
+                        bag.Read("FriendlyName", out nameObj, null);
+                        name = nameObj as string;
+                        catnames.Add(sg, name);
 
-                    Marshal.ReleaseComObject(bagObj);
-                    Marshal.ReleaseComObject(mon[0]);
+                        Marshal.ReleaseComObject(bagObj);
+                        Marshal.ReleaseComObject(mon[0]);
+                    }
                 }
+            }
+            catch (COMException e)
+            {
+                Graph.ShowCOMException(e, "Can't enumerate filter categories");
+                return;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Can't enumerate filter categories");
+                return;
             }
             
             Addcat(FilterCategory.ActiveMovieCategories, "ActiveMovieCategories");
@@ -111,6 +130,9 @@ namespace gep
             Addcat(FilterCategory.WDMStreamingEncoderDevices, "WDM Streaming Encoder Devices");
             Addcat(FilterCategory.WDMStreamingMultiplexerDevices, "WDM Streaming Multiplexer Devices");
 
+            foreach (KeyValuePair<string, Guid> p in dmo_cats)
+                Addcat(p.Value, p.Key);
+
             //fill combo box and remember guids
             foreach (KeyValuePair<string, string> p in catnames)
             {
@@ -149,18 +171,53 @@ namespace gep
 
         private void catcombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            current_category_filters = GetFiltersOfCategory(catcombo.SelectedItem.ToString());
-            ShowSearchedFilters();
+            try
+            {
+                current_category_filters = GetFiltersOfCategory(catcombo.SelectedItem.ToString());
+                ShowSearchedFilters();
+            }
+            catch (COMException ex)
+            {
+                Graph.ShowCOMException(ex, "Can't enumerate filter category");
+                return;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Can't enumerate filter category");
+                return;
+            }
         }
 
         public static List<FilterProps> GetFiltersOfCategory(string cat_name)
         {
+            if (dmo_cats.ContainsKey(cat_name))
+                return GetDMOFilters(cat_name);
             ICreateDevEnum devenum = new CreateDevEnum() as ICreateDevEnum;
             IEnumMoniker emon;            
             Guid cg = catguids[cat_name];
             int hr = devenum.CreateClassEnumerator(cg, out emon, 0);
             if (hr < 0) return new List<FilterProps>();
             return GetFiltersFromEnum(emon, cg);
+        }
+
+        private static List<FilterProps> GetDMOFilters(string cat_name)
+        {
+            Guid g = dmo_cats[cat_name];
+            List<FilterProps> lst = new List<FilterProps>();
+            DirectShowLib.DMO.IEnumDMO pEnum;
+            if (0 != DirectShowLib.DMO.DMOUtils.DMOEnum(g, DirectShowLib.DMO.DMOEnumerator.IncludeKeyed, 0, 
+                        null, 0, null, out pEnum))
+                return lst;
+            Guid[] clsids = new Guid[1];
+            string[] names = new string[1];
+            string cat_guid_str = Graph.GuidToString(g);
+            while (pEnum.Next(1, clsids, names, IntPtr.Zero) == 0)
+            {
+                string clsid = Graph.GuidToString(clsids[0]);
+                string devname = "@device:dmo:" + clsid + cat_guid_str;
+                lst.Add(new FilterProps(names[0], devname, clsid, cat_guid_str));
+            }
+            return lst;
         }
 
         public static List<FilterProps> GetAllFilters()
@@ -174,6 +231,9 @@ namespace gep
                 foreach (KeyValuePair<string, Guid> p in catguids)
                 {
                     Guid cg = p.Value;
+                    if (dmo_cats.ContainsKey(p.Key))
+                        list.AddRange(GetDMOFilters(p.Key));
+                    else
                     if (cg != FilterCategory.ActiveMovieCategories)
                     {
                         IEnumMoniker emon;
@@ -515,6 +575,16 @@ namespace gep
                 }
             }
             return false;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case GraphForm.WM_NCLBUTTONDBLCLK:                    
+                    return;                    
+            }
+            base.WndProc(ref m);
         }
 
     }//Filterz class

@@ -1033,8 +1033,9 @@ namespace gep
         }
 
         public const int WM_GRAPHEVENT = 0x8000 + 1350;
-        const int WM_SYSCOMMAND = 0x0112;
-        const int SC_MAXIMIZE = 0xF030;
+        public const int WM_SYSCOMMAND = 0x0112;
+        public const int SC_MAXIMIZE = 0xF030;
+        public const int WM_NCLBUTTONDBLCLK = 0xa3;
 
         protected override void WndProc(ref Message m)
         {
@@ -1049,7 +1050,9 @@ namespace gep
                         return;
                     }
                     break;
-
+                case WM_NCLBUTTONDBLCLK:
+                    MyMaximize();
+                    return;                    
             }
             base.WndProc(ref m);
         }

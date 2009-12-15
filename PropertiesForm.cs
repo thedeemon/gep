@@ -24,5 +24,15 @@ namespace gep
         {
             propgrid.ViewForeColor = Color.FromArgb(1, 1, 1);
         }
+
+        protected override void WndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case GraphForm.WM_NCLBUTTONDBLCLK:
+                    return;                    
+            }
+            base.WndProc(ref m);
+        }
     }
 }
