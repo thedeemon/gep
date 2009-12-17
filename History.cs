@@ -23,7 +23,7 @@ namespace gep
         public abstract string DefineSetFormat(HISetFormat hi);
         public abstract string DefineConnect(HIConnect hi);
         public abstract string BuildAddFilterDS(HIAddFilterDS hi, Graph graph);
-        public abstract string BuildAddFilterMon(HIAddFilterMon hi, Graph graph);
+        public abstract string BuildAddFilterOther(HIAddFilterOther hi, Graph graph);
         public abstract string SetFormat(HISetFormat hi);
         protected abstract string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi);
 
@@ -42,9 +42,16 @@ namespace gep
                    });
         }
 
+        public string DefineAddFilterOther(HIAddFilterOther hi)
+        {
+            return defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.CatVar, "$guid", hi.CatGuid, "$file", "", "$xguid", xguid(hi.CatGuid)
+            });
+        }
+
         public abstract string GenCode(bool useDirectConnect, Graph graph);
 
-        public bool needCreateFilterProc = false, needGetPin = false, directConnect = true;
+        public bool needCreateFilterProc = false, needGetPin = false, directConnect = true, createFiltersByName = true;
         public History History { set { history = value; } }
 
         public CodeSnippet[] snippets;
@@ -83,7 +90,7 @@ namespace gep
         protected Dictionary<string, string> known = new Dictionary<string, string>(); // guid => CLSID_Shit
         protected List<string> srcFileNames = new List<string>();
         protected List<string> dstFileNames = new List<string>();
-        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl;
+        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl, defineDsTpl;
 
         protected string Insert(HistoryItem hi, Graph graph)
         {
@@ -167,27 +174,29 @@ namespace gep
         }
     }
 
-    class HIAddFilterMon : HistoryItem
+    class HIAddFilterOther : HistoryItem
     {
-        public string DisplayName;
+        public string DisplayName, CatGuid, CatVar;
 
-        public HIAddFilterMon(string _Name, string _DisplayName, string realname,
+        public HIAddFilterOther(string _Name, string _DisplayName, string realname, string catguid, string catname,
             string SrcFileName, string DstFileName, History h)
         {
             Name = _Name; DisplayName = _DisplayName; RealName = realname;
-            srcFileName = SrcFileName; dstFileName = DstFileName;
+            srcFileName = SrcFileName; dstFileName = DstFileName; CatGuid = catguid;
             h.MakeVarName(_Name, out clsname, out var);
+            string t;
+            h.MakeVarName(catname, out CatVar, out t);
         }
 
         public override string Define(CodeGenBase cg)
         {
             cg.needCreateFilterProc = true;
-            return "";
+            return cg.DefineAddFilterOther(this);
         }
 
         public override string Build(CodeGenBase cg, Graph graph)
         {
-            return cg.BuildAddFilterMon(this, graph);
+            return cg.BuildAddFilterOther(this, graph);
         }
     }
 
@@ -272,7 +281,7 @@ namespace gep
             if (fp.DisplayName.StartsWith("@device:sw:{083863F1-70DE-11D0-BD40-00A0C911CE86}")) //DirectShow filters
                 history.Add(new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcFileName, dstFileName, this));
             else
-                history.Add(new HIAddFilterMon(fp.Name, fp.DisplayName, realname, srcFileName, dstFileName, this));
+                history.Add(new HIAddFilterOther(fp.Name, fp.DisplayName, realname, fp.catguid, fp.CategoryName, srcFileName, dstFileName, this));
         }
 
         public void AddFilterIfNew(FilterProps fp, string realname, string srcfilename, string dstfilename, Filter f)
@@ -381,7 +390,7 @@ namespace gep
 
     class CodeGenCPP : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, defineDsTpl, addFiltDsTpl, checkTpl;
+        CodeSnippet addFiltMonTpl, addFiltDsTpl, checkTpl, addFiltByNameTpl;
         
         public CodeGenCPP()
         {
@@ -467,6 +476,18 @@ namespace gep
                 "$var", "pFrapsVideoDecompressor",
                 "$displayname", @"@device:cm:{33D9A760-90C8-11D0-BD43-00A0C911CE86}\\fps1"
             });
+
+            addFiltByNameTpl = new CodeSnippet("Create filter by its name and category", "addFiltByNameTpl",
+                "    //add $name\r\n" +
+                "    CComPtr<IBaseFilter> $var = CreateFilterByName(L\"$name\", $category);\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable holding IBaseFilter\r\n" +
+                "$category - CLSID of this filter's category\r\n");
+            addFiltByNameTpl.SetVars(new string[] {
+                "$name", "Fraps Video Decompressor",
+                "$var", "pFrapsVideoDecompressor",
+                "$category", "CLSID_VideoCompressors"
+            });
             
             connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
                 "    //connect $pair\r\n" +
@@ -515,12 +536,11 @@ namespace gep
             , "");
 
             snippets = new CodeSnippet[] { 
-                defineDsTpl, addFiltDsTpl, addFiltMonTpl, setSrcFileTpl, setDstFileTpl,
+                defineDsTpl, addFiltDsTpl, addFiltMonTpl, addFiltByNameTpl, setSrcFileTpl, setDstFileTpl,
                 insertTpl, connectTpl, connectDirectTpl, checkTpl                
             };
 
-            LoadTemplates();
-            
+            LoadTemplates();            
         }
 
         public override string ToString()
@@ -580,10 +600,11 @@ namespace gep
                 }) + Insert(hi, graph);
         }
 
-        public override string BuildAddFilterMon(HIAddFilterMon hi, Graph graph)
+        public override string BuildAddFilterOther(HIAddFilterOther hi, Graph graph)
         {
-            return addFiltMonTpl.GenerateWith(new string[] {
-                "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName.Replace("\\","\\\\")
+            CodeSnippet addFilt = createFiltersByName ? addFiltByNameTpl : addFiltMonTpl;
+            return addFilt.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName.Replace("\\","\\\\"), "$category", hi.CatVar
             }) + Insert(hi, graph);
         }
 
@@ -725,28 +746,75 @@ namespace gep
             }
             if (needCreateFilterProc)
             {
-                sb.AppendLine("CComPtr<IBaseFilter> CreateFilter(WCHAR* displayName)");
-                sb.AppendLine("{");
-                sb.AppendLine("    CComPtr<IBindCtx> pBindCtx;");
-                sb.AppendLine("    HRESULT hr = CreateBindCtx(0, &pBindCtx);");
-                sb.AppendLine("    if (hrcheck(hr, \"Can't create bind context\"))");
-                sb.AppendLine("        return NULL;");
-                sb.AppendLine();
-                sb.AppendLine("    ULONG chEaten = 0;");
-                sb.AppendLine("    CComPtr<IMoniker> pMoniker;");
-                sb.AppendLine("    hr = MkParseDisplayName(pBindCtx, displayName, &chEaten, &pMoniker);");
-                sb.AppendLine("    if (hrcheck(hr, \"Can't create parse display name of the filter\"))");
-                sb.AppendLine("        return NULL;");
-                sb.AppendLine();
-                sb.AppendLine("    CComPtr<IBaseFilter> pFilter;");
-                sb.AppendLine("    if (SUCCEEDED(hr))");
-                sb.AppendLine("    {");
-                sb.AppendLine("        hr = pMoniker->BindToObject(pBindCtx, NULL, IID_IBaseFilter, (void**)&pFilter);");
-                sb.AppendLine("        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
-                sb.AppendLine("            return NULL;");
-                sb.AppendLine("    }");
-                sb.AppendLine("    return pFilter;");
-                sb.AppendLine("}");
+                if (createFiltersByName)
+                {
+                    sb.AppendLine("CComPtr<IBaseFilter> CreateFilterByName(const WCHAR* filterName, const GUID& category)");
+                    sb.AppendLine("{");
+                    sb.AppendLine("    HRESULT hr = S_OK;");
+                    sb.AppendLine("    CComPtr<ICreateDevEnum> pSysDevEnum;");
+                    sb.AppendLine("    hr = pSysDevEnum.CoCreateInstance(CLSID_SystemDeviceEnum);");
+                    sb.AppendLine("    if (hrcheck(hr, \"Can't create System Device Enumerator\"))");
+                    sb.AppendLine("        return NULL;");
+                    sb.AppendLine();
+                    sb.AppendLine("    CComPtr<IEnumMoniker> pEnumCat;");
+                    sb.AppendLine("    hr = pSysDevEnum->CreateClassEnumerator(category, &pEnumCat, 0);");
+                    sb.AppendLine();	
+                    sb.AppendLine("    if (hr == S_OK) ");
+                    sb.AppendLine("    {");
+                    sb.AppendLine("        CComPtr<IMoniker> pMoniker;");
+                    sb.AppendLine("        ULONG cFetched;");
+                    sb.AppendLine("        while(pEnumCat->Next(1, &pMoniker, &cFetched) == S_OK)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            CComPtr<IPropertyBag> pPropBag;");
+                    sb.AppendLine("            hr = pMoniker->BindToStorage(0, 0, IID_IPropertyBag, (void **)&pPropBag);");
+                    sb.AppendLine("            if (SUCCEEDED(hr))");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                VARIANT varName;");
+                    sb.AppendLine("                VariantInit(&varName);");
+                    sb.AppendLine("                hr = pPropBag->Read(L\"FriendlyName\", &varName, 0);");
+                    sb.AppendLine("                if (SUCCEEDED(hr))");
+                    sb.AppendLine("                {");
+                    sb.AppendLine("                    if (wcscmp(filterName, varName.bstrVal)==0) {");
+                    sb.AppendLine("                        CComPtr<IBaseFilter> pFilter;");
+                    sb.AppendLine("                        hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&pFilter);");
+                    sb.AppendLine("                        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
+                    sb.AppendLine("                            return NULL;");
+                    sb.AppendLine("                        return pFilter;");
+                    sb.AppendLine("                    }");
+                    sb.AppendLine("                }");
+                    sb.AppendLine("                VariantClear(&varName);				");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            pMoniker.Release();");
+                    sb.AppendLine("        }");
+                    sb.AppendLine("    }");
+                    sb.AppendLine("    return NULL;");
+                    sb.AppendLine("}");
+                }
+                else
+                {
+                    sb.AppendLine("CComPtr<IBaseFilter> CreateFilter(WCHAR* displayName)");
+                    sb.AppendLine("{");
+                    sb.AppendLine("    CComPtr<IBindCtx> pBindCtx;");
+                    sb.AppendLine("    HRESULT hr = CreateBindCtx(0, &pBindCtx);");
+                    sb.AppendLine("    if (hrcheck(hr, \"Can't create bind context\"))");
+                    sb.AppendLine("        return NULL;");
+                    sb.AppendLine();
+                    sb.AppendLine("    ULONG chEaten = 0;");
+                    sb.AppendLine("    CComPtr<IMoniker> pMoniker;");
+                    sb.AppendLine("    hr = MkParseDisplayName(pBindCtx, displayName, &chEaten, &pMoniker);");
+                    sb.AppendLine("    if (hrcheck(hr, \"Can't create parse display name of the filter\"))");
+                    sb.AppendLine("        return NULL;");
+                    sb.AppendLine();
+                    sb.AppendLine("    CComPtr<IBaseFilter> pFilter;");
+                    sb.AppendLine("    if (SUCCEEDED(hr))");
+                    sb.AppendLine("    {");
+                    sb.AppendLine("        hr = pMoniker->BindToObject(pBindCtx, NULL, IID_IBaseFilter, (void**)&pFilter);");
+                    sb.AppendLine("        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
+                    sb.AppendLine("            return NULL;");
+                    sb.AppendLine("    }");
+                    sb.AppendLine("    return pFilter;");
+                    sb.AppendLine("}");                    
+                }
                 sb.AppendLine();
             }
             if (needGetPin)
@@ -827,12 +895,15 @@ namespace gep
             sb.AppendLine("        CHECK_HR(hr, \"Can't run the graph\");");
             sb.AppendLine("        CComQIPtr<IMediaEvent, &IID_IMediaEvent> mediaEvent(graph);");
             sb.AppendLine("        BOOL stop = FALSE;");
+            sb.AppendLine("        MSG msg;");
             sb.AppendLine("        while(!stop) ");
             sb.AppendLine("        {");
             sb.AppendLine("            long ev=0, p1=0, p2=0;");
             sb.AppendLine("            Sleep(500);");
             sb.AppendLine("            printf(\".\");");
-            sb.AppendLine("            if (mediaEvent->GetEvent(&ev, &p1, &p2, 0)==S_OK)");
+            sb.AppendLine("            while(PeekMessage(&msg, NULL, 0,0, PM_REMOVE))");
+            sb.AppendLine("                DispatchMessage(&msg);");
+            sb.AppendLine("            while (mediaEvent->GetEvent(&ev, &p1, &p2, 0)==S_OK)");
             sb.AppendLine("            {");
             sb.AppendLine("                if (ev == EC_COMPLETE || ev == EC_USERABORT)");
             sb.AppendLine("                {");
@@ -929,7 +1000,7 @@ namespace gep
 
     class CodeGenCS : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl;
+        CodeSnippet addFiltMonTpl, addFiltByNameTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl;
         
 
         public override string ToString()
@@ -1030,6 +1101,18 @@ namespace gep
                 "$displayname", @"@device:cm:{33D9A760-90C8-11D0-BD43-00A0C911CE86}\fps1"
             });
 
+            addFiltByNameTpl = new CodeSnippet("Create filter by its name and category", "addFiltByNameTpl",
+                "            //add $name\r\n" +
+                "            IBaseFilter $var = CreateFilterByName(@\"$name\", $category);\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable holding IBaseFilter\r\n" +
+                "$category - CLSID of this filter's category\r\n");
+            addFiltByNameTpl.SetVars(new string[] {
+                "$name", "Fraps Video Decompressor",
+                "$var", "pFrapsVideoDecompressor",
+                "$category", "CLSID_VideoCompressors"
+            });
+
             connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
                 "            //connect $pair\r\n" +
                 "            hr = pBuilder.RenderStream(null, $majortype, $var1, null, $var2);\r\n" +
@@ -1071,7 +1154,7 @@ namespace gep
             "        }\r\n", "");
 
             snippets = new CodeSnippet[] { 
-                defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, setSrcFileTpl, setDstFileTpl,
+                defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, addFiltByNameTpl, setSrcFileTpl, setDstFileTpl,
                 insertTpl, connectTpl, connectDirectTpl, checkTpl
             };
 
@@ -1119,10 +1202,11 @@ namespace gep
             return create + Insert(hi, graph);
         }
 
-        public override string BuildAddFilterMon(HIAddFilterMon hi, Graph graph)
+        public override string BuildAddFilterOther(HIAddFilterOther hi, Graph graph)
         {
-            return addFiltMonTpl.GenerateWith(new string[] {
-                "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName
+            CodeSnippet addFilt = createFiltersByName ? addFiltByNameTpl : addFiltMonTpl;
+            return addFilt.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName, "$category", hi.CatVar
             }) + Insert(hi, graph);
         }
 
@@ -1260,14 +1344,15 @@ namespace gep
             sb.AppendLine("                int hr = mediaControl.Run();");
             sb.AppendLine("                checkHR(hr, \"Can't run the graph\");");
             sb.AppendLine("                bool stop = false;");
-            sb.AppendLine("                int n = 0;");
+           // sb.AppendLine("                int n = 0;");
             sb.AppendLine("                while (!stop)");
             sb.AppendLine("                {");
             sb.AppendLine("                    System.Threading.Thread.Sleep(500);");
             sb.AppendLine("                    Console.Write(\".\");");
             sb.AppendLine("                    EventCode ev;");
             sb.AppendLine("                    IntPtr p1, p2;");
-            sb.AppendLine("                    if (mediaEvent.GetEvent(out ev, out p1, out p2, 0) == 0)");
+            sb.AppendLine("                    System.Windows.Forms.Application.DoEvents();");
+            sb.AppendLine("                    while (mediaEvent.GetEvent(out ev, out p1, out p2, 0) == 0)");
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (ev == EventCode.Complete || ev == EventCode.UserAbort)");
             sb.AppendLine("                        {");
@@ -1283,14 +1368,14 @@ namespace gep
             sb.AppendLine("                        }");
             sb.AppendLine("                        mediaEvent.FreeEventParams(ev, p1, p2);");
             sb.AppendLine("                    }");
-            sb.AppendLine("                    // stop after 10 seconds");
+ /*           sb.AppendLine("                    // stop after 10 seconds");
             sb.AppendLine("                    n++;");
             sb.AppendLine("                    if (n > 20)");
             sb.AppendLine("                    {");
             sb.AppendLine("                        Console.WriteLine(\"stopping..\");");
             sb.AppendLine("                        mediaControl.Stop();");
             sb.AppendLine("                        stop = true;");
-            sb.AppendLine("                    }");
+            sb.AppendLine("                    }");*/
             sb.AppendLine("                }");
             sb.AppendLine("            }");
             sb.AppendLine("            catch (COMException ex)");
@@ -1306,45 +1391,73 @@ namespace gep
             if (needCreateFilterProc)
             {
                 sb.AppendLine();
-                sb.AppendLine("        public static IBaseFilter CreateFilter(string displayName)");
-                sb.AppendLine("        {");
-                sb.AppendLine("            int hr = 0;");
-                sb.AppendLine("            IBaseFilter filter = null;");
-                sb.AppendLine("            IBindCtx bindCtx = null;");
-                sb.AppendLine("            IMoniker moniker = null;");
-                sb.AppendLine("");
-                sb.AppendLine("            try");
-                sb.AppendLine("            {");
-                sb.AppendLine("                hr = CreateBindCtx(0, out bindCtx);");
-                sb.AppendLine("                Marshal.ThrowExceptionForHR(hr);");
-                sb.AppendLine("");
-                sb.AppendLine("                int eaten;");
-                sb.AppendLine("                hr = MkParseDisplayName(bindCtx, displayName, out eaten, out moniker);");
-                sb.AppendLine("                Marshal.ThrowExceptionForHR(hr);");
-                sb.AppendLine("");
-                sb.AppendLine("                Guid guid = typeof(IBaseFilter).GUID;");
-                sb.AppendLine("                object obj;");
-                sb.AppendLine("                moniker.BindToObject(bindCtx, null, ref guid, out obj);");
-                sb.AppendLine("                filter = (IBaseFilter)obj;");
-                sb.AppendLine("            }");
-                //sb.AppendLine("            catch");
-                //sb.AppendLine("            {");
-                //sb.AppendLine("                throw;");
-                //sb.AppendLine("            }");
-                sb.AppendLine("            finally");
-                sb.AppendLine("            {");
-                sb.AppendLine("                if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);");
-                sb.AppendLine("                if (moniker != null) Marshal.ReleaseComObject(moniker);");
-                sb.AppendLine("            }");
-                sb.AppendLine();
-                sb.AppendLine("            return filter;");
-                sb.AppendLine("        }");
+                if (createFiltersByName)
+                {
+                    sb.AppendLine("        public static IBaseFilter CreateFilterByName(string filterName, Guid category)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            int hr = 0;");
+                    sb.AppendLine("            DsDevice[] devices = DsDevice.GetDevicesOfCat(category);");
+                    sb.AppendLine("            foreach(DsDevice dev in devices)");
+                    sb.AppendLine("                if (dev.Name == filterName)");
+                    sb.AppendLine("                {");
+                    sb.AppendLine("                    IBaseFilter filter = null;");
+                    sb.AppendLine("                    IBindCtx bindCtx = null;");
+                    sb.AppendLine("                    try");
+                    sb.AppendLine("                    {");
+                    sb.AppendLine("                        hr = CreateBindCtx(0, out bindCtx);");
+                    sb.AppendLine("                        DsError.ThrowExceptionForHR(hr);");
+                    sb.AppendLine("                        Guid guid = typeof(IBaseFilter).GUID;");
+                    sb.AppendLine("                        object obj;");
+                    sb.AppendLine("                        dev.Mon.BindToObject(bindCtx, null, ref guid, out obj);");
+                    sb.AppendLine("                        filter = (IBaseFilter)obj;");
+                    sb.AppendLine("                    }");
+                    sb.AppendLine("                    finally");
+                    sb.AppendLine("                    {");
+                    sb.AppendLine("                        if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);");
+                    sb.AppendLine("                    }");
+                    sb.AppendLine("                    return filter;");
+                    sb.AppendLine("                }");
+                    sb.AppendLine("            return null;");
+                    sb.AppendLine("        }");
+                }
+                else
+                {
+                    sb.AppendLine("        public static IBaseFilter CreateFilter(string displayName)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            int hr = 0;");
+                    sb.AppendLine("            IBaseFilter filter = null;");
+                    sb.AppendLine("            IBindCtx bindCtx = null;");
+                    sb.AppendLine("            IMoniker moniker = null;");
+                    sb.AppendLine("");
+                    sb.AppendLine("            try");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                hr = CreateBindCtx(0, out bindCtx);");
+                    sb.AppendLine("                Marshal.ThrowExceptionForHR(hr);");
+                    sb.AppendLine("");
+                    sb.AppendLine("                int eaten;");
+                    sb.AppendLine("                hr = MkParseDisplayName(bindCtx, displayName, out eaten, out moniker);");
+                    sb.AppendLine("                Marshal.ThrowExceptionForHR(hr);");
+                    sb.AppendLine("");
+                    sb.AppendLine("                Guid guid = typeof(IBaseFilter).GUID;");
+                    sb.AppendLine("                object obj;");
+                    sb.AppendLine("                moniker.BindToObject(bindCtx, null, ref guid, out obj);");
+                    sb.AppendLine("                filter = (IBaseFilter)obj;");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            finally");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);");
+                    sb.AppendLine("                if (moniker != null) Marshal.ReleaseComObject(moniker);");
+                    sb.AppendLine("            }");
+                    sb.AppendLine();
+                    sb.AppendLine("            return filter;");
+                    sb.AppendLine("        }");
+                    sb.AppendLine();
+                    sb.AppendLine("        [DllImport(\"ole32.dll\")]");
+                    sb.AppendLine("        public static extern int MkParseDisplayName(IBindCtx pcb, [MarshalAs(UnmanagedType.LPWStr)] string szUserName, out int pchEaten, out IMoniker ppmk);");
+                }
                 sb.AppendLine();
                 sb.AppendLine("        [DllImport(\"ole32.dll\")]");
                 sb.AppendLine("        public static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);");
-                sb.AppendLine("");
-                sb.AppendLine("        [DllImport(\"ole32.dll\")]");
-                sb.AppendLine("        public static extern int MkParseDisplayName(IBindCtx pcb, [MarshalAs(UnmanagedType.LPWStr)] string szUserName, out int pchEaten, out IMoniker ppmk);");
                 sb.AppendLine();
             }
 

@@ -92,11 +92,12 @@ namespace gep
             }
             int sugg_url = (int)nrk.GetValue("suggestURL", 0);
             suggestURLs = sugg_url > 0;
-            suggestURLsForSourcesToolStripMenuItem.Checked = suggestURLs;
 
             int useDirCon = (int) nrk.GetValue("useDirectConnect", 1);
             useDirectConnect = useDirCon > 0;
-            useDirectConnectMenuItem.Checked = useDirectConnect;
+
+            createFiltersByName = (int)nrk.GetValue("createFiltersByName", 1) > 0;
+            autoArrange = (int)nrk.GetValue("autoArrange", 0) > 0;
 
             if (filetoopen == null)
                 OnNewGraph(null, null);
@@ -210,15 +211,10 @@ namespace gep
         }
 
         public bool autoArrange = false;
+        public bool suggestURLs = false;
+        public bool useDirectConnect = true; // in code generation
+        public bool createFiltersByName = true;
 
-        private void OnAutoArrage(object sender, EventArgs e)
-        {
-            autoArrange = !autoArrange;
-            autoLayoutFiltersToolStripMenuItem.Checked = autoArrange;
-            if (autoArrange && activeGraphForm != null)
-                activeGraphForm.LayoutFilters();
-
-        }
 
         List<FilterPropsKernel> favlist = new List<FilterPropsKernel>();
 
@@ -317,15 +313,6 @@ namespace gep
                 if (activeGraphForm != null)
                     activeGraphForm.RenderURL(rf.selectedURL);
             }
-
-        }
-
-        public bool suggestURLs = false;
-
-        private void OnSuggestURLs(object sender, EventArgs e)
-        {
-            suggestURLs = !suggestURLs;
-            suggestURLsForSourcesToolStripMenuItem.Checked = suggestURLs;
         }
 
         private void OnClosing(object sender, FormClosingEventArgs e)
@@ -334,11 +321,10 @@ namespace gep
                              Registry.CurrentUser.CreateSubKey(keyname);
             if (rk != null)
             {
-                int v = suggestURLs ? 1 : 0;
-                rk.SetValue("suggestURL", v);
-
-                v = useDirectConnect ? 1 : 0;
-                rk.SetValue("useDirectConnect", v);
+                rk.SetValue("suggestURL", suggestURLs ? 1 : 0);
+                rk.SetValue("useDirectConnect", useDirectConnect ? 1 : 0);
+                rk.SetValue("createFiltersByName", createFiltersByName ? 1 : 0);
+                rk.SetValue("autoArrange", autoArrange ? 1 : 0);
                 SaveFavorites(rk);
             }
         }
@@ -360,14 +346,6 @@ namespace gep
         {
             TemplatesForm tf = new TemplatesForm();
             tf.ShowDialog();
-        }
-
-        public bool useDirectConnect = true; // in code generation
-
-        private void OnUseDirectConnect(object sender, EventArgs e)
-        {
-            useDirectConnect = !useDirectConnect;
-            useDirectConnectMenuItem.Checked = useDirectConnect;
         }
 
         private void OnDragDrop(object sender, DragEventArgs e)
@@ -431,6 +409,21 @@ namespace gep
                             }
 
                 return bestrec;                
+            }
+        }
+
+        private void OnPreferences(object sender, EventArgs e)
+        {
+            PreferencesForm frm = new PreferencesForm(autoArrange, suggestURLs, useDirectConnect, createFiltersByName);
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                autoArrange = frm.autoArrange;
+                useDirectConnect = frm.useDirectConnect;
+                suggestURLs = frm.suggestURLs;
+                createFiltersByName = frm.createFiltersByName;
+
+                if (autoArrange && activeGraphForm != null)
+                    activeGraphForm.LayoutFilters();
             }
         }
     }//class

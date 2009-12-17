@@ -21,7 +21,7 @@ namespace gep
         string filename; //with path
         int version;
         int merit;
-        string catguid;
+        public string catguid;
         static string sys32 = System.Environment.GetFolderPath(System.Environment.SpecialFolder.System)+"\\";
         long filesize;
         DateTime cr_time, mod_time;

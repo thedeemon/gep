@@ -47,11 +47,9 @@ namespace gep
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.autoLayoutFiltersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.suggestURLsForSourcesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.useClockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.codeTemplatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.useDirectConnectMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.preferencesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.favoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearFavoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -221,49 +219,33 @@ namespace gep
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.autoLayoutFiltersToolStripMenuItem,
-            this.suggestURLsForSourcesToolStripMenuItem,
             this.useClockToolStripMenuItem,
             this.codeTemplatesToolStripMenuItem,
-            this.useDirectConnectMenuItem});
+            this.preferencesToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.optionsToolStripMenuItem.Text = "Options";
             // 
-            // autoLayoutFiltersToolStripMenuItem
-            // 
-            this.autoLayoutFiltersToolStripMenuItem.Name = "autoLayoutFiltersToolStripMenuItem";
-            this.autoLayoutFiltersToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
-            this.autoLayoutFiltersToolStripMenuItem.Text = "AutoArrange filters";
-            this.autoLayoutFiltersToolStripMenuItem.Click += new System.EventHandler(this.OnAutoArrage);
-            // 
-            // suggestURLsForSourcesToolStripMenuItem
-            // 
-            this.suggestURLsForSourcesToolStripMenuItem.Name = "suggestURLsForSourcesToolStripMenuItem";
-            this.suggestURLsForSourcesToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
-            this.suggestURLsForSourcesToolStripMenuItem.Text = "Suggest URLs for sources and sinks";
-            this.suggestURLsForSourcesToolStripMenuItem.Click += new System.EventHandler(this.OnSuggestURLs);
-            // 
             // useClockToolStripMenuItem
             // 
             this.useClockToolStripMenuItem.Name = "useClockToolStripMenuItem";
-            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
-            this.useClockToolStripMenuItem.Text = "Use clock";
+            this.useClockToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.useClockToolStripMenuItem.Text = "Use clock in this graph";
             this.useClockToolStripMenuItem.Click += new System.EventHandler(this.OnUseClock);
             // 
             // codeTemplatesToolStripMenuItem
             // 
             this.codeTemplatesToolStripMenuItem.Name = "codeTemplatesToolStripMenuItem";
-            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(274, 22);
+            this.codeTemplatesToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
             this.codeTemplatesToolStripMenuItem.Text = "Code templates...";
             this.codeTemplatesToolStripMenuItem.Click += new System.EventHandler(this.OnCodeTemplates);
             // 
-            // useDirectConnectMenuItem
+            // preferencesToolStripMenuItem
             // 
-            this.useDirectConnectMenuItem.Name = "useDirectConnectMenuItem";
-            this.useDirectConnectMenuItem.Size = new System.Drawing.Size(274, 22);
-            this.useDirectConnectMenuItem.Text = "Use direct connect in code generation";
-            this.useDirectConnectMenuItem.Click += new System.EventHandler(this.OnUseDirectConnect);
+            this.preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
+            this.preferencesToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.preferencesToolStripMenuItem.Text = "Preferences...";
+            this.preferencesToolStripMenuItem.Click += new System.EventHandler(this.OnPreferences);
             // 
             // favoritesToolStripMenuItem
             // 
@@ -445,7 +427,6 @@ namespace gep
         private System.Windows.Forms.ToolStripButton buyToolStripButton;
         private System.Windows.Forms.ToolStripMenuItem renderFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem autoLayoutFiltersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem favoritesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearFavoritesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -453,12 +434,11 @@ namespace gep
         private System.Windows.Forms.ToolStripMenuItem disconnectFromRunningToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem windowsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renderURLToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem suggestURLsForSourcesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useClockToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem codeTemplatesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem useDirectConnectMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem preferencesToolStripMenuItem;
     }
 }
 
