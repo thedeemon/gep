@@ -460,6 +460,12 @@ namespace gep
                         menu.MenuItems.Add("Add to favorites", AddToFavorites);
                         menu.MenuItems.Add("Find this filter in the list", FindFilterInList);
                     }
+
+                    if ((filter.BaseFilter as IPersistStream) != null)
+                    {
+                        menu.MenuItems.Add("Save state to code", SaveFilterStateToCode);
+                    }
+
                     menu.Show(this, eLocation);
                 }
             }
@@ -1094,6 +1100,25 @@ namespace gep
             Bounds = Program.mainform.MaximumRectangle;
         }
 
+        private void SaveFilterStateToCode(object sender, EventArgs e)
+        {
+            if (rightClickedFilter != null)
+            {
+                try
+                {
+                    rightClickedFilter.SaveStateToCode();
+                }
+                catch (COMException ex)
+                {
+                    Graph.ShowCOMException(ex, "Can't get save filter's state");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Exception caught while saving state");
+                }
+            }
+            rightClickedFilter = null;
+        }
     }// GraphForm class
 
     class SickToolStripRenderer : ToolStripProfessionalRenderer
@@ -1127,5 +1152,6 @@ namespace gep
         CPP = 1,
         CS = 2
     }
+
 
 }//namespace

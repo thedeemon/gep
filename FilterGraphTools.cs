@@ -1126,6 +1126,8 @@ namespace gep
             return lst;
         }
 
+        [System.Runtime.InteropServices.DllImport("OLE32.DLL", EntryPoint = "CreateStreamOnHGlobal")] // Create a COM stream from a pointer in unmanaged memory
+        extern public static int CreateStreamOnHGlobal(IntPtr ptr, bool delete, out IStream pOutStm);
     }
 
     #region Unmanaged Code declarations

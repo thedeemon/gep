@@ -738,7 +738,7 @@ namespace gep
             if (CanPlaceFilter(orgpos, f))
                 return orgpos;
             for (int r = 1; r < 99; r++)
-            {
+            { 
                 for (int x = -r; x < r; x++)
                 {
                     Point p = new Point(orgpos.X + x, orgpos.Y - r);
@@ -768,9 +768,18 @@ namespace gep
             return "{" + g.ToString().ToUpperInvariant()+ "}";
         }
 
+
         public static void ShowCOMException(COMException e, string message)
         {
             MessageBox.Show(e.ErrorCode.ToString("X") + ": " + e.Message, message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        public static void CheckHR(int hr, string action)
+        {
+            try  { DsError.ThrowExceptionForHR(hr);  }
+            catch (COMException e) { 
+                throw new COMException(e.Message + "\n\nin\n" + action, e.ErrorCode); 
+            }
         }
 
         public void SaveGraph(string filename)

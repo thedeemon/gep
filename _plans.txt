@@ -1,3 +1,6 @@
+- bug: 'guidnames' not included in generated C++ code
+- warn when running in 64 bits
+- bug: multiple names in video window title
 - change protection
 - open all grf files http://msdn.microsoft.com/en-us/library/ms783350 
 - make manual
@@ -6,3 +9,4 @@
 - load filters in different thread
 - unicode-friendly C++
 - create DMO filters differently (use DMO wrapper)
+- free filters approptiately
