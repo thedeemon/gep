@@ -20,6 +20,8 @@ namespace gep
             dmo_cats.Add("DMO Audio Capture Effects", DirectShowLib.DMO.DMOCategory.AudioCaptureEffect);
 
             InitializeComponent();
+            string nbits = IntPtr.Size == 4 ? "32" : "64";
+            this.Text = "Filters (" + nbits + " bits)";
             filtertree.Sorted = true;
         }
 

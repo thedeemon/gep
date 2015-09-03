@@ -1,9 +1,9 @@
 - bug: OnLoad crash (same key to dictionary) on some systems
-- bug: 64 bit version in Win8 "trial expired"
++ bug: 64 bit version in Win8 "trial expired"
 - bug: 'guidnames' not included in generated C++ code
-- warn when running in 64 bits (already done in setup)
++ warn when running in 64 bits (already done in setup)
 - bug: multiple names in video window title
-- change protection
++ change protection
 - open all grf files http://msdn.microsoft.com/en-us/library/ms783350 
 - make manual
 - precompile (ngen)
