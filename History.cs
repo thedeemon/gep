@@ -256,7 +256,7 @@ namespace gep
         List<HistoryItem> history = new List<HistoryItem>();
         List<TempHistoryItem> temp = new List<TempHistoryItem>();
 
-        public IEnumerable Items
+        public IEnumerable<HistoryItem> Items
         {
             get
             {

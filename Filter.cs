@@ -288,7 +288,7 @@ namespace gep
                     pin.Rect = new Rectangle(boxsize.X * cellsize - pinsize, (pin.Num + 1) * cellsize + delta, pinsize, pinsize);
         }
 
-        public System.Collections.IEnumerable Connections
+        public System.Collections.Generic.IEnumerable<PinConnection> Connections
         {
             get 
             {
@@ -303,7 +303,7 @@ namespace gep
             return pins.Find(delegate(Pin p) { return p.UniqName == pinname; });
         }
 
-        public System.Collections.IEnumerable Pins { get { foreach (Pin pin in pins) yield return pin; } }
+        public System.Collections.Generic.IEnumerable<Pin> Pins { get { foreach (Pin pin in pins) yield return pin; } }
 
         public int Stage
         {
