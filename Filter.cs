@@ -39,7 +39,6 @@ namespace gep
         FilterState filterState;
         static Dictionary<string, string> dispnames = new Dictionary<string, string>(); //orgname => display name
 
-
         public Filter(FilterProps fp)
         {
             filterProps = fp;
@@ -227,10 +226,10 @@ namespace gep
                 IVideoWindow vw = basefilter as IVideoWindow;
                 if (vw != null)
                 {
-                    string s;
-                    vw.get_Caption(out s);
-                    string gname = Graph.Form.Text + ": " + name + ": ";
-                    vw.put_Caption(gname + s);
+                    //string s;
+                    //vw.get_Caption(out s);
+                    string gname = Graph.Form.Text + ": " + name;// +": ";
+                    vw.put_Caption(gname);
                     //vw.SetWindowForeground(OABool.False);
                     //vw.put_AutoShow(OABool.True);
                     //vw.put_Owner(Program.mainform.Handle); hangs
