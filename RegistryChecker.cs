@@ -7,36 +7,57 @@ using System.IO;
 
 namespace gep
 {
+    struct Pair<A, B>
+    {
+        public A fst;
+        public B snd;
+
+        public Pair(A x, B y) { fst = x; snd = y; }
+    }
+
+    struct Unit { }
+
+    delegate Thunk Thunk();
+    delegate Thunk Kont<T>(T x);
+
+    class Res<T> : Exception
+    {
+        public T res;
+        public Res(T x) { res = x; }
+    }
+
+    class Sum<A, B>
+    {
+    }
+
+    class Left<A, B> : Sum<A, B>
+    {
+        public A a;
+        public Left(A x) { a = x; }
+    }
+    class Right<A, B> : Sum<A, B>
+    {
+        public B b;
+        public Right(B x) { b = x; }
+    }
+
+    delegate Thunk RF<T>(T x, Kont<T> f);
+
+    class UnRec<T>
+    {
+        RF<T> rf;
+        public UnRec(RF<T> recfun) { rf = recfun; }
+        public Thunk g(T x) { return rf(x, g); }
+    }
+
+
     class RegistryChecker
     {
         public static int[] R;
-        static byte[][] A; //arrays
-        static bool flag = false;
-
-        public const int RET = 0x80;//r : return r
-        public const int JZ = 0x81; //v : if fl ip += v
-        public const int JMP = 0x82; //v : ip += v 
-
-        //modificators. R is number of register; V is value; A is number of register that has index in array z
-        public const int RR = 0x00; //CMD|RR, rDst, rSrc
-        public const int RA = 0x10; //CMD|RA, rDst, rIndex, vArray //vArray = 0..15 or -1 for R_array
-        public const int RV = 0x20; //CMD|RV, rDst, vValue
-
-        public const int ADD = 1;  //a1; a2 : a1 += a2
-        public const int MUL = 2;  //a1; a2 : a1 *= a2
-        public const int MOD = 3;  //a1; a2 : a1 %= a2
-        public const int SUB = 4;  //a1; a2 : a1 -= a2
-        public const int DIV = 9;  //a1; a2 : a1 /= a2
-        public const int XOR = 10; //a1; a2 : a1 ^= a2
-        public const int MOV = 5;  //a1; a2 : a1 = a2
-        public const int LE = 7; //a1; a2 : fl = a1 < a2 
-        public const int EQ = 8; //a1; a2 : fl = a1 == a2 */
-
 
         public RegistryChecker()
         {
             R = new int[256];
-            A = new byte[16][];
             Random rnd = new Random();
 
             R[07] = 2214472;
@@ -53,34 +74,82 @@ namespace gep
         public void CalcDays()
         {
             DateTime dt = DateTime.Now;
-            long curdate = dt.Ticks, firstdate = DateTime.MinValue.Ticks;
-            long xr = XorValue();
-            string keyname = @"CLSID\{8AF0B76D-52D5-4b6a-82EE-662078EE80FF}\InprocServer32";
-            using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname, true))
-            {
-                if (rk == null) //no key yet
-                {
-                    using(RegistryKey rk2 = Registry.ClassesRoot.CreateSubKey(keyname))
-                        if (rk2 != null)
-                            rk2.SetValue("", curdate ^ xr, RegistryValueKind.QWord);
-                    firstdate = curdate;
-                } 
-                else                
-                {
-                    firstdate =(long) rk.GetValue("", (long)0);
-                    if (firstdate == 0)
-                    {
-                        firstdate = curdate;
-                        rk.SetValue("", curdate ^ xr, RegistryValueKind.QWord);
-                    }
-                    firstdate ^= xr;
-                }
-            }
-            DateTime fd = new DateTime(firstdate);
+            var di = new DirectoryInfo(Application.StartupPath);
+            var fd = di.CreationTime;
             TimeSpan ts = dt - fd;
+            R[05] = 1858; // just some noise
+            R[08] = 2304;
+            R[12] = 14;
             R[13] = ts.Days;
-            //MessageBox.Show(R[13].ToString());
+            R[16] = 30;
+            R[48] = 16384;
         }
+
+        static Pair<A, B> pair<A, B>(A a, B b)
+        {
+            Pair<A, B> p;
+            p.fst = a; p.snd = b;
+            return p;
+        }
+
+        static Unit unit;
+
+        static Thunk run<T>(Kont<T> f, T x)
+        {
+            return f(x);
+        }
+
+        static Kont<T> unrec<T>(RF<T> rf)
+        {
+            return new UnRec<T>(rf).g;
+        }
+
+        static Sum<A, B> left<A, B>(A a)
+        {
+            return new Left<A, B>(a);
+        }
+        static Sum<A, B> right<A, B>(B b)
+        {
+            return new Right<A, B>(b);
+        }
+
+        static Thunk match<A, B>(Sum<A, B> e, Kont<A> fa, Kont<B> fb)
+        {
+            var l = e as Left<A, B>;
+            if (l != null) return () => fa(l.a);
+            var r = e as Right<A, B>;
+            if (r != null) return () => fb(r.b);
+            throw new Exception("bad Sum value");
+        }
+
+        static Sum<Unit, Unit> eql(int a, int b)
+        {
+            if (a == b) return right<Unit, Unit>(unit);
+            else return left<Unit, Unit>(unit);
+        }
+
+        static Sum<Unit, Unit> less(int a, int b)
+        {
+            if (a < b) return right<Unit, Unit>(unit);
+            else return left<Unit, Unit>(unit);
+        }
+
+        static int[] set(int[] a, int i, int v)
+        {
+            a[i] = v;
+            return a;
+        }
+
+        static Kont<Kont<T>> lazy<T>(T x) { return k => k(x); }
+
+        static Kont<Kont<int[]>> ofString(string s)
+        {
+            var m = new int[s.Length];
+            for (int i = 0; i < s.Length; i++)
+                m[i] = (int)s[i];
+            return lazy(m);
+        }
+
 
         /*
 {0xe0, 0xbe, 0xf7, 0xcf, 0xba, 0xa4, 0x42, 0x50, 0xae, 0x67, 0x90, 0x01, 0x62, 0x22, 0x99, 0x91},
@@ -119,31 +188,8 @@ namespace gep
          * R[27] + R[14] + R[52] = 1 if registered, 0 if not
          */
 
-        public bool CheckCode(string email, string code)
+        public bool CheckCode(string emailstr, string codestr)
         {
-            A[1] = new byte[16];
-            A[2] = new byte[code.Length];
-            R[5] = email.Length;
-            R[6] = code.Length;
-            byte[] buf;
-            int sz = 0;
-            //MessageBox.Show(Application.ExecutablePath);
-            using (FileStream fs = new FileStream(Application.ExecutablePath, FileMode.Open, FileAccess.Read))
-            {
-                sz = (int)fs.Length;
-                buf = new byte[sz];
-                fs.Read(buf, 0, sz);
-            }
-            A[0] = buf;
-            R[4] = sz;
-            
-            if (email.Length>0)
-                for (int i = 0; i < 16; i++)
-                    A[1][i] = (byte)email[i % email.Length];
-            for (int i = 0; i < code.Length; i++)
-                A[2][i] = (byte)code[i];
-
-
             /*R[11] = -(R[24] + R[66]);
             R[32] = -(R[07] + R[55] - 1);
             R[69] = -(R[81] + R[15] - 175);
@@ -152,965 +198,33 @@ namespace gep
             //R[1] = 1;//test
             if (R[13] <= 30)
                 R[93] = 30 - R[13]; //days left*/
-            Run(vmcode);
-            /*int sum = 0;
-            int codeval =  (hexc2int(A[2][0]) << 8) + (hexc2int(A[2][1]) << 4) + hexc2int(A[2][2]);
-            for (int i = 0; i < 16; i++)
-                sum += ((int)A[1][i] * (int)A[0][i])%256;*/
-            //MessageBox.Show("check code: " + " vmret="+x/*.ToString("X")*/ + " vm.codeval="+R[25].ToString("X")
-            //     + " vm.sum=" + R[20].ToString("X") + " sum="+sum);
-            /*if (sum == codeval)
+
+            var r = lazy(R);
+            var elen = lazy(emailstr.Length);
+            var codelen = lazy(codestr.Length);
+            var email = ofString(emailstr);
+            var code = ofString(codestr);
+
+            Thunk fmain = () => run<Kont<Pair<Kont<Kont<int[]>>, Kont<int[]>>>>(x0 => () => run<Pair<Kont<Kont<int[]>>, Kont<int[]>>>(x0, pair<Kont<Kont<int[]>>, Kont<int[]>>(k1 => () => run<Kont<Pair<Kont<Kont<int[]>>, Kont<int[]>>>>(x2 => () => run<Pair<Kont<Kont<int[]>>, Kont<int[]>>>(x2, pair<Kont<Kont<int[]>>, Kont<int[]>>(k3 => () => run<Kont<int[]>>(r, m44 => () => run<int>(i45 => () => run<int>(a47 => () => run<Kont<int[]>>(r, m53 => () => run<int>(i54 => () => run<int>(a49 => () => run<Kont<int[]>>(r, m51 => () => run<int>(i52 => () => run<int>(b50 => () => run<int>(b48 => () => run<int>(v46 => () => run<int[]>(m31 => () => run<int>(i32 => () => run<int>(a34 => () => run<Kont<int[]>>(r, m42 => () => run<int>(i43 => () => run<int>(a38 => () => run<Kont<int[]>>(r, m40 => () => run<int>(i41 => () => run<int>(b39 => () => run<int>(a36 => () => run<int>(b37 => () => run<int>(b35 => () => run<int>(v33 => () => run<int[]>(m18 => () => run<int>(i19 => () => run<int>(a21 => () => run<Kont<int[]>>(r, m29 => () => run<int>(i30 => () => run<int>(a25 => () => run<Kont<int[]>>(r, m27 => () => run<int>(i28 => () => run<int>(b26 => () => run<int>(a23 => () => run<int>(b24 => () => run<int>(b22 => () => run<int>(v20 => () => run<int[]>(m7 => () => run<int>(i8 => () => run<int>(a10 => () => run<Kont<int[]>>(r, m16 => () => run<int>(i17 => () => run<int>(a12 => () => run<Kont<int[]>>(r, m14 => () => run<int>(i15 => () => run<int>(b13 => () => run<int>(b11 => () => run<int>(v9 => () => run<int[]>(m4 => () => run<int>(i5 => () => run<int>(v6 => () => run<int[]>(k3, set(m4, i5, v6)), 1), 0), set(m7, i8, v9)), (a10 - b11)), (a12 + b13)), m14[i15]), 52)), m16[i17]), 14)), 0), 27), set(m18, i19, v20)), (a21 - b22)), (a23 - b24)), 175), (a25 + b26)), m27[i28]), 15)), m29[i30]), 81)), 0), 69), set(m31, i32, v33)), (a34 - b35)), (a36 - b37)), 1), (a38 + b39)), m40[i41]), 55)), m42[i43]), 7)), 0), 32), set(m44, i45, v46)), (a47 - b48)), (a49 + b50)), m51[i52]), 66)), m53[i54]), 24)), 0), 11)), k1)), w55 => () => run<Kont<int[]>>(w55.fst, m68 => () => run<int>(i69 => () => run<int>(a66 => () => run<int>(b67 => () => run<Sum<Unit, Unit>>(z58 => match<Unit, Unit>(z58, u56 => () => run<Kont<int[]>>(w55.fst, w55.snd), u57 => () => run<Kont<int[]>>(w55.fst, m59 => () => run<int>(i60 => () => run<int>(a62 => () => run<Kont<int[]>>(w55.fst, m64 => () => run<int>(i65 => () => run<int>(b63 => () => run<int>(v61 => () => run<int[]>(w55.snd, set(m59, i60, v61)), (a62 - b63)), m64[i65]), 13)), 30), 93))), less(a66, b67)), 31), m68[i69]), 13))), x => { throw new Res<int[]>(x); })), w70 => () => run<Kont<int>>(elen, a217 => () => run<int>(b218 => () => run<Sum<Unit, Unit>>(z73 => match<Unit, Unit>(z73, u71 => () => run<Kont<int>>(codelen, a215 => () => run<int>(b216 => () => run<Sum<Unit, Unit>>(z76 => match<Unit, Unit>(z76, u74 => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int[]>>>>(x77 => () => run<Pair<Kont<Kont<int>>, Kont<int[]>>>(x77, pair<Kont<Kont<int>>, Kont<int[]>>(k78 => () => run<Kont<Pair<Kont<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>, Kont<int>>>>(x79 => () => run<Pair<Kont<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>, Kont<int>>>(x79, pair<Kont<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>, Kont<int>>(k80 => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>(k80, w81 => () => run<Kont<int>>(w81.fst, a89 => () => run<int>(b90 => () => run<Sum<Unit, Unit>>(z84 => match<Unit, Unit>(z84, u82 => () => run<Kont<int>>(w81.fst, a85 => () => run<int>(b86 => () => run<int>(w81.snd, (a85 - b86)), 55)), u83 => () => run<Kont<int>>(w81.fst, a87 => () => run<int>(b88 => () => run<int>(w81.snd, (a87 - b88)), 48))), less(a89, b90)), 60))), k78)), w91 => () => run<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>(w91.fst, x108 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x108, pair<Kont<Kont<int>>, Kont<int>>(k109 => () => run<Kont<int[]>>(code, m110 => () => run<int>(i111 => () => run<int>(k109, m110[i111]), 3)), a106 => () => run<int>(b107 => () => run<int>(a98 => () => run<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>(w91.fst, x102 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x102, pair<Kont<Kont<int>>, Kont<int>>(k103 => () => run<Kont<int[]>>(code, m104 => () => run<int>(i105 => () => run<int>(k103, m104[i105]), 4)), a100 => () => run<int>(b101 => () => run<int>(b99 => () => run<int>(a92 => () => run<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>(w91.fst, x94 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x94, pair<Kont<Kont<int>>, Kont<int>>(k95 => () => run<Kont<int[]>>(code, m96 => () => run<int>(i97 => () => run<int>(k95, m96[i97]), 5)), b93 => () => run<int>(w91.snd, (a92 + b93))))), (a98 + b99)), (a100 * b101)), 16)))), (a106 * b107)), 256))))), w70.snd)), w112 => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int[]>>>>(x113 => () => run<Pair<Kont<Kont<int>>, Kont<int[]>>>(x113, pair<Kont<Kont<int>>, Kont<int[]>>(k114 => () => run<Kont<Pair<Kont<Kont<int[]>>, Kont<int>>>>(x115 => () => run<Pair<Kont<Kont<int[]>>, Kont<int>>>(x115, pair<Kont<Kont<int[]>>, Kont<int>>(k116 => () => run<int>(sz165 => () => run<int[]>(m162 => () => run<int>(i163 => () => run<int>(v164 => () => run<int[]>(m159 => () => run<int>(i160 => () => run<int>(v161 => () => run<int[]>(m156 => () => run<int>(i157 => () => run<int>(v158 => () => run<int[]>(m153 => () => run<int>(i154 => () => run<int>(v155 => () => run<int[]>(m150 => () => run<int>(i151 => () => run<int>(v152 => () => run<int[]>(m147 => () => run<int>(i148 => () => run<int>(v149 => () => run<int[]>(m144 => () => run<int>(i145 => () => run<int>(v146 => () => run<int[]>(m141 => () => run<int>(i142 => () => run<int>(v143 => () => run<int[]>(m138 => () => run<int>(i139 => () => run<int>(v140 => () => run<int[]>(m135 => () => run<int>(i136 => () => run<int>(v137 => () => run<int[]>(m132 => () => run<int>(i133 => () => run<int>(v134 => () => run<int[]>(m129 => () => run<int>(i130 => () => run<int>(v131 => () => run<int[]>(m126 => () => run<int>(i127 => () => run<int>(v128 => () => run<int[]>(m123 => () => run<int>(i124 => () => run<int>(v125 => () => run<int[]>(m120 => () => run<int>(i121 => () => run<int>(v122 => () => run<int[]>(m117 => () => run<int>(i118 => () => run<int>(v119 => () => run<int[]>(k116, set(m117, i118, v119)), 69), 15), set(m120, i121, v122)), 239), 14), set(m123, i124, v125)), 115), 13), set(m126, i127, v128)), 209), 12), set(m129, i130, v131)), 241), 11), set(m132, i133, v134)), 71), 10), set(m135, i136, v137)), 22), 9), set(m138, i139, v140)), 158), 8), set(m141, i142, v143)), 215), 7), set(m144, i145, v146)), 66), 6), set(m147, i148, v149)), 106), 5), set(m150, i151, v152)), 156), 4), set(m153, i154, v155)), 135), 3), set(m156, i157, v158)), 156), 2), set(m159, i160, v161)), 218), 1), set(m162, i163, v164)), 103), 0), new int[sz165]), 16), k114)), w166 => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>(x167 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x167, pair<Kont<Kont<int>>, Kont<int>>(k168 => () => run<int>(k168, 0), w166.snd)), unrec<Pair<Kont<Kont<int>>, Kont<int>>>((w169, rec170) => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>(x172 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x172, pair<Kont<Kont<int>>, Kont<int>>(k173 => () => run<Kont<int[]>>(w166.fst, m182 => () => run<Kont<int>>(w169.fst, i183 => () => run<int>(a176 => () => run<Kont<int[]>>(email, m178 => () => run<Kont<int>>(w169.fst, a180 => () => run<Kont<int>>(elen, b181 => () => run<int>(i179 => () => run<int>(b177 => () => run<int>(a174 => () => run<int>(b175 => () => run<int>(k173, (a174 % b175)), 256), (a176 * b177)), m178[i179]), (a180 % b181))))), m182[i183]))), w169.snd)), w184 => () => run<Kont<int>>(w169.fst, a194 => () => run<int>(b195 => () => run<Sum<Unit, Unit>>(z187 => match<Unit, Unit>(z187, u185 => () => run<Kont<int>>(w184.fst, a188 => () => run<Kont<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>>(u171 => () => run<Kont<Pair<Kont<Kont<int>>, Kont<int>>>>(u171, rec170), x190 => () => run<Pair<Kont<Kont<int>>, Kont<int>>>(x190, pair<Kont<Kont<int>>, Kont<int>>(k191 => () => run<Kont<int>>(w169.fst, a192 => () => run<int>(b193 => () => run<int>(k191, (a192 + b193)), 1)), b189 => () => run<int>(w184.snd, (a188 + b189)))))), u186 => () => run<Kont<int>>(w184.fst, w184.snd)), eql(a194, b195)), 15)))))), w112.snd)), w196 => () => run<Kont<int>>(w112.fst, a213 => () => run<Kont<int>>(w196.fst, b214 => () => run<Sum<Unit, Unit>>(z199 => match<Unit, Unit>(z199, u197 => () => run<Kont<int[]>>(w70.fst, w196.snd), u198 => () => run<Kont<Pair<Kont<Kont<int[]>>, Kont<int[]>>>>(x200 => () => run<Pair<Kont<Kont<int[]>>, Kont<int[]>>>(x200, pair<Kont<Kont<int[]>>, Kont<int[]>>(k201 => () => run<Kont<int[]>>(w70.fst, m202 => () => run<int>(i203 => () => run<int>(v204 => () => run<int[]>(k201, set(m202, i203, v204)), 1), 1)), w196.snd)), w205 => () => run<Kont<int[]>>(w205.fst, m206 => () => run<int>(i207 => () => run<Kont<int[]>>(w205.fst, m211 => () => run<int>(i212 => () => run<int>(a209 => () => run<int>(b210 => () => run<int>(v208 => () => run<int[]>(w205.snd, set(m206, i207, v208)), (a209 + b210)), 1), m211[i212]), 27)), 27)))), eql(a213, b214)))))), u75 => () => run<Kont<int[]>>(w70.fst, w70.snd)), less(a215, b216)), 6)), u72 => () => run<Kont<int[]>>(w70.fst, w70.snd)), less(a217, b218)), 1)));
+            try
             {
-                R[1] = 1;
-                R[27] = -(R[14] + R[52] - 1);
-            } */           
+                while (true)
+                {
+                    fmain = fmain();
+                }
+            }
+            catch (Res<int[]> rr)
+            {
+                /*var a = rr.res;
+                var s11 = a[11] + a[24] + a[66];
+                var s32 = a[32] + a[07] + a[55];
+                var s69 = a[69] + a[81] + a[15];
+                var s27 = a[27] + a[14] + a[52];
+                Console.WriteLine("result: {0} {1} {2} {3} {4} {5} {6}", a[0], a[1], s11, s32, s69, s27, a[93]);
+                Console.WriteLine("R: {0} {1}", R[0], R[1]);*/
+            }
+
             return R[1] > 0;
         }
-
-        static long XorValue()
-        {
-            long x = Run(xorval_code);
-            //MessageBox.Show(x.ToString("X"));
-            return (x<<32)+x;
-        }
-
-        /*int hexc2int(byte h)
-        {
-            if (h <= '9') return h - '0';
-            else return h - 'A' + 10;
-        }*/
-
-        static int Run(int[] code)
-        {
-            int ip = 0, source = 0, cmdsz = 3;
-            flag = false;
-            while (ip >= 0 && ip < code.Length)
-            {
-                int cmd = code[ip];
-                if ((cmd & 0x80) > 0)
-                {
-                    switch (cmd)
-                    {
-                        case RET: return R[code[ip + 1]];
-                        case JZ:
-                            if (!flag)
-                                ip += code[ip + 1];
-                            else
-                                ip += 2;
-                            break;
-                        case JMP:
-                            ip += code[ip + 1];
-                            break;
-                    }
-                    continue;
-                }
-
-                switch (cmd & 0x30)
-                {
-                    case RR: source = R[code[ip + 2]]; cmdsz = 3; break;
-                    case RV: source = code[ip + 2]; cmdsz = 3; break;
-                    case RA:
-                        int arr = code[ip + 3];
-                        if (arr >= 0)
-                            source = A[arr][R[code[ip + 2]]];
-                        else
-                            source = R[R[code[ip + 2]]];
-                        cmdsz = 4;
-                        break;
-                }
-
-                int di = code[ip + 1];
-                switch (cmd & 0x0F)
-                {
-                    case ADD:
-                        R[di] += source;
-                        break;
-                    case SUB:
-                        R[di] -= source;
-                        break;
-                    case MOD:
-                        R[di] %= source;
-                        break;
-                    case MUL:
-                        R[di] *= source;
-                        break;
-                    case DIV:
-                        R[di] /= source;
-                        break;
-                    case XOR:
-                        R[di] ^= source;
-                        break;
-                    case MOV:
-                        R[di] = source;
-                        break;
-                    case LE:
-                        flag = (R[di] < source);
-                        break;
-                    case EQ:
-                        flag = (R[di] == source);
-                        break;
-                    default:
-                        ip -= 2;
-                        break;
-                }
-                ip += cmdsz;
-
-            }
-            return -1;
-        }
-
-        readonly int[] vmcode = new int[] {
-LE|RR, 144, 149,
-JZ, 13,
-MOV|RR, 150, 127,
-SUB|RV, 150, 189,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 120,
-ADD|RV, 150, 68,
-MOV|RR, 140, 150,
-MOV|RV, 150, 0,
-MOV|RR, 151, 24,
-ADD|RR, 151, 66,
-SUB|RR, 150, 151,
-MOV|RR, 11, 150,
-MOV|RV, 150, 0,
-MOV|RR, 151, 7,
-ADD|RR, 151, 55,
-SUB|RV, 151, 1,
-SUB|RR, 150, 151,
-MOV|RR, 32, 150,
-LE|RR, 134, 129,
-JZ, 13,
-MOV|RR, 150, 149,
-MUL|RV, 150, 92,
-MOV|RR, 127, 150,
-JMP, 11,
-MOV|RR, 150, 122,
-MUL|RV, 150, 205,
-MOV|RR, 126, 150,
-LE|RR, 133, 120,
-JZ, 13,
-MOV|RR, 150, 144,
-ADD|RV, 150, 32,
-MOV|RR, 142, 150,
-JMP, 11,
-MOV|RR, 150, 143,
-MUL|RV, 150, 207,
-MOV|RR, 132, 150,
-LE|RR, 148, 120,
-JZ, 13,
-MOV|RR, 150, 141,
-MUL|RV, 150, 72,
-MOV|RR, 131, 150,
-JMP, 11,
-MOV|RR, 150, 127,
-SUB|RV, 150, 129,
-MOV|RR, 142, 150,
-MOV|RV, 150, 0,
-MOV|RR, 151, 81,
-ADD|RR, 151, 15,
-SUB|RV, 151, 175,
-SUB|RR, 150, 151,
-MOV|RR, 69, 150,
-MOV|RV, 150, 0,
-MOV|RR, 151, 14,
-ADD|RR, 151, 52,
-SUB|RV, 151, 0,
-SUB|RR, 150, 151,
-MOV|RR, 27, 150,
-MOV|RV, 0, 1,
-LE|RR, 143, 125,
-JZ, 13,
-MOV|RR, 150, 140,
-MUL|RV, 150, 173,
-MOV|RR, 148, 150,
-JMP, 11,
-MOV|RR, 150, 125,
-ADD|RV, 150, 70,
-MOV|RR, 127, 150,
-LE|RR, 131, 132,
-JZ, 13,
-MOV|RR, 150, 147,
-ADD|RV, 150, 92,
-MOV|RR, 125, 150,
-JMP, 11,
-MOV|RR, 150, 145,
-SUB|RV, 150, 219,
-MOV|RR, 140, 150,
-LE|RR, 145, 139,
-JZ, 13,
-MOV|RR, 150, 132,
-ADD|RV, 150, 110,
-MOV|RR, 139, 150,
-JMP, 11,
-MOV|RR, 150, 143,
-MUL|RV, 150, 115,
-MOV|RR, 147, 150,
-LE|RV, 13, 31,
-JZ, 13,
-MOV|RV, 150, 30,
-SUB|RR, 150, 13,
-MOV|RR, 93, 150,
-JMP, 2,
-LE|RR, 145, 129,
-JZ, 13,
-MOV|RR, 150, 148,
-SUB|RV, 150, 142,
-MOV|RR, 136, 150,
-JMP, 11,
-MOV|RR, 150, 132,
-SUB|RV, 150, 222,
-MOV|RR, 143, 150,
-EQ|RR, 130, 127,
-JZ, 13,
-MOV|RR, 150, 134,
-ADD|RV, 150, 142,
-MOV|RR, 135, 150,
-JMP, 11,
-MOV|RR, 150, 146,
-ADD|RV, 150, 97,
-MOV|RR, 148, 150,
-LE|RR, 134, 130,
-JZ, 13,
-MOV|RR, 150, 124,
-MUL|RV, 150, 255,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 145,
-SUB|RV, 150, 194,
-MOV|RR, 146, 150,
-LE|RR, 149, 146,
-JZ, 13,
-MOV|RR, 150, 145,
-SUB|RV, 150, 126,
-MOV|RR, 132, 150,
-JMP, 11,
-MOV|RR, 150, 131,
-MUL|RV, 150, 102,
-MOV|RR, 136, 150,
-LE|RV, 5, 1,
-JZ, 9,
-MOV|RV, 150, 0,
-RET, 150,
-JMP, 2,
-LE|RV, 6, 3,
-JZ, 9,
-MOV|RV, 150, 0,
-RET, 150,
-JMP, 2,
-EQ|RR, 149, 121,
-JZ, 13,
-MOV|RR, 150, 147,
-SUB|RV, 150, 115,
-MOV|RR, 133, 150,
-JMP, 11,
-MOV|RR, 150, 121,
-SUB|RV, 150, 168,
-MOV|RR, 141, 150,
-LE|RR, 139, 148,
-JZ, 13,
-MOV|RR, 150, 126,
-MUL|RV, 150, 27,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 127,
-SUB|RV, 150, 118,
-MOV|RR, 137, 150,
-EQ|RR, 135, 138,
-JZ, 13,
-MOV|RR, 150, 149,
-SUB|RV, 150, 44,
-MOV|RR, 130, 150,
-JMP, 11,
-MOV|RR, 150, 121,
-MUL|RV, 150, 62,
-MOV|RR, 147, 150,
-EQ|RR, 130, 125,
-JZ, 13,
-MOV|RR, 150, 147,
-MUL|RV, 150, 110,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 121,
-SUB|RV, 150, 25,
-MOV|RR, 139, 150,
-EQ|RR, 132, 126,
-JZ, 13,
-MOV|RR, 150, 133,
-SUB|RV, 150, 43,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 123,
-SUB|RV, 150, 22,
-MOV|RR, 132, 150,
-MOV|RV, 9, 0,
-MOV|RV, 20, 1653,
-LE|RR, 9, 4,
-JZ, 11,
-ADD|RA, 20, 9, 0,
-ADD|RV, 9, 1,
-JMP, -12,
-EQ|RR, 137, 121,
-JZ, 13,
-MOV|RR, 150, 142,
-SUB|RV, 150, 64,
-MOV|RR, 142, 150,
-JMP, 11,
-MOV|RR, 150, 123,
-SUB|RV, 150, 127,
-MOV|RR, 135, 150,
-EQ|RR, 138, 129,
-JZ, 13,
-MOV|RR, 150, 126,
-MUL|RV, 150, 63,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 131,
-ADD|RV, 150, 153,
-MOV|RR, 134, 150,
-EQ|RR, 138, 148,
-JZ, 13,
-MOV|RR, 150, 121,
-ADD|RV, 150, 21,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 126,
-MUL|RV, 150, 60,
-MOV|RR, 142, 150,
-EQ|RR, 135, 125,
-JZ, 13,
-MOV|RR, 150, 135,
-ADD|RV, 150, 72,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 126,
-SUB|RV, 150, 245,
-MOV|RR, 137, 150,
-EQ|RR, 145, 146,
-JZ, 13,
-MOV|RR, 150, 148,
-SUB|RV, 150, 180,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 144,
-ADD|RV, 150, 244,
-MOV|RR, 121, 150,
-MOD|RV, 20, 65536,
-EQ|RV, 20, 0,
-JZ, 104,
-LE|RR, 121, 125,
-JZ, 13,
-MOV|RR, 150, 135,
-ADD|RV, 150, 203,
-MOV|RR, 128, 150,
-JMP, 11,
-MOV|RR, 150, 130,
-SUB|RV, 150, 73,
-MOV|RR, 128, 150,
-LE|RR, 123, 132,
-JZ, 13,
-MOV|RR, 150, 132,
-ADD|RV, 150, 116,
-MOV|RR, 126, 150,
-JMP, 11,
-MOV|RR, 150, 125,
-ADD|RV, 150, 175,
-MOV|RR, 139, 150,
-EQ|RR, 139, 128,
-JZ, 13,
-MOV|RR, 150, 148,
-SUB|RV, 150, 55,
-MOV|RR, 131, 150,
-JMP, 11,
-MOV|RR, 150, 136,
-SUB|RV, 150, 2,
-MOV|RR, 137, 150,
-LE|RR, 125, 141,
-JZ, 13,
-MOV|RR, 150, 134,
-MUL|RV, 150, 12,
-MOV|RR, 133, 150,
-JMP, 11,
-MOV|RR, 150, 132,
-MUL|RV, 150, 79,
-MOV|RR, 142, 150,
-JMP, 7,
-MOV|RV, 150, 0,
-RET, 150,
-LE|RR, 124, 149,
-JZ, 13,
-MOV|RR, 150, 139,
-MUL|RV, 150, 255,
-MOV|RR, 147, 150,
-JMP, 11,
-MOV|RR, 150, 144,
-ADD|RV, 150, 47,
-MOV|RR, 125, 150,
-EQ|RR, 142, 124,
-JZ, 13,
-MOV|RR, 150, 125,
-MUL|RV, 150, 184,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 126,
-MUL|RV, 150, 90,
-MOV|RR, 146, 150,
-MOV|RV, 9, 0,
-LE|RR, 120, 131,
-JZ, 13,
-MOV|RR, 150, 125,
-ADD|RV, 150, 11,
-MOV|RR, 144, 150,
-JMP, 11,
-MOV|RR, 150, 144,
-ADD|RV, 150, 83,
-MOV|RR, 134, 150,
-EQ|RR, 124, 141,
-JZ, 13,
-MOV|RR, 150, 126,
-MUL|RV, 150, 142,
-MOV|RR, 148, 150,
-JMP, 11,
-MOV|RR, 150, 127,
-SUB|RV, 150, 143,
-MOV|RR, 145, 150,
-LE|RR, 127, 143,
-JZ, 13,
-MOV|RR, 150, 134,
-SUB|RV, 150, 227,
-MOV|RR, 127, 150,
-JMP, 11,
-MOV|RR, 150, 138,
-ADD|RV, 150, 124,
-MOV|RR, 121, 150,
-EQ|RR, 122, 141,
-JZ, 13,
-MOV|RR, 150, 143,
-SUB|RV, 150, 70,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 140,
-ADD|RV, 150, 147,
-MOV|RR, 120, 150,
-LE|RR, 121, 127,
-JZ, 13,
-MOV|RR, 150, 133,
-MUL|RV, 150, 149,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 139,
-MUL|RV, 150, 28,
-MOV|RR, 124, 150,
-MOV|RA, 8, 9, 2,
-LE|RV, 8, 60,
-JZ, 10,
-SUB|RV, 8, 48,
-MOV|RR, 10, 8,
-JMP, 8,
-SUB|RV, 8, 55,
-MOV|RR, 10, 8,
-ADD|RV, 9, 1,
-EQ|RR, 123, 129,
-JZ, 13,
-MOV|RR, 150, 147,
-SUB|RV, 150, 160,
-MOV|RR, 139, 150,
-JMP, 11,
-MOV|RR, 150, 148,
-MUL|RV, 150, 157,
-MOV|RR, 137, 150,
-LE|RR, 148, 145,
-JZ, 13,
-MOV|RR, 150, 124,
-ADD|RV, 150, 77,
-MOV|RR, 147, 150,
-JMP, 11,
-MOV|RR, 150, 129,
-ADD|RV, 150, 211,
-MOV|RR, 125, 150,
-EQ|RR, 120, 149,
-JZ, 13,
-MOV|RR, 150, 145,
-ADD|RV, 150, 168,
-MOV|RR, 125, 150,
-JMP, 11,
-MOV|RR, 150, 135,
-ADD|RV, 150, 82,
-MOV|RR, 141, 150,
-MUL|RV, 10, 256,
-MOV|RR, 25, 10,
-MOV|RA, 8, 9, 2,
-LE|RV, 8, 60,
-JZ, 10,
-SUB|RV, 8, 48,
-MOV|RR, 10, 8,
-JMP, 8,
-SUB|RV, 8, 55,
-MOV|RR, 10, 8,
-ADD|RV, 9, 1,
-MUL|RV, 10, 16,
-ADD|RR, 25, 10,
-MOV|RA, 8, 9, 2,
-LE|RV, 8, 60,
-JZ, 10,
-SUB|RV, 8, 48,
-MOV|RR, 10, 8,
-JMP, 8,
-SUB|RV, 8, 55,
-MOV|RR, 10, 8,
-ADD|RV, 9, 1,
-ADD|RR, 25, 10,
-EQ|RR, 123, 139,
-JZ, 13,
-MOV|RR, 150, 128,
-SUB|RV, 150, 80,
-MOV|RR, 126, 150,
-JMP, 11,
-MOV|RR, 150, 128,
-MUL|RV, 150, 230,
-MOV|RR, 125, 150,
-MOV|RV, 100, 224,
-MOV|RV, 101, 190,
-LE|RR, 135, 128,
-JZ, 13,
-MOV|RR, 150, 147,
-MUL|RV, 150, 5,
-MOV|RR, 125, 150,
-JMP, 11,
-MOV|RR, 150, 147,
-ADD|RV, 150, 91,
-MOV|RR, 126, 150,
-LE|RR, 131, 139,
-JZ, 13,
-MOV|RR, 150, 134,
-MUL|RV, 150, 148,
-MOV|RR, 137, 150,
-JMP, 11,
-MOV|RR, 150, 146,
-SUB|RV, 150, 98,
-MOV|RR, 124, 150,
-MOV|RV, 102, 247,
-MOV|RV, 103, 207,
-MOV|RV, 104, 186,
-EQ|RR, 140, 130,
-JZ, 13,
-MOV|RR, 150, 146,
-ADD|RV, 150, 180,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 122,
-SUB|RV, 150, 42,
-MOV|RR, 148, 150,
-LE|RR, 131, 139,
-JZ, 13,
-MOV|RR, 150, 131,
-ADD|RV, 150, 173,
-MOV|RR, 120, 150,
-JMP, 11,
-MOV|RR, 150, 132,
-SUB|RV, 150, 220,
-MOV|RR, 122, 150,
-MOV|RV, 105, 164,
-MOV|RV, 106, 66,
-MOV|RV, 107, 80,
-LE|RR, 143, 134,
-JZ, 13,
-MOV|RR, 150, 137,
-SUB|RV, 150, 106,
-MOV|RR, 143, 150,
-JMP, 11,
-MOV|RR, 150, 125,
-ADD|RV, 150, 85,
-MOV|RR, 130, 150,
-MOV|RV, 108, 174,
-MOV|RV, 109, 103,
-EQ|RR, 131, 135,
-JZ, 13,
-MOV|RR, 150, 142,
-SUB|RV, 150, 255,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 132,
-MUL|RV, 150, 146,
-MOV|RR, 134, 150,
-EQ|RR, 124, 135,
-JZ, 13,
-MOV|RR, 150, 143,
-MUL|RV, 150, 13,
-MOV|RR, 120, 150,
-JMP, 11,
-MOV|RR, 150, 122,
-ADD|RV, 150, 87,
-MOV|RR, 129, 150,
-LE|RR, 132, 145,
-JZ, 13,
-MOV|RR, 150, 122,
-SUB|RV, 150, 147,
-MOV|RR, 135, 150,
-JMP, 11,
-MOV|RR, 150, 140,
-ADD|RV, 150, 135,
-MOV|RR, 133, 150,
-LE|RR, 147, 125,
-JZ, 13,
-MOV|RR, 150, 149,
-ADD|RV, 150, 34,
-MOV|RR, 149, 150,
-JMP, 11,
-MOV|RR, 150, 132,
-MUL|RV, 150, 54,
-MOV|RR, 140, 150,
-LE|RR, 144, 124,
-JZ, 13,
-MOV|RR, 150, 129,
-ADD|RV, 150, 27,
-MOV|RR, 125, 150,
-JMP, 11,
-MOV|RR, 150, 122,
-ADD|RV, 150, 239,
-MOV|RR, 129, 150,
-MOV|RV, 110, 144,
-MOV|RV, 111, 1,
-LE|RR, 128, 147,
-JZ, 13,
-MOV|RR, 150, 146,
-SUB|RV, 150, 109,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 131,
-ADD|RV, 150, 127,
-MOV|RR, 137, 150,
-LE|RR, 149, 145,
-JZ, 13,
-MOV|RR, 150, 122,
-SUB|RV, 150, 138,
-MOV|RR, 131, 150,
-JMP, 11,
-MOV|RR, 150, 133,
-SUB|RV, 150, 138,
-MOV|RR, 129, 150,
-EQ|RR, 142, 127,
-JZ, 13,
-MOV|RR, 150, 145,
-SUB|RV, 150, 29,
-MOV|RR, 123, 150,
-JMP, 11,
-MOV|RR, 150, 141,
-SUB|RV, 150, 60,
-MOV|RR, 128, 150,
-EQ|RR, 124, 127,
-JZ, 13,
-MOV|RR, 150, 130,
-MUL|RV, 150, 97,
-MOV|RR, 137, 150,
-JMP, 11,
-MOV|RR, 150, 147,
-SUB|RV, 150, 106,
-MOV|RR, 128, 150,
-MOV|RV, 112, 98,
-MOV|RV, 113, 34,
-LE|RR, 124, 135,
-JZ, 13,
-MOV|RR, 150, 127,
-SUB|RV, 150, 141,
-MOV|RR, 136, 150,
-JMP, 11,
-MOV|RR, 150, 129,
-MUL|RV, 150, 7,
-MOV|RR, 143, 150,
-MOV|RV, 114, 153,
-MOV|RV, 115, 145,
-MOV|RV, 20, 0,
-MOV|RV, 9, 0,
-LE|RR, 134, 127,
-JZ, 13,
-MOV|RR, 150, 131,
-ADD|RV, 150, 7,
-MOV|RR, 140, 150,
-JMP, 11,
-MOV|RR, 150, 122,
-ADD|RV, 150, 236,
-MOV|RR, 131, 150,
-MOV|RV, 21, 100,
-LE|RV, 9, 16,
-JZ, 149,
-MOV|RA, 150, 9, 1,
-MUL|RA, 150, 21, -1,
-MOD|RV, 150, 256,
-ADD|RR, 20, 150,
-ADD|RV, 9, 1,
-EQ|RR, 120, 127,
-JZ, 13,
-MOV|RR, 150, 140,
-ADD|RV, 150, 9,
-MOV|RR, 130, 150,
-JMP, 11,
-MOV|RR, 150, 137,
-ADD|RV, 150, 144,
-MOV|RR, 137, 150,
-EQ|RR, 134, 123,
-JZ, 13,
-MOV|RR, 150, 128,
-MUL|RV, 150, 72,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 138,
-MUL|RV, 150, 114,
-MOV|RR, 146, 150,
-EQ|RR, 128, 120,
-JZ, 13,
-MOV|RR, 150, 144,
-MUL|RV, 150, 153,
-MOV|RR, 122, 150,
-JMP, 11,
-MOV|RR, 150, 138,
-SUB|RV, 150, 51,
-MOV|RR, 131, 150,
-EQ|RR, 124, 126,
-JZ, 13,
-MOV|RR, 150, 123,
-ADD|RV, 150, 191,
-MOV|RR, 146, 150,
-JMP, 11,
-MOV|RR, 150, 131,
-ADD|RV, 150, 89,
-MOV|RR, 135, 150,
-EQ|RR, 122, 141,
-JZ, 13,
-MOV|RR, 150, 143,
-ADD|RV, 150, 213,
-MOV|RR, 139, 150,
-JMP, 11,
-MOV|RR, 150, 134,
-MUL|RV, 150, 98,
-MOV|RR, 139, 150,
-ADD|RV, 21, 1,
-JMP, -150,
-LE|RR, 138, 147,
-JZ, 13,
-MOV|RR, 150, 145,
-ADD|RV, 150, 14,
-MOV|RR, 129, 150,
-JMP, 11,
-MOV|RR, 150, 145,
-SUB|RV, 150, 116,
-MOV|RR, 120, 150,
-EQ|RR, 136, 122,
-JZ, 13,
-MOV|RR, 150, 142,
-SUB|RV, 150, 150,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 128,
-SUB|RV, 150, 179,
-MOV|RR, 132, 150,
-LE|RR, 141, 139,
-JZ, 13,
-MOV|RR, 150, 148,
-ADD|RV, 150, 248,
-MOV|RR, 133, 150,
-JMP, 11,
-MOV|RR, 150, 139,
-ADD|RV, 150, 35,
-MOV|RR, 148, 150,
-EQ|RR, 122, 139,
-JZ, 13,
-MOV|RR, 150, 136,
-MUL|RV, 150, 210,
-MOV|RR, 145, 150,
-JMP, 11,
-MOV|RR, 150, 147,
-ADD|RV, 150, 137,
-MOV|RR, 147, 150,
-EQ|RR, 20, 25,
-JZ, 185,
-EQ|RR, 122, 132,
-JZ, 13,
-MOV|RR, 150, 132,
-SUB|RV, 150, 171,
-MOV|RR, 147, 150,
-JMP, 11,
-MOV|RR, 150, 134,
-SUB|RV, 150, 239,
-MOV|RR, 138, 150,
-LE|RR, 136, 139,
-JZ, 13,
-MOV|RR, 150, 140,
-MUL|RV, 150, 24,
-MOV|RR, 139, 150,
-JMP, 11,
-MOV|RR, 150, 120,
-MUL|RV, 150, 56,
-MOV|RR, 139, 150,
-MOV|RV, 1, 1,
-LE|RR, 145, 128,
-JZ, 13,
-MOV|RR, 150, 123,
-MUL|RV, 150, 174,
-MOV|RR, 132, 150,
-JMP, 11,
-MOV|RR, 150, 142,
-SUB|RV, 150, 182,
-MOV|RR, 139, 150,
-EQ|RR, 145, 137,
-JZ, 13,
-MOV|RR, 150, 131,
-SUB|RV, 150, 168,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 124,
-ADD|RV, 150, 96,
-MOV|RR, 141, 150,
-EQ|RR, 139, 130,
-JZ, 13,
-MOV|RR, 150, 141,
-MUL|RV, 150, 40,
-MOV|RR, 136, 150,
-JMP, 11,
-MOV|RR, 150, 129,
-ADD|RV, 150, 120,
-MOV|RR, 140, 150,
-EQ|RR, 142, 135,
-JZ, 13,
-MOV|RR, 150, 128,
-SUB|RV, 150, 224,
-MOV|RR, 132, 150,
-JMP, 11,
-MOV|RR, 150, 120,
-SUB|RV, 150, 91,
-MOV|RR, 137, 150,
-EQ|RR, 130, 122,
-JZ, 13,
-MOV|RR, 150, 144,
-SUB|RV, 150, 215,
-MOV|RR, 121, 150,
-JMP, 11,
-MOV|RR, 150, 136,
-MUL|RV, 150, 217,
-MOV|RR, 146, 150,
-ADD|RV, 27, 1,
-JMP, 27,
-LE|RR, 131, 140,
-JZ, 13,
-MOV|RR, 150, 147,
-ADD|RV, 150, 99,
-MOV|RR, 143, 150,
-JMP, 11,
-MOV|RR, 150, 129,
-MUL|RV, 150, 19,
-MOV|RR, 137, 150,
-EQ|RR, 131, 122,
-JZ, 13,
-MOV|RR, 150, 124,
-MUL|RV, 150, 38,
-MOV|RR, 130, 150,
-JMP, 11,
-MOV|RR, 150, 136,
-SUB|RV, 150, 247,
-MOV|RR, 121, 150,
-EQ|RR, 146, 121,
-JZ, 13,
-MOV|RR, 150, 143,
-SUB|RV, 150, 163,
-MOV|RR, 131, 150,
-JMP, 11,
-MOV|RR, 150, 134,
-MUL|RV, 150, 61,
-MOV|RR, 121, 150,
-RET, 1
-        };
-
-        static readonly int[] xorval_code = new int[] {
-LE|RR, 138, 120,
-JZ, 13,
-MOV|RR, 150, 139,
-SUB|RV, 150, 90,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 121,
-MUL|RV, 150, 12,
-MOV|RR, 123, 150,
-EQ|RR, 125, 144,
-JZ, 13,
-MOV|RR, 150, 125,
-MUL|RV, 150, 143,
-MOV|RR, 143, 150,
-JMP, 11,
-MOV|RR, 150, 143,
-SUB|RV, 150, 166,
-MOV|RR, 141, 150,
-EQ|RR, 123, 148,
-JZ, 13,
-MOV|RR, 150, 127,
-ADD|RV, 150, 161,
-MOV|RR, 130, 150,
-JMP, 11,
-MOV|RR, 150, 136,
-MUL|RV, 150, 254,
-MOV|RR, 138, 150,
-MOV|RV, 31, 1783,
-ADD|RR, 31, 31,
-LE|RR, 126, 134,
-JZ, 13,
-MOV|RR, 150, 134,
-MUL|RV, 150, 3,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 140,
-SUB|RV, 150, 243,
-MOV|RR, 129, 150,
-LE|RR, 137, 142,
-JZ, 13,
-MOV|RR, 150, 128,
-ADD|RV, 150, 92,
-MOV|RR, 121, 150,
-JMP, 11,
-MOV|RR, 150, 134,
-SUB|RV, 150, 199,
-MOV|RR, 124, 150,
-MOV|RR, 32, 31,
-LE|RR, 139, 148,
-JZ, 13,
-MOV|RR, 150, 136,
-ADD|RV, 150, 115,
-MOV|RR, 134, 150,
-JMP, 11,
-MOV|RR, 150, 134,
-SUB|RV, 150, 237,
-MOV|RR, 149, 150,
-EQ|RR, 123, 122,
-JZ, 13,
-MOV|RR, 150, 132,
-ADD|RV, 150, 225,
-MOV|RR, 147, 150,
-JMP, 11,
-MOV|RR, 150, 138,
-SUB|RV, 150, 241,
-MOV|RR, 138, 150,
-EQ|RR, 122, 147,
-JZ, 13,
-MOV|RR, 150, 149,
-MUL|RV, 150, 157,
-MOV|RR, 125, 150,
-JMP, 11,
-MOV|RR, 150, 125,
-ADD|RV, 150, 103,
-MOV|RR, 133, 150,
-EQ|RR, 125, 144,
-JZ, 13,
-MOV|RR, 150, 146,
-ADD|RV, 150, 186,
-MOV|RR, 124, 150,
-JMP, 11,
-MOV|RR, 150, 148,
-MUL|RV, 150, 128,
-MOV|RR, 141, 150,
-MOV|RR, 150, 31,
-MUL|RV, 150, 4096,
-ADD|RR, 150, 32,
-RET, 150
-        };
-
-    }
+    }//class
 }

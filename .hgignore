@@ -7,4 +7,5 @@ syntax: glob
 *.rej
 *.bk
 obj/*
-bin/*
+bin/**
+VTune/*
