@@ -51,7 +51,7 @@ namespace gep
         public Filterz filterz;
         public PropertiesForm propform;
         public string email, code;
-        public string keyname = @"Software\Dee Mon\GraphEditPlus";
+        public string keyname = @"Software\Infognition\GraphEditPlus";
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -76,20 +76,22 @@ namespace gep
             //propform.PerformLayout();
 
             RegistryKey nrk = Registry.CurrentUser.OpenSubKey(keyname);
-            RegistryKey ork = Registry.CurrentUser.OpenSubKey(@"Dee Mon\GraphEditPlus");
-            if (ork != null && nrk == null)
-            {
-                email = (string)ork.GetValue("email", "");
-                code = (string)ork.GetValue("code", "");
-
-            }
             if (nrk==null)
                 nrk = Registry.CurrentUser.CreateSubKey(keyname);
-            if (email==null)
-            {
-                email = (string)nrk.GetValue("email", "");
-                code = (string)nrk.GetValue("code", "");
+
+            email = (string)nrk.GetValue("email", "");
+            code = (string)nrk.GetValue("code", "");
+
+            if (email.Length == 0)
+            {   // try reading from old location
+                RegistryKey ork = Registry.CurrentUser.OpenSubKey(@"Software\Dee Mon\GraphEditPlus");
+                if (ork != null)
+                {
+                    email = (string)ork.GetValue("email", "");
+                    code = (string)ork.GetValue("code", "");
+                }
             }
+
             int sugg_url = (int)nrk.GetValue("suggestURL", 0);
             suggestURLs = sugg_url > 0;
 
@@ -182,6 +184,8 @@ namespace gep
         {
             RegisterForm rf = new RegisterForm();
             rf.ShowDialog();
+            if (RegistryChecker.R[1] == 1)
+                buyToolStripButton.Visible = false;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)

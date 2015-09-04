@@ -29,7 +29,7 @@ namespace gep
                 MessageBox.Show("Thanks!");
                 Program.mainform.email = emailTextBox.Text;
                 Program.mainform.code = codeTextBox.Text;
-                string keyname = @"Software\Dee Mon\GraphEditPlus";
+                string keyname = @"Software\Infognition\GraphEditPlus";
                 RegistryKey rk = Registry.CurrentUser.OpenSubKey(keyname, true);
                 if (rk == null)
                     rk = Registry.CurrentUser.CreateSubKey(keyname);
@@ -49,7 +49,7 @@ namespace gep
             Close();
         }
 
-        string regGetBuyURL(string publisher, string appName, string appVer )
+        /*string regGetBuyURL(string publisher, string appName, string appVer )
         {	        
 	        string buyURL = "";
 	        // form the registry key path
@@ -65,13 +65,13 @@ namespace gep
                 rk.Close();            
 	        }            
 	        return buyURL;
-        }
+        }*/
 
         private void btnOrder_Click(object sender, EventArgs e)
         {
-            string buyURL = regGetBuyURL("Dee Mon", "GraphEditPlus", "0");
-            if (buyURL==null || buyURL.Length == 0)
-                buyURL = "http://www.thedeemon.com/GraphEditPlus/register.html";
+            //string buyURL = regGetBuyURL("Dee Mon", "GraphEditPlus", "0");
+            //if (buyURL==null || buyURL.Length == 0)
+            string  buyURL = "http://www.infognition.com/GraphEditPlus/register.html";
             //MessageBox.Show(buyURL);
             //System.Diagnostics.Process.Start(buyURL);
             Program.OpenBrowser(buyURL);

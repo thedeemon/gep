@@ -41,7 +41,7 @@ namespace gep
         }
 
         List<string> url_list = new List<string>();
-        string keyname = @"Software\Dee Mon\GraphEditPlus";
+        string keyname = @"Software\Infognition\GraphEditPlus";
         public string selectedURL;
 
         private void RenderURLForm_Load(object sender, EventArgs e)
