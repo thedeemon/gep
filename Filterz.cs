@@ -71,7 +71,8 @@ namespace gep
                         object nameObj;
                         bag.Read("FriendlyName", out nameObj, null);
                         name = nameObj as string;
-                        catnames.Add(sg, name);
+                        if (!catnames.ContainsKey(sg))
+                            catnames.Add(sg, name);
 
                         Marshal.ReleaseComObject(bagObj);
                         Marshal.ReleaseComObject(mon[0]);
@@ -139,7 +140,8 @@ namespace gep
             foreach (KeyValuePair<string, string> p in catnames)
             {
                 Guid guid = new Guid(p.Key);
-                catguids.Add(p.Value, guid);
+                if (!catguids.ContainsKey(p.Value))
+                    catguids.Add(p.Value, guid);
                 catcombo.Items.Add(p.Value);
             }
 
@@ -164,7 +166,7 @@ namespace gep
             toolTip.SetToolTip(linkSearchForm, "Advanced search");
             toolTip.SetToolTip(catcombo, "Filter category");
 
-            RefreshCategories();            
+            RefreshCategories();
             filtertree.Focus();
         }
 
