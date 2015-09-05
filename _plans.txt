@@ -12,7 +12,7 @@
 + unicode-friendly C++
 - create DMO filters differently (use DMO wrapper)
 - free filters approptiately
-- start with larger graph window
++ start with larger graph window
 - run regsvr32 with enough rights
 + hide register btn after registration
 + update About Box and version

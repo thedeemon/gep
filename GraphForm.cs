@@ -899,6 +899,8 @@ namespace gep
         {
             int n = Math.Min(ngraphs, 15);
             Location = new Point(300 + n * 10, (n-1) * 30);
+            int w = MdiParent.ClientSize.Width - 400, h = MdiParent.ClientSize.Height*3/4;
+            Size = new Size(w, h);
             zoomCombo.Items.Add("25%");
             zoomCombo.Items.Add("50%");
             zoomCombo.Items.Add("75%");

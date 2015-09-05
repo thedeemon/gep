@@ -534,7 +534,7 @@ namespace gep
 	                    sb.AppendLine("    CComQIPtr<IPersistStream, &IID_IPersistStream> ips(pFilter);");
 	                    sb.AppendLine("    if (ips) {");
 	                    sb.AppendLine("        hr = ips->Load(pStream);");
-	                    sb.AppendLine("        CHECK_HR(hr, \"Can't load filter state.\");");
+	                    sb.AppendLine("        CHECK_HR(hr, _T(\"Can't load filter state.\"));");
 	                    sb.AppendLine("    }");
 	                    sb.AppendLine("}");
 	                    sb.AppendLine("GlobalFree(hg);");
