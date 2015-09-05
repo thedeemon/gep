@@ -726,6 +726,19 @@ namespace gep
             sb.AppendLine("#include <atlbase.h>");
             sb.AppendLine("#include <initguid.h>");
             sb.AppendLine("#include <dvdmedia.h>");
+
+            //include "SampleGrabber.h" if necessary
+            foreach (HistoryItem hi in history.Items)
+            {
+                HIAddFilterDS hds = hi as HIAddFilterDS;
+                if (hds != null && hds.CLSID == "{C1F400A0-3F08-11D3-9F0B-006008039E37}")
+                {
+                    sb.AppendLine("// take this file from GraphEditPlus folder and use it ");
+                    sb.AppendLine("#include \"SampleGrabber.h\" // if your version of Windows SDK doesn't know about SampleGrabber");
+                    break;
+                }
+            }
+
             sb.AppendLine();
             sb.AppendLine(checkTpl.Generate());
 
