@@ -413,7 +413,7 @@ namespace gep
                 "    //add $name\r\n" +
                 "    CComPtr<IBaseFilter> $var;\r\n"+
                 "    hr = $var.CoCreateInstance($clsname);\r\n"+
-                "    CHECK_HR(hr, \"Can't create $name\");\r\n",
+                "    CHECK_HR(hr, _T(\"Can't create $name\"));\r\n",
                 "$name - name of the filter\r\n" +
                 "$var - variable to hold IBaseFilter\r\n" +
                 "$clsname - name of CLSID value for this filter");
@@ -425,7 +425,7 @@ namespace gep
             
             insertTpl = new CodeSnippet("Insert filter to graph", "insertTpl",
                 "    hr = pGraph->AddFilter($var, L\"$name\");\r\n" +
-                "    CHECK_HR(hr, \"Can't add $name to graph\");\r\n",
+                "    CHECK_HR(hr, _T(\"Can't add $name to graph\"));\r\n",
                 "$var - variable holding IBaseFilter\r\n" +
                 "$name - name of the filter");
             insertTpl.SetVars(new string[] {
@@ -437,9 +437,9 @@ namespace gep
                 "    //set source filename\r\n" +
                 "    CComQIPtr<IFileSourceFilter, &IID_IFileSourceFilter> $srcvar($var);\r\n" +
                 "    if (!$srcvar)\r\n" +
-                "        CHECK_HR(E_NOINTERFACE, \"Can't get IFileSourceFilter\");\r\n" +
+                "        CHECK_HR(E_NOINTERFACE, _T(\"Can't get IFileSourceFilter\"));\r\n" +
                 "    hr = $srcvar->Load($filename, NULL);\r\n" +
-                "    CHECK_HR(hr, \"Can't load file\");\r\n",
+                "    CHECK_HR(hr, _T(\"Can't load file\"));\r\n",
                 "$srcvar - variable to hold IFileSourceFilter\r\n" +
                 "$var - variable holding IBaseFilter\r\n" +
                 "$filename - variable holding name of file to open");
@@ -453,9 +453,9 @@ namespace gep
                 "    //set destination filename\r\n" +
                 "    CComQIPtr<IFileSinkFilter, &IID_IFileSinkFilter> $dstvar($var);\r\n" +
                 "    if (!$dstvar)\r\n" +
-                "        CHECK_HR(E_NOINTERFACE, \"Can't get IFileSinkFilter\");\r\n" +
+                "        CHECK_HR(E_NOINTERFACE, _T(\"Can't get IFileSinkFilter\"));\r\n" +
                 "    hr = $dstvar->SetFileName($filename, NULL);\r\n" +
-                "    CHECK_HR(hr, \"Can't set filename\");\r\n",
+                "    CHECK_HR(hr, _T(\"Can't set filename\"));\r\n",
                 "$dstvar - variable to hold IFileSinkFilter\r\n" +
                 "$var - variable holding IBaseFilter\r\n" +
                 "$filename - variable holding name of file to open");
@@ -492,7 +492,7 @@ namespace gep
             connectTpl = new CodeSnippet("Connect two filters", "connectTpl",
                 "    //connect $pair\r\n" +
                 "    hr = pBuilder->RenderStream(NULL, &$majortype, $var1, NULL, $var2);\r\n" +
-                "    CHECK_HR(hr, \"Can't connect $pair\");\r\n\r\n",
+                "    CHECK_HR(hr, _T(\"Can't connect $pair\"));\r\n\r\n",
                 "$pair - names of connecting filters\r\n" +
                 "$majortype - major media type of connection\r\n" +
                 "$var1, $var2 - variables holding IBaseFilter of connecting filters");
@@ -506,7 +506,7 @@ namespace gep
             connectDirectTpl = new CodeSnippet("Connect two filters directly", "connectDirectTpl",
                 "    //connect $pair\r\n" +
                 "    hr = pGraph->ConnectDirect(GetPin($var1, L\"$pin1\"), GetPin($var2, L\"$pin2\"), NULL);\r\n" +
-                "    CHECK_HR(hr, \"Can't connect $pair\");\r\n\r\n",
+                "    CHECK_HR(hr, _T(\"Can't connect $pair\"));\r\n\r\n",
                 "$pair - names of connecting filters\r\n" +
                 "$var1, $var2 - variables holding IBaseFilter of connecting filters\r\n"+
                 "$pin1, $pin2 - names of connecting pins");
@@ -646,7 +646,7 @@ namespace gep
             string iscvar = hi.var.Replace("pmt", "isc");
             sb.AppendFormat("    CComQIPtr<IAMStreamConfig, &IID_IAMStreamConfig> {0}(GetPin({1}, L\"{2}\"));\r\n", iscvar, fvar, hi.pin);
             sb.AppendFormat("    hr = {1}->SetFormat(&{0});\r\n", hi.var, iscvar);
-            sb.Append("    CHECK_HR(hr, \"Can't set format\");\r\n");
+            sb.Append("    CHECK_HR(hr, _T(\"Can't set format\"));\r\n");
             sb.AppendLine();
             return sb.ToString();
         }
@@ -659,7 +659,7 @@ namespace gep
             string isgvar = mtvar.Replace("pmt", "isg");
             sb.AppendFormat("    CComQIPtr<ISampleGrabber, &IID_ISampleGrabber> {0}({1});\r\n", isgvar, hi.var);
             sb.AppendFormat("    hr = {1}->SetMediaType(&{0});\r\n", mtvar, isgvar);
-            sb.Append("    CHECK_HR(hr, \"Can't set media type to sample grabber\");\r\n");
+            sb.Append("    CHECK_HR(hr, _T(\"Can't set media type to sample grabber\"));\r\n");
             sb.AppendLine();
             return sb.ToString();
         }
@@ -753,7 +753,7 @@ namespace gep
                     sb.AppendLine("    HRESULT hr = S_OK;");
                     sb.AppendLine("    CComPtr<ICreateDevEnum> pSysDevEnum;");
                     sb.AppendLine("    hr = pSysDevEnum.CoCreateInstance(CLSID_SystemDeviceEnum);");
-                    sb.AppendLine("    if (hrcheck(hr, \"Can't create System Device Enumerator\"))");
+                    sb.AppendLine("    if (hrcheck(hr, _T(\"Can't create System Device Enumerator\")))");
                     sb.AppendLine("        return NULL;");
                     sb.AppendLine();
                     sb.AppendLine("    CComPtr<IEnumMoniker> pEnumCat;");
@@ -777,7 +777,7 @@ namespace gep
                     sb.AppendLine("                    if (wcscmp(filterName, varName.bstrVal)==0) {");
                     sb.AppendLine("                        CComPtr<IBaseFilter> pFilter;");
                     sb.AppendLine("                        hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&pFilter);");
-                    sb.AppendLine("                        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
+                    sb.AppendLine("                        if (hrcheck(hr, _T(\"Can't bind moniker to filter object\")))");
                     sb.AppendLine("                            return NULL;");
                     sb.AppendLine("                        return pFilter;");
                     sb.AppendLine("                    }");
@@ -796,20 +796,20 @@ namespace gep
                     sb.AppendLine("{");
                     sb.AppendLine("    CComPtr<IBindCtx> pBindCtx;");
                     sb.AppendLine("    HRESULT hr = CreateBindCtx(0, &pBindCtx);");
-                    sb.AppendLine("    if (hrcheck(hr, \"Can't create bind context\"))");
+                    sb.AppendLine("    if (hrcheck(hr, _T(\"Can't create bind context\")))");
                     sb.AppendLine("        return NULL;");
                     sb.AppendLine();
                     sb.AppendLine("    ULONG chEaten = 0;");
                     sb.AppendLine("    CComPtr<IMoniker> pMoniker;");
                     sb.AppendLine("    hr = MkParseDisplayName(pBindCtx, displayName, &chEaten, &pMoniker);");
-                    sb.AppendLine("    if (hrcheck(hr, \"Can't create parse display name of the filter\"))");
+                    sb.AppendLine("    if (hrcheck(hr, _T(\"Can't create parse display name of the filter\")))");
                     sb.AppendLine("        return NULL;");
                     sb.AppendLine();
                     sb.AppendLine("    CComPtr<IBaseFilter> pFilter;");
                     sb.AppendLine("    if (SUCCEEDED(hr))");
                     sb.AppendLine("    {");
                     sb.AppendLine("        hr = pMoniker->BindToObject(pBindCtx, NULL, IID_IBaseFilter, (void**)&pFilter);");
-                    sb.AppendLine("        if (hrcheck(hr, \"Can't bind moniker to filter object\"))");
+                    sb.AppendLine("        if (hrcheck(hr, _T(\"Can't bind moniker to filter object\")))");
                     sb.AppendLine("            return NULL;");
                     sb.AppendLine("    }");
                     sb.AppendLine("    return pFilter;");
@@ -825,7 +825,7 @@ namespace gep
                 sb.AppendLine("    CComPtr<IPin>       pPin;");
                 sb.AppendLine();
                 sb.AppendLine("    HRESULT hr = pFilter->EnumPins(&pEnum);");
-                sb.AppendLine("    if (hrcheck(hr, \"Can't enumerate pins.\"))");
+                sb.AppendLine("    if (hrcheck(hr, _T(\"Can't enumerate pins.\")))");
                 sb.AppendLine("        return NULL;");
                 sb.AppendLine();
                 sb.AppendLine("    while(pEnum->Next(1, &pPin, 0) == S_OK)");
@@ -863,9 +863,9 @@ namespace gep
             sb.AppendLine("    //graph builder");
             sb.AppendLine("    CComPtr<ICaptureGraphBuilder2> pBuilder;");
             sb.AppendLine("    hr = pBuilder.CoCreateInstance(CLSID_CaptureGraphBuilder2);");
-            sb.AppendLine("    CHECK_HR(hr, \"Can't create Capture Graph Builder\");");
+            sb.AppendLine("    CHECK_HR(hr, _T(\"Can't create Capture Graph Builder\"));");
             sb.AppendLine("    hr = pBuilder->SetFiltergraph(pGraph);");
-            sb.AppendLine("    CHECK_HR(hr, \"Can't SetFiltergraph\");");
+            sb.AppendLine("    CHECK_HR(hr, _T(\"Can't SetFiltergraph\"));");
             sb.AppendLine();
             sb.Append(sb_bld.ToString());
             sb.AppendLine("    return S_OK;");
@@ -892,7 +892,7 @@ namespace gep
             sb.AppendLine("        printf(\"Running\");");
             sb.AppendLine("        CComQIPtr<IMediaControl, &IID_IMediaControl> mediaControl(graph);");
             sb.AppendLine("        hr = mediaControl->Run();");
-            sb.AppendLine("        CHECK_HR(hr, \"Can't run the graph\");");
+            sb.AppendLine("        CHECK_HR(hr, _T(\"Can't run the graph\"));");
             sb.AppendLine("        CComQIPtr<IMediaEvent, &IID_IMediaEvent> mediaEvent(graph);");
             sb.AppendLine("        BOOL stop = FALSE;");
             sb.AppendLine("        MSG msg;");
