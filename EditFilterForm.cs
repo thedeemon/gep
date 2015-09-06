@@ -67,7 +67,10 @@ namespace gep
         {
             if (DialogResult.Yes == MessageBox.Show("Do you really want to remove information about "+fp.Name+" from system?", "Unregister filter?", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
-                Process.Start("regsvr32.exe", "/u \"" + fp.GetFileName()+ "\"");
+                var si = new ProcessStartInfo("regsvr32.exe", "/u \"" + fp.GetFileName() + "\"");
+                si.Verb = "runas";
+                Process.Start(si);
+                //Process.Start("regsvr32.exe", "/u \"" + fp.GetFileName()+ "\"");
                 Thread.Sleep(300);
                 Program.mainform.filterz.RefreshTree();
             }

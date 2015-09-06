@@ -357,7 +357,9 @@ namespace gep
             fd.Filter = "DLL, AX, OCX files|*.dll;*.ax;*.ocx|All files (*.*)|*.*";
             if (fd.ShowDialog() != DialogResult.OK)
                 return;
-            Process.Start("regsvr32.exe", "\""+fd.FileName+"\"");
+            var si = new ProcessStartInfo("regsvr32.exe", "\"" + fd.FileName + "\"");
+            si.Verb = "runas";
+            Process.Start(si);
             Thread.Sleep(300);
             RefreshTree();
         }
