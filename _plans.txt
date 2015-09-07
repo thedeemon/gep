@@ -11,7 +11,7 @@
 - load filters in different thread
 + unicode-friendly C++
 - create DMO filters differently (use DMO wrapper)
-- free filters approptiately
++ free filters approptiately
 + start with larger graph window
 + run regsvr32 with enough rights
 + hide register btn after registration
@@ -19,3 +19,4 @@
 - save filter state to code - finish this feature (C# code gen?)
 + include samplegrabber.h in generated C++ code when necessary
 - edit filter info: deal with insufficient rights
+- close filter window after unregistering

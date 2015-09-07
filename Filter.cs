@@ -84,6 +84,12 @@ namespace gep
             filterProps.SetFilter(this);
         }
 
+        public void ReleaseBaseFilter()
+        {
+            Marshal.ReleaseComObject(basefilter);
+            basefilter = null;
+        }
+
         public void ReloadPins()
         {
             IEnumPins penum;

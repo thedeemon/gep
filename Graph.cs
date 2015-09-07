@@ -184,7 +184,7 @@ namespace gep
                     int hr = graphBuilder.RemoveFilter(f.BaseFilter);
                     DsError.ThrowExceptionForHR(hr);
                 }
-                Marshal.ReleaseComObject(f.BaseFilter);
+                f.ReleaseBaseFilter();
             }
             catch (COMException e)
             {

@@ -123,6 +123,7 @@ namespace gep
         public void SetFilter(Filter f)
         {
             pointer = Marshal.GetIUnknownForObject(f.BaseFilter);
+            Marshal.Release(pointer); // do not keep refcount increased
         }
 
         [CategoryAttribute("1) Filter"),
@@ -188,7 +189,7 @@ namespace gep
         DescriptionAttribute("Pointer to IUnknown.")]
         public string Pointer
         {
-            get { Prepare(); return "0x" + pointer.ToString("X8"); }
+            get { Prepare(); return "0x" + pointer.ToString(IntPtr.Size == 4 ? "X8" : "X16"); }
         }
 
         [CategoryAttribute("2) File"),
@@ -287,8 +288,8 @@ namespace gep
 
         public void Dispose()
         {
-            if (pointer != IntPtr.Zero)
-                Marshal.Release(pointer);
+            //if (pointer != IntPtr.Zero)
+            //    Marshal.Release(pointer); //already done after acquiring
             pointer = IntPtr.Zero;
             GC.SuppressFinalize(this);
         }
