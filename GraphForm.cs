@@ -778,7 +778,8 @@ namespace gep
                 else
                     sb.Append("Move mouse to the pin you want to connect to. ");
             if (RegistryChecker.R[1]==0 && RegistryChecker.R[0] != 0)
-                sb.AppendFormat("{0} days to evaluate.", RegistryChecker.R[93]);
+                sb.AppendFormat("{0} days to evaluate. ", RegistryChecker.R[93]);
+            //sb.AppendFormat("R {0} {1}", RegistryChecker.R[0], RegistryChecker.R[1]);
             //sb.AppendFormat(" {0} animated", animated_objects.Count);
             Program.mainform.SetHint(sb.ToString());
         }
