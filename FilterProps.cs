@@ -10,6 +10,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace gep
 {
@@ -262,11 +263,13 @@ namespace gep
         public void SetMerit(int mr)
         {
             string keyname = @"CLSID\" + catguid + @"\Instance\" + guid;
-            using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname, true))
+            byte[] bytes = null;
+            //read data and modify the value
+            using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname, false))
             {
                 if (rk != null)
                 {
-                    byte[] bytes = (byte[])rk.GetValue("FilterData");
+                    bytes = (byte[])rk.GetValue("FilterData");
                     if (bytes != null && bytes.Length >= 8)
                     {
                         //merit = (((((bytes[7] << 8) + bytes[6]) << 8) + bytes[5]) << 8) + bytes[4];
@@ -274,11 +277,48 @@ namespace gep
                         bytes[6] = (byte)((mr >> 16) & 0xff);
                         bytes[5] = (byte)((mr >> 8) & 0xff);
                         bytes[4] = (byte)(mr & 0xff);
-                        rk.SetValue("FilterData", bytes);
+                        //rk.SetValue("FilterData", bytes);
                     }
                 }
             }
+            if (bytes == null) return;
 
+            try // to write to registry
+            {
+                using (RegistryKey rk = Registry.ClassesRoot.OpenSubKey(keyname, true))
+                {
+                    if (rk != null)
+                        rk.SetValue("FilterData", bytes);
+                }
+            }
+            catch (SecurityException ex)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Windows Registry Editor Version 5.00");
+                sb.AppendLine();
+                sb.AppendFormat(@"[HKEY_CLASSES_ROOT\CLSID\{0}\Instance\{1}]", catguid, guid);
+                sb.AppendLine();
+                sb.Append("\"FilterData\"=hex:");
+                foreach (byte x in bytes)
+                    sb.AppendFormat("{0:X2},", x);
+
+                sb.AppendLine();
+                sb.AppendFormat(@"[HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{0}\Instance\{1}]", catguid, guid);
+                sb.AppendLine();
+                sb.Append("\"FilterData\"=hex:");
+                foreach (byte x in bytes)
+                    sb.AppendFormat("{0:X2},", x);
+
+                string text = sb.ToString();                
+                string path = System.IO.Path.GetTempPath() + "ChangeFilterData.reg";
+                var w = new StreamWriter(path, false, Encoding.Unicode);
+                w.Write(text);
+                w.Close();
+
+                var si = new ProcessStartInfo("regedit.exe", path);
+                si.Verb = "runas";
+                Process.Start(si).WaitForExit();
+            }
         }
 
         public FilterPropsKernel Kernel()

@@ -17,5 +17,5 @@
 + update About Box and version
 - save filter state to code - finish this feature (C# code gen?)
 + include samplegrabber.h in generated C++ code when necessary
-- edit filter info: deal with insufficient rights
++ edit filter info: deal with insufficient rights
 + close filter window after unregistering
