@@ -69,10 +69,9 @@ namespace gep
             {
                 var si = new ProcessStartInfo("regsvr32.exe", "/u \"" + fp.GetFileName() + "\"");
                 si.Verb = "runas";
-                Process.Start(si);
-                //Process.Start("regsvr32.exe", "/u \"" + fp.GetFileName()+ "\"");
-                Thread.Sleep(300);
+                Process.Start(si).WaitForExit();
                 Program.mainform.filterz.RefreshTree();
+                Close();
             }
         }
 
