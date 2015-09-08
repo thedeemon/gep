@@ -7,8 +7,7 @@
 - open all grf files http://msdn.microsoft.com/en-us/library/ms783350 
 - make manual
 - precompile (ngen)
-- lazy loading of filters(?)
-- load filters in different thread
++ check registration on start in different thread
 + unicode-friendly C++
 - create DMO filters differently (use DMO wrapper)
 + free filters approptiately

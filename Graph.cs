@@ -652,6 +652,7 @@ namespace gep
             {
                 int st = Math.Max(flt.Stage, 0);
                 maxst = Math.Max(maxst, st);
+                Filterz.rch.EnsureInited();
                 if (grid[st] == null)
                     grid[st] = new List<Filter>();
                 grid[st].Add(flt);

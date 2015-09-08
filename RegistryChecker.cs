@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.IO;
+using System.Threading;
 
 namespace gep
 {
@@ -50,15 +51,18 @@ namespace gep
         public Thunk g(T x) { return rf(x, g); }
     }
 
-
     class RegistryChecker
     {
         public static int[] R;
+        EventWaitHandle evtDone;
+        Thread thr;
 
         public RegistryChecker()
         {
             R = new int[256];
             Random rnd = new Random();
+
+            evtDone = new EventWaitHandle(false, EventResetMode.ManualReset);
 
             R[07] = 2214472;
             R[13] = 133247;
@@ -188,6 +192,28 @@ namespace gep
          * R[27] + R[14] + R[52] = 1 if registered, 0 if not
          */
 
+        public void EnsureInited()
+        {
+            if (R[0] == 0)
+            {
+                if (thr == null) throw new Exception("EnsureInited called before thread created!");
+                evtDone.WaitOne();
+            }
+        }
+
+        public void StartChecking(string emailstr, string codestr)
+        {
+            if (thr != null) return;
+            thr = new Thread(RCThreadProc);
+            thr.Start(pair(emailstr, codestr));
+        }
+
+        void RCThreadProc(Object o)
+        {
+            var ec = (Pair<string, string>)o;
+            CheckCode(ec.fst, ec.snd);                       
+        }
+
         public bool CheckCode(string emailstr, string codestr)
         {
             /*R[11] = -(R[24] + R[66]);
@@ -223,7 +249,8 @@ namespace gep
                 Console.WriteLine("result: {0} {1} {2} {3} {4} {5} {6}", a[0], a[1], s11, s32, s69, s27, a[93]);
                 Console.WriteLine("R: {0} {1}", R[0], R[1]);*/
             }
-
+            evtDone.Set();
+            Program.mainform.BeginInvoke(new MethodInvoker(Program.mainform.HideRegisterButton));
             return R[1] > 0;
         }
     }//class

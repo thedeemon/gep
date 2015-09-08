@@ -777,7 +777,7 @@ namespace gep
                     sb.Append("Release mouse button to attempt connection. ");
                 else
                     sb.Append("Move mouse to the pin you want to connect to. ");
-            if (RegistryChecker.R[1]==0)
+            if (RegistryChecker.R[1]==0 && RegistryChecker.R[0] != 0)
                 sb.AppendFormat("{0} days to evaluate.", RegistryChecker.R[93]);
             //sb.AppendFormat(" {0} animated", animated_objects.Count);
             Program.mainform.SetHint(sb.ToString());
@@ -909,6 +909,7 @@ namespace gep
 
             regtimer.Interval = 250;
             regtimer.Tick += delegate{
+                if (RegistryChecker.R[0] == 0) return;
                 regtimer.Stop();
                 if (RegistryChecker.R[1] < 1 && RegistryChecker.R[93] < 1)
                 {
@@ -1019,7 +1020,8 @@ namespace gep
         }
 
         public void GenerateCode(lang lng)
-        {            
+        {
+            Filterz.rch.EnsureInited(); 
             graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]], lng,
                 Program.mainform.useDirectConnect);
         }

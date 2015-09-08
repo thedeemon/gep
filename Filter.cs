@@ -341,6 +341,7 @@ namespace gep
         public void PropagateWeight()
         {
             int ni=0, no=0;
+            Filterz.rch.EnsureInited();
             graph.ClearWeightAddedFlags();
             foreach(Pin pin in pins)
                 if (pin.Direction == PinDirection.Input)

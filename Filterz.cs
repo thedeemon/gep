@@ -277,11 +277,6 @@ namespace gep
                     }            
         }
 
-        public static void BuildFilterTree(IEnumMoniker emon, TreeView tree, Guid cg)
-        {
-            FillFilterTree(tree, GetFiltersFromEnum(emon, cg));
-        }
-
         static public void FillFilterTree(TreeView tree, IEnumerable<FilterProps> flist)
         {
             tree.BeginUpdate();

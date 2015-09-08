@@ -8,12 +8,12 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace gep
-{
+{ 
     partial class RegisterForm : Form
     {
         public RegisterForm()
         {
-            InitializeComponent();
+            InitializeComponent(); 
         }
 
         private void btnOK_Click(object sender, EventArgs e)

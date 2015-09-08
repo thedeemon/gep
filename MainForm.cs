@@ -9,7 +9,7 @@ using Microsoft.Win32;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
-
+using System.Diagnostics;
 
 namespace gep
 {
@@ -26,7 +26,7 @@ namespace gep
         private void OnNewGraph(object sender, EventArgs e)
         {
             if (RegistryChecker.R[0] == 0)
-                Filterz.rch.CheckCode(email, code);
+                Filterz.rch.StartChecking(email, code); //in sepatate thread
             GraphForm gf = new GraphForm();
             gf.MdiParent = this;
             gf.Show();
@@ -106,7 +106,12 @@ namespace gep
             else
                 openToolStripMenuItem_Click(null, null);
 
-            if (RegistryChecker.R[1] == 1)
+            LoadFavorites(nrk);
+        }
+
+        public void HideRegisterButton()
+        {
+            if (RegistryChecker.R[1] == 1) //todo: make this thing happen after checker thread ends
                 buyToolStripButton.Visible = false;
             else
             {
@@ -115,8 +120,6 @@ namespace gep
                 item.Click += buyToolStripButton_Click;
                 helpToolStripMenuItem.DropDownItems.Add(item);
             }
-
-            LoadFavorites(nrk);
         }
 
         private void newToolStripButton_Click(object sender, EventArgs e)
