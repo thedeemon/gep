@@ -6,6 +6,7 @@ syntax: glob
 *.orig
 *.rej
 *.bk
+*.idc
 obj/*
 bin/**
 VTune/*

@@ -292,11 +292,6 @@ namespace gep
                     f));
         }
 
-        /*public void Connect(Pin p1, Pin p2) //not used?
-        {
-            history.Add(new HIConnect(p1.Filter.Name, p1.Name, p2.Filter.Name, p2.Name));
-        }*/
-
         public void ConnectIfNew(Pin p1, Pin p2, PinConnection con)
         {
             AMMediaType mt = new AMMediaType();
