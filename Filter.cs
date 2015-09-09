@@ -573,12 +573,13 @@ namespace gep
                 IntPtr ppos = Marshal.AllocHGlobal(8);
                 stream.Seek(0, 1, ppos);
                 long pos = Marshal.ReadInt64(ppos);
-                if (pos >= 16)
+                if (pos >= 32)
                 {
                     byte[] data1 = new byte[16];
                     byte[] data2 = new byte[16];
                     Marshal.Copy(hg, data1, 0, 16);
-                    Marshal.Copy(hg, data2, 16, 16);
+                    IntPtr hg16 = new IntPtr(hg.ToInt64() + 16);
+                    Marshal.Copy(hg16, data2, 0, 16);
                     Guid g1 = new Guid(data1);
                     Guid g2 = new Guid(data2);
                     return new Pair<Guid, Guid>(g1, g2);

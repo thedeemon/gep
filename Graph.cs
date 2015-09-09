@@ -616,11 +616,11 @@ namespace gep
                 ShowCOMException(e, "Error while enumerating filters in the graph");
                 return;
             }
-            catch (Exception e)
+            /*catch (Exception e)
             {
                 MessageBox.Show(e.Message, "Error while enumerating filters in the graph");
                 return;
-            }
+            }*/
             log("reload_filters: almost done");
             history.CommitAdded(this);
             log("reload_filters: done");

@@ -329,7 +329,8 @@ namespace gep
         {
             var guids = f.ReadDMOGuids();
             if (guids.HasValue)            
-                return new HIAddFilterDMO(fp.FriendlyName, realname, guids.Value.fst.ToString(), guids.Value.snd.ToString(), this);            
+                return new HIAddFilterDMO(fp.FriendlyName, realname, 
+                    Graph.GuidToString(guids.Value.fst), Graph.GuidToString(guids.Value.snd), this);            
             return null;
         }
 
@@ -426,7 +427,7 @@ namespace gep
 
     class CodeGenCPP : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, addFiltDsTpl, checkTpl, addFiltByNameTpl;
+        CodeSnippet addFiltMonTpl, addFiltDsTpl, checkTpl, addFiltByNameTpl, addFiltDMOTpl;
         
         public CodeGenCPP()
         {
@@ -457,6 +458,27 @@ namespace gep
                 "$name", "DV Splitter",
                 "$var", "pDVSplitter",
                 "$clsname", "CLSID_DVSplitter"
+            });
+
+            addFiltDMOTpl = new CodeSnippet("Create a DMO filter", "addFiltDMOTpl",
+                "    //add $name\r\n" +
+                "    CComPtr<IBaseFilter> $var;\r\n" +
+                "    hr = $var.CoCreateInstance(CLSID_DMOWrapperFilter);\r\n" +
+                "    CHECK_HR(hr, _T(\"Can't create DMO Wrapper\"));\r\n" +
+                "    CComQIPtr<IDMOWrapperFilter, &IID_IDMOWrapperFilter> $var_wrapper($var);\r\n" +
+                "    if (!$var_wrapper)\r\n" +
+                "        CHECK_HR(E_NOINTERFACE, _T(\"Can't get IDMOWrapperFilter\"));\r\n" +
+                "    hr = $var_wrapper->Init($clsname, $dmocat);\r\n" +
+                "    CHECK_HR(hr, _T(\"DMO Wrapper Init failed\"));\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable to hold IBaseFilter\r\n" +
+                "$clsname - name of CLSID value for this DMO\r\n" + 
+                "$dmocat - name of CLSID value for DMO category");
+            addFiltDMOTpl.SetVars(new string[] {
+                "$name", "MP3 Decoder DMO",
+                "$var", "pMP3DecoderDMO",
+                "$clsname", "CLSID_MP3DecoderDMO",
+                "$dmocat", "DMOCATEGORY_AUDIO_DECODER"
             });
             
             insertTpl = new CodeSnippet("Insert filter to graph", "insertTpl",
@@ -555,24 +577,24 @@ namespace gep
             });
 
             checkTpl = new CodeSnippet("Check HRESULT for errors", "checkTpl",
-            "BOOL hrcheck(HRESULT hr, TCHAR* errtext)\r\n" +
-            "{\r\n" +
-            "    if (hr >= S_OK)\r\n" +
-            "        return FALSE;\r\n" +
-            "    TCHAR szErr[MAX_ERROR_TEXT_LEN];\r\n" +
-            "    DWORD res = AMGetErrorText(hr, szErr, MAX_ERROR_TEXT_LEN);\r\n" +
-            "    if (res)\r\n" +
-            "        printf(\"Error %x: %s\\n%s\\n\",hr, errtext,szErr);\r\n" +
-            "    else\r\n" +
-            "        printf(\"Error %x: %s\\n\", hr, errtext);\r\n" +
-            "    return TRUE;\r\n" +
-            "}\r\n\r\n" +            
-            "//change this macro to fit your style of error handling\r\n" +
-            "#define CHECK_HR(hr, msg) if (hrcheck(hr, msg)) return hr;\r\n" 
+                "BOOL hrcheck(HRESULT hr, TCHAR* errtext)\r\n" +
+                "{\r\n" +
+                "    if (hr >= S_OK)\r\n" +
+                "        return FALSE;\r\n" +
+                "    TCHAR szErr[MAX_ERROR_TEXT_LEN];\r\n" +
+                "    DWORD res = AMGetErrorText(hr, szErr, MAX_ERROR_TEXT_LEN);\r\n" +
+                "    if (res)\r\n" +
+                "        printf(\"Error %x: %s\\n%s\\n\",hr, errtext,szErr);\r\n" +
+                "    else\r\n" +
+                "        printf(\"Error %x: %s\\n\", hr, errtext);\r\n" +
+                "    return TRUE;\r\n" +
+                "}\r\n\r\n" +            
+                "//change this macro to fit your style of error handling\r\n" +
+                "#define CHECK_HR(hr, msg) if (hrcheck(hr, msg)) return hr;\r\n" 
             , "");
 
             snippets = new CodeSnippet[] { 
-                defineDsTpl, addFiltDsTpl, addFiltMonTpl, addFiltByNameTpl, setSrcFileTpl, setDstFileTpl,
+                defineDsTpl, addFiltDsTpl, addFiltMonTpl, addFiltByNameTpl, addFiltDMOTpl, setSrcFileTpl, setDstFileTpl,
                 insertTpl, connectTpl, connectDirectTpl, checkTpl                
             };
 
@@ -612,7 +634,11 @@ namespace gep
 
         public override string DefineAddFilterDMO(HIAddFilterDMO hi)
         {
-            return "todo";
+            return defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.clsname, "$guid", hi.dmoClsid, "$file", "DMO", "$xguid", xguid(hi.dmoClsid)
+            }) + defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.clsname + "_cat", "$guid", hi.dmoCat, "$file", "DMO category", "$xguid", xguid(hi.dmoCat)
+            });
         }
 
         string DefineIfNotKnown(string guidname, string known_prefix, string guid)
@@ -651,7 +677,9 @@ namespace gep
 
         public override string BuildAddFilterDMO(HIAddFilterDMO hi)
         {
-            return "todo";
+            return addFiltDMOTpl.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname, "$dmocat", hi.clsname + "_cat"
+            }) + Insert(hi, null);
         }
 
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
@@ -773,16 +801,27 @@ namespace gep
             sb.AppendLine("#include <initguid.h>");
             sb.AppendLine("#include <dvdmedia.h>");
 
-            //include "SampleGrabber.h" if necessary
+            bool useSG = false, useDMO = false;
             foreach (HistoryItem hi in history.Items)
             {
                 HIAddFilterDS hds = hi as HIAddFilterDS;
-                if (hds != null && hds.CLSID == "{C1F400A0-3F08-11D3-9F0B-006008039E37}")
-                {
-                    sb.AppendLine("// take this file from GraphEditPlus folder and use it ");
-                    sb.AppendLine("#include \"SampleGrabber.h\" // if your version of Windows SDK doesn't know about SampleGrabber");
-                    break;
-                }
+                if (hds != null && hds.CLSID == "{C1F400A0-3F08-11D3-9F0B-006008039E37}") // sample grabber
+                    useSG = true;
+                HIAddFilterDMO hidmo = hi as HIAddFilterDMO;
+                if (hidmo != null)
+                    useDMO = true;
+            }
+
+            if (useSG)
+            {
+                sb.AppendLine("// take this file from GraphEditPlus folder and use it ");
+                sb.AppendLine("#include \"SampleGrabber.h\" // if your version of Windows SDK doesn't know about SampleGrabber");
+            }
+            if (useDMO)
+            {
+                sb.AppendLine("#include <dmodshow.h> // we're going to use DMO Wrapper Filter");
+                sb.AppendLine("#include <dmoreg.h>");
+                sb.AppendLine("//Please add dmoguids.lib in the Link section of project settings");
             }
 
             sb.AppendLine();
