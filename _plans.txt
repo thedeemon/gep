@@ -20,4 +20,4 @@
 + edit filter info: deal with insufficient rights
 + close filter window after unregistering
 - bug: in C++ code hrcheck doesn't print properly in unicode mode
-- refresh code templates when new version of GEP runs 
++ refresh code templates when new version of GEP runs 

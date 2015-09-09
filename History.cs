@@ -25,7 +25,6 @@ namespace gep
         public abstract string DefineConnect(HIConnect hi);
         public abstract string BuildAddFilterDS(HIAddFilterDS hi, Graph graph);
         public abstract string BuildAddFilterOther(HIAddFilterOther hi, Graph graph);
-        public abstract string BuildAddFilterDMO(HIAddFilterDMO hi);
         public abstract string SetFormat(HISetFormat hi);
         protected abstract string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi);
 
@@ -51,10 +50,18 @@ namespace gep
             });
         }
 
+        public string BuildAddFilterDMO(HIAddFilterDMO hi)
+        {
+            return addFiltDMOTpl.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname, "$dmocat", hi.clsname + "_cat"
+            }) + Insert(hi, null);
+        }
+
         public abstract string GenCode(bool useDirectConnect, Graph graph);
 
         public bool needCreateFilterProc = false, needGetPin = false, directConnect = true, createFiltersByName = true;
         public History History { set { history = value; } }
+        static string snipversion = "1.5.0";
 
         public CodeSnippet[] snippets;
         public void SaveTemplates()
@@ -68,7 +75,8 @@ namespace gep
             {
                 string lang = ToString()+".";
                 foreach(CodeSnippet snp in snippets)
-                    rk.SetValue(lang + snp.Codename, snp.Text);                
+                    rk.SetValue(lang + snp.Codename, snp.Text);
+                rk.SetValue("snipversion", snipversion);
             }
             rk.Close();            
         }
@@ -80,6 +88,8 @@ namespace gep
             if (rk == null)
                 return;
             string lang = ToString() + ".";
+            var v = (string)rk.GetValue("snipversion");
+            if (v == null || v != snipversion) return; // this is an old version, do not load
             foreach (CodeSnippet snp in snippets)
             {
                 string s = (string)rk.GetValue(lang + snp.Codename);
@@ -92,7 +102,7 @@ namespace gep
         protected Dictionary<string, string> known = new Dictionary<string, string>(); // guid => CLSID_Shit
         protected List<string> srcFileNames = new List<string>();
         protected List<string> dstFileNames = new List<string>();
-        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl, defineDsTpl;
+        protected CodeSnippet insertTpl, setSrcFileTpl, setDstFileTpl, connectTpl, connectDirectTpl, defineDsTpl, addFiltDMOTpl;
 
         protected string Insert(HistoryItem hi, Graph graph)
         {
@@ -427,7 +437,7 @@ namespace gep
 
     class CodeGenCPP : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, addFiltDsTpl, checkTpl, addFiltByNameTpl, addFiltDMOTpl;
+        CodeSnippet addFiltMonTpl, addFiltDsTpl, checkTpl, addFiltByNameTpl;
         
         public CodeGenCPP()
         {
@@ -673,13 +683,6 @@ namespace gep
             return addFilt.GenerateWith(new string[] {
                 "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName.Replace("\\","\\\\"), "$category", hi.CatVar
             }) + Insert(hi, graph);
-        }
-
-        public override string BuildAddFilterDMO(HIAddFilterDMO hi)
-        {
-            return addFiltDMOTpl.GenerateWith(new string[] {
-                "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname, "$dmocat", hi.clsname + "_cat"
-            }) + Insert(hi, null);
         }
 
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
@@ -1098,8 +1101,7 @@ namespace gep
 
     class CodeGenCS : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, addFiltByNameTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl, addFiltDMOTpl;
-        
+        CodeSnippet addFiltMonTpl, addFiltByNameTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl;
 
         public override string ToString()
         {
@@ -1336,13 +1338,6 @@ namespace gep
             }) + Insert(hi, graph);
         }
 
-        public override string BuildAddFilterDMO(HIAddFilterDMO hi)
-        {
-            return addFiltDMOTpl.GenerateWith(new string[] {
-                "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname, "$dmocat", hi.clsname + "_cat"
-            }) + Insert(hi, null);
-        }
-
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
         {
             sb.AppendFormat("            AMMediaType {0} = new AMMediaType();\r\n", var);
@@ -1374,7 +1369,6 @@ namespace gep
             sb.AppendLine();
             return sb.ToString();
         }
-
 
         protected override string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi)
         {
