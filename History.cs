@@ -1098,7 +1098,7 @@ namespace gep
 
     class CodeGenCS : CodeGenBase
     {
-        CodeSnippet addFiltMonTpl, addFiltByNameTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl;
+        CodeSnippet addFiltMonTpl, addFiltByNameTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, checkTpl, addFiltDMOTpl;
         
 
         public override string ToString()
@@ -1187,6 +1187,25 @@ namespace gep
                 "$filename", "dstFile1"
             });
 
+            addFiltDMOTpl = new CodeSnippet("Create a DMO filter", "addFiltDMOTpl",
+                "            //add $name\r\n" +
+                "            IBaseFilter $var = (IBaseFilter) new DMOWrapperFilter();\r\n" +
+                "            var $var_wrapper = $var as IDMOWrapperFilter;\r\n" +
+                "            if ($var_wrapper==null)\r\n" +
+                "                checkHR(unchecked((int)0x80004002), \"Can't get IDMOWrapperFilter\");\r\n" +
+                "            hr = $var_wrapper.Init($clsname, $dmocat);\r\n" +
+                "            checkHR(hr, \"DMO Wrapper Init failed\");\r\n",
+                "$name - name of the filter\r\n" +
+                "$var - variable to hold IBaseFilter\r\n" +
+                "$clsname - name of CLSID value for this DMO\r\n" +
+                "$dmocat - name of CLSID value for DMO category");
+            addFiltDMOTpl.SetVars(new string[] {
+                "$name", "MP3 Decoder DMO",
+                "$var", "pMP3DecoderDMO",
+                "$clsname", "CLSID_MP3DecoderDMO",
+                "$dmocat", "DMOCATEGORY_AUDIO_DECODER"
+            });
+
             addFiltMonTpl = new CodeSnippet("Create a filter by display name", "addFiltMonTpl",
                 "            //add $name\r\n" +
                 "            IBaseFilter $var = CreateFilter(@\"$displayname\");\r\n",
@@ -1252,8 +1271,8 @@ namespace gep
             "        }\r\n", "");
 
             snippets = new CodeSnippet[] { 
-                defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, addFiltByNameTpl, setSrcFileTpl, setDstFileTpl,
-                insertTpl, connectTpl, connectDirectTpl, checkTpl
+                defineDsTpl, addFiltDsKnownTpl, addFiltDsUnknownTpl, addFiltMonTpl, addFiltByNameTpl, addFiltDMOTpl, 
+                setSrcFileTpl, setDstFileTpl, insertTpl, connectTpl, connectDirectTpl, checkTpl
             };
 
             LoadTemplates();
@@ -1274,7 +1293,11 @@ namespace gep
 
         public override string DefineAddFilterDMO(HIAddFilterDMO hi)
         {
-            return "todo";
+            return defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.clsname, "$guid", hi.dmoClsid, "$file", "DMO"
+            }) + defineDsTpl.GenerateWith(new string[] {
+                "$clsname", hi.clsname + "_cat", "$guid", hi.dmoCat, "$file", "DMO category"
+            });
         }
 
         public override string DefineSetFormat(HISetFormat hi)
@@ -1315,7 +1338,9 @@ namespace gep
 
         public override string BuildAddFilterDMO(HIAddFilterDMO hi)
         {
-            return "todo";
+            return addFiltDMOTpl.GenerateWith(new string[] {
+                "$name", hi.Name, "$var", hi.var, "$clsname", hi.clsname, "$dmocat", hi.clsname + "_cat"
+            }) + Insert(hi, null);
         }
 
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)

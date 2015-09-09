@@ -9,7 +9,7 @@
 - precompile (ngen)
 + check registration on start in different thread
 + unicode-friendly C++
-- create DMO filters differently (use DMO wrapper)
++ create DMO filters differently (use DMO wrapper)
 + free filters approptiately
 + start with larger graph window
 + run regsvr32 with enough rights
