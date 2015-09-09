@@ -20,10 +20,12 @@ namespace gep
     abstract class CodeGenBase
     {
         public abstract string DefineAddFilterDS(HIAddFilterDS hi);
+        public abstract string DefineAddFilterDMO(HIAddFilterDMO hi);
         public abstract string DefineSetFormat(HISetFormat hi);
         public abstract string DefineConnect(HIConnect hi);
         public abstract string BuildAddFilterDS(HIAddFilterDS hi, Graph graph);
         public abstract string BuildAddFilterOther(HIAddFilterOther hi, Graph graph);
+        public abstract string BuildAddFilterDMO(HIAddFilterDMO hi);
         public abstract string SetFormat(HISetFormat hi);
         protected abstract string SetSampleGrabberMediaType(AMMediaType mt, HistoryItem hi);
 
@@ -116,7 +118,7 @@ namespace gep
             }
 
             string setmtype = "";
-            if (hi.RealName != null)
+            if (hi.RealName != null && graph != null)
             {
                 AMMediaType mt = graph.SampleGrabberMediaType(hi.RealName);
                 if (mt != null)
@@ -128,8 +130,6 @@ namespace gep
 
             return ins + setfname + setmtype + "\r\n";
         }
-
-
 
         protected static string xguid(string guid)
         {
@@ -151,8 +151,10 @@ namespace gep
         public abstract string MediaTypeToString(Guid guid);
     }
 
+    abstract class HIAddFilter : HistoryItem
+    { }
 
-    class HIAddFilterDS : HistoryItem
+    class HIAddFilterDS : HIAddFilter
     {
         public string CLSID, FileName;
         public HIAddFilterDS(string _Name, string _CLSID, string realName, string _FileName,
@@ -174,7 +176,7 @@ namespace gep
         }
     }
 
-    class HIAddFilterOther : HistoryItem
+    class HIAddFilterOther : HIAddFilter
     {
         public string DisplayName, CatGuid, CatVar;
 
@@ -197,6 +199,29 @@ namespace gep
         public override string Build(CodeGenBase cg, Graph graph)
         {
             return cg.BuildAddFilterOther(this, graph);
+        }
+    }
+
+    class HIAddFilterDMO : HIAddFilter
+    {
+        public string dmoClsid, dmoCat;
+
+        public HIAddFilterDMO(string _Name, string realname, string _dmoClsid, string catGuid, History h)
+        {
+            Name = _Name; RealName = realname;
+            dmoClsid = _dmoClsid;
+            dmoCat = catGuid;
+            h.MakeVarName(_Name, out clsname, out var);
+        }
+
+        public override string Define(CodeGenBase cg)
+        {
+            return cg.DefineAddFilterDMO(this);
+        }
+
+        public override string Build(CodeGenBase cg, Graph graph)
+        {
+            return cg.BuildAddFilterDMO(this);
         }
     }
 
@@ -276,20 +301,36 @@ namespace gep
             return null;
         }
 
-        public void AddFilter(FilterProps fp, string realname, string srcFileName, string dstFileName)
+        public void AddFilter(FilterProps fp, string realname, string srcFileName, string dstFileName, Filter f)
         {
             if (fp.DisplayName.StartsWith("@device:sw:{083863F1-70DE-11D0-BD40-00A0C911CE86}")) //DirectShow filters
                 history.Add(new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcFileName, dstFileName, this));
             else
-                history.Add(new HIAddFilterOther(fp.Name, fp.DisplayName, realname, fp.catguid, fp.CategoryName, srcFileName, dstFileName, this));
+            {
+                HIAddFilterDMO hidmo = TryMakingDMO(fp, realname, f);
+                if (hidmo != null) 
+                    history.Add(hidmo);
+                else
+                    history.Add(new HIAddFilterOther(fp.Name, fp.DisplayName, realname, fp.catguid, fp.CategoryName, srcFileName, dstFileName, this));
+            }
         }
 
         public void AddFilterIfNew(FilterProps fp, string realname, string srcfilename, string dstfilename, Filter f)
         {
             if (FindByRealName(realname) == null)
-                temp.Add(new THIAddFilterDS(
-                    new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcfilename, dstfilename, this),
-                    f));
+            {
+                HIAddFilter hi = TryMakingDMO(fp, realname, f);
+                if (hi==null) hi = new HIAddFilterDS(fp.FriendlyName, fp.CLSID, realname, fp.FileName, srcfilename, dstfilename, this);
+                temp.Add(new THIAddFilter(hi, f));
+            }
+        }
+
+        HIAddFilterDMO TryMakingDMO(FilterProps fp, string realname, Filter f)
+        {
+            var guids = f.ReadDMOGuids();
+            if (guids.HasValue)            
+                return new HIAddFilterDMO(fp.FriendlyName, realname, guids.Value.fst.ToString(), guids.Value.snd.ToString(), this);            
+            return null;
         }
 
         public void ConnectIfNew(Pin p1, Pin p2, PinConnection con)
@@ -569,6 +610,11 @@ namespace gep
             });
         }
 
+        public override string DefineAddFilterDMO(HIAddFilterDMO hi)
+        {
+            return "todo";
+        }
+
         string DefineIfNotKnown(string guidname, string known_prefix, string guid)
         {
             if (guidname.StartsWith(known_prefix)) return "";
@@ -601,6 +647,11 @@ namespace gep
             return addFilt.GenerateWith(new string[] {
                 "$name", hi.Name, "$var", hi.var, "$displayname", hi.DisplayName.Replace("\\","\\\\"), "$category", hi.CatVar
             }) + Insert(hi, graph);
+        }
+
+        public override string BuildAddFilterDMO(HIAddFilterDMO hi)
+        {
+            return "todo";
         }
 
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
@@ -1182,6 +1233,11 @@ namespace gep
             });
         }
 
+        public override string DefineAddFilterDMO(HIAddFilterDMO hi)
+        {
+            return "todo";
+        }
+
         public override string DefineSetFormat(HISetFormat hi)
         {
             return "";
@@ -1218,6 +1274,10 @@ namespace gep
             }) + Insert(hi, graph);
         }
 
+        public override string BuildAddFilterDMO(HIAddFilterDMO hi)
+        {
+            return "todo";
+        }
 
         void CreateMediaType(string var, AMMediaType mt, StringBuilder sb)
         {

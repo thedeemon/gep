@@ -558,6 +558,40 @@ namespace gep
             }                
         }
 
+        public Nullable<Pair<Guid, Guid>> ReadDMOGuids()
+        {
+            IDMOWrapperFilter idmo = BaseFilter as IDMOWrapperFilter;
+            if (idmo == null) return null;
+            IPersistStream ips = BaseFilter as IPersistStream;
+            if (ips == null) return null;
+            IntPtr hg = Marshal.AllocHGlobal(10240);
+            try
+            {
+                IStream stream;
+                Graph.CheckHR(FilterGraphTools.CreateStreamOnHGlobal(hg, false, out stream), "CreateStreamOnHGlobal");
+                Graph.CheckHR(ips.Save(stream, false), "IPersistStream::Save");
+                IntPtr ppos = Marshal.AllocHGlobal(8);
+                stream.Seek(0, 1, ppos);
+                long pos = Marshal.ReadInt64(ppos);
+                if (pos >= 16)
+                {
+                    byte[] data1 = new byte[16];
+                    byte[] data2 = new byte[16];
+                    Marshal.Copy(hg, data1, 0, 16);
+                    Marshal.Copy(hg, data2, 16, 16);
+                    Guid g1 = new Guid(data1);
+                    Guid g2 = new Guid(data2);
+                    return new Pair<Guid, Guid>(g1, g2);
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(hg);
+            }
+            return null;
+        }
+
+
     }//class
 
     

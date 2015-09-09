@@ -153,7 +153,7 @@ namespace gep
                 dstfn = f.ChooseDstFileName();
 
             AddFilterHere(f, true, desired_pos);
-            history.AddFilter(fp, f.Name, srcfn, dstfn);
+            history.AddFilter(fp, f.Name, srcfn, dstfn, f);
         }
 
         void AddFilterHere(Filter f, bool recalcPaths, Point? desired_pos)

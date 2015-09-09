@@ -26,11 +26,11 @@ namespace gep
         }
     }
 
-    class THIAddFilterDS : TempHistoryItem
+    class THIAddFilter : TempHistoryItem
     {
         Filter filter;
 
-        public THIAddFilterDS(HIAddFilterDS _hi, Filter f)
+        public THIAddFilter(HIAddFilter _hi, Filter f)
         {
             filter = f;
             hi = _hi;
