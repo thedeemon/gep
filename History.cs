@@ -824,7 +824,7 @@ namespace gep
             {
                 sb.AppendLine("#include <dmodshow.h> // we're going to use DMO Wrapper Filter");
                 sb.AppendLine("#include <dmoreg.h>");
-                sb.AppendLine("//Please add dmoguids.lib in the Link section of project settings");
+                sb.AppendLine("#pragma comment(lib,\"dmoguids.lib\")");
             }
 
             sb.AppendLine();
