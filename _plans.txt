@@ -1,6 +1,6 @@
 + bug: OnLoad crash (same key to dictionary) on some systems
 + bug: 64 bit version in Win8 "trial expired"
-- bug: 'guidnames' not included in generated C++ code
++ bug: 'guidnames' not included in generated C++ code
 + warn when running in 64 bits (already done in setup)
 + bug: multiple names in video window title
 + change protection
