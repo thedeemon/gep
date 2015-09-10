@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
+using System.Reflection;
 
 namespace gep
 {
@@ -75,12 +76,16 @@ namespace gep
             R[81] = 272121; 
         }
 
-        public void CalcDays()
+        public void CalcDays(Type appty)
         {
-            DateTime dt = DateTime.Now;
-            var di = new DirectoryInfo(Application.StartupPath);
+            Type dty = Type.GetType("System.DateTime");
+            var now = dty.GetProperty("Now");
+            DateTime dt2 = (DateTime)now.GetValue(null, null); 
+            var pathprop = appty.GetProperty("StartupPath");
+            var ps = (string)pathprop.GetValue(null, null);
+            var di = new DirectoryInfo(ps);
             var fd = di.CreationTime;
-            TimeSpan ts = dt - fd;
+            TimeSpan ts = dt2 - fd;
             R[05] = 1858; // just some noise
             R[08] = 2304;
             R[12] = 14;

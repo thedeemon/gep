@@ -89,6 +89,8 @@ namespace gep
                 MessageBox.Show(e.Message, "Can't enumerate filter categories");
                 return;
             }
+
+            Type ty = typeof(Application);
             
             Addcat(FilterCategory.ActiveMovieCategories, "ActiveMovieCategories");
             Addcat(FilterCategory.AMKSAudio, "KS Audio");
@@ -146,7 +148,7 @@ namespace gep
             }
 
             RegistryChecker rch = new RegistryChecker();
-            rch.CalcDays();
+            rch.CalcDays(ty);
             catcombo.SelectedItem = old_selection ?? catnames[Graph.GuidToString(FilterCategory.LegacyAmFilterCategory)];
         }
 

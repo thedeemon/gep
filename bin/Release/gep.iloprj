@@ -1,53 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <NineRays.ILOMD.Options.Project>
-  <StrongNameKeyFile>
-  </StrongNameKeyFile>
+  <Excludes>
+    <NineRays.ILOMD.Options.Member>
+      <Name>
+      </Name>
+      <AssemblyName>
+      </AssemblyName>
+      <MemberInfoType>Custom</MemberInfoType>
+    </NineRays.ILOMD.Options.Member>
+  </Excludes>
+  <PathToSignTool>
+  </PathToSignTool>
+  <AssemblyList>
+    <NineRays.ILOMD.Options.AssemblyFileName>
+      <ObfuscationOptions>
+        <NineRays.ILOMD.Options.Options>
+          <AntiILDASM>True</AntiILDASM>
+          <Members>Events, Public, Overridables, Default</Members>
+          <StringEncryptionMode>Encrypt</StringEncryptionMode>
+          <SoftwareWatermark>
+          </SoftwareWatermark>
+          <Naming>NonDisplayable</Naming>
+        </NineRays.ILOMD.Options.Options>
+      </ObfuscationOptions>
+      <Name>.\gep.exe</Name>
+    </NineRays.ILOMD.Options.AssemblyFileName>
+  </AssemblyList>
   <References>
     <NineRays.ILOMD.Options.FileName>
       <Name>
       </Name>
     </NineRays.ILOMD.Options.FileName>
   </References>
-  <AssemblyList>
-    <NineRays.ILOMD.Options.AssemblyFileName>
-      <ObfuscationOptions>
-        <NineRays.ILOMD.Options.Options>
-          <Naming>NonDisplayable</Naming>
-          <StringEncryptionMode>Encrypt</StringEncryptionMode>
-          <Members>Events, Public, Overridables, Default</Members>
-          <AntiILDASM>True</AntiILDASM>
-          <SoftwareWatermark>
-          </SoftwareWatermark>
-        </NineRays.ILOMD.Options.Options>
-      </ObfuscationOptions>
-      <Name>.\gep.exe</Name>
-    </NineRays.ILOMD.Options.AssemblyFileName>
-  </AssemblyList>
-  <Excludes>
-    <NineRays.ILOMD.Options.Member>
-      <MemberInfoType>Custom</MemberInfoType>
-      <AssemblyName>
-      </AssemblyName>
-      <Name>
-      </Name>
-    </NineRays.ILOMD.Options.Member>
-  </Excludes>
-  <LayoutInfo>&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;Layout&gt;
-  &lt;Window Guid="1ab51f96-7428-4b68-9f25-0af0d8415f26" FloatingSize="250, 400" FloatingLocation="-1, -1" Docked="1" PopupSize="0" DockedSize="301" LastFixedDockLocation="Left" LastFixedLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" LastLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" /&gt;
-  &lt;Window Guid="16bbe2d2-5504-4cd4-82f2-6737d26493b8" FloatingSize="250, 400" FloatingLocation="-1, -1" Docked="1" PopupSize="0" DockedSize="301" LastFixedDockLocation="Left" LastFixedLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" LastLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" /&gt;
-  &lt;Window Guid="d011ae1a-b131-40cb-8ce1-4454c2694fcd" FloatingSize="250, 400" FloatingLocation="-1, -1" Docked="1" PopupSize="0" DockedSize="301" LastFixedDockLocation="Left" LastFixedLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" LastLayoutGuid="7338db9e-e761-425a-a48e-168073bbf816" /&gt;
-  &lt;Window Guid="a7f30d18-a60c-46aa-9041-19b3bbd5f7d5" FloatingSize="550, 400" FloatingLocation="-1, -1" Docked="1" PopupSize="0" DockedSize="200" LastFixedDockLocation="Center" LastFixedLayoutGuid="635d50c1-6ddc-446d-b5b1-b43decd2980f" LastLayoutGuid="635d50c1-6ddc-446d-b5b1-b43decd2980f" /&gt;
-  &lt;Container Dock="3" ContentSize="301"&gt;
-    &lt;SplitLayoutSystem WorkingSize="301, 503" SplitMode="0"&gt;
-      &lt;ControlLayoutSystem WorkingSize="301, 503" Guid="7338db9e-e761-425a-a48e-168073bbf816" Collapsed="0" SelectedControl="1ab51f96-7428-4b68-9f25-0af0d8415f26"&gt;
-        &lt;Controls&gt;
-          &lt;Control Guid="1ab51f96-7428-4b68-9f25-0af0d8415f26" /&gt;
-          &lt;Control Guid="d011ae1a-b131-40cb-8ce1-4454c2694fcd" /&gt;
-          &lt;Control Guid="16bbe2d2-5504-4cd4-82f2-6737d26493b8" /&gt;
-        &lt;/Controls&gt;
-      &lt;/ControlLayoutSystem&gt;
-    &lt;/SplitLayoutSystem&gt;
-  &lt;/Container&gt;
-&lt;/Layout&gt;</LayoutInfo>
+  <StrongNameKeyFile>
+  </StrongNameKeyFile>
+  <LayoutInfo>&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;utf-16&amp;quot;?&amp;gt;
+&amp;lt;Layout&amp;gt;
+  &amp;lt;Window Guid=&amp;quot;62448337-056e-4d2b-941b-6c299819a28c&amp;quot; LastFocused=&amp;quot;130863407247996873&amp;quot; DockedSize=&amp;quot;200&amp;quot; PopupSize=&amp;quot;0&amp;quot; FloatingLocation=&amp;quot;-1, -1&amp;quot; FloatingSize=&amp;quot;550, 400&amp;quot; LastOpenDockSituation=&amp;quot;Document&amp;quot; LastFixedDockSituation=&amp;quot;Document&amp;quot; LastFixedDockLocation=&amp;quot;Right&amp;quot; LastFloatingWindowGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; LastDockContainerCount=&amp;quot;0&amp;quot; LastDockContainerIndex=&amp;quot;0&amp;quot; DockedWorkingSize=&amp;quot;250, 400&amp;quot; DockedWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; DockedIndexInWindowGroup=&amp;quot;0&amp;quot; DockedSplitPath=&amp;quot;0&amp;quot; DocumentWorkingSize=&amp;quot;250, 400&amp;quot; DocumentWindowGroupGuid=&amp;quot;044706ff-da65-40d6-8cb8-6fbb00805cbf&amp;quot; DocumentIndexInWindowGroup=&amp;quot;0&amp;quot; DocumentSplitPath=&amp;quot;0&amp;quot; FloatingWorkingSize=&amp;quot;250, 400&amp;quot; FloatingWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; FloatingIndexInWindowGroup=&amp;quot;0&amp;quot; FloatingSplitPath=&amp;quot;0&amp;quot; /&amp;gt;
+  &amp;lt;Window Guid=&amp;quot;d011ae1a-b131-40cb-8ce1-4454c2694fcd&amp;quot; LastFocused=&amp;quot;0&amp;quot; DockedSize=&amp;quot;301&amp;quot; PopupSize=&amp;quot;0&amp;quot; FloatingLocation=&amp;quot;-1, -1&amp;quot; FloatingSize=&amp;quot;250, 400&amp;quot; LastOpenDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockLocation=&amp;quot;Left&amp;quot; LastFloatingWindowGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; LastDockContainerCount=&amp;quot;1&amp;quot; LastDockContainerIndex=&amp;quot;0&amp;quot; DockedWorkingSize=&amp;quot;301, 503&amp;quot; DockedWindowGroupGuid=&amp;quot;7338db9e-e761-425a-a48e-168073bbf816&amp;quot; DockedIndexInWindowGroup=&amp;quot;1&amp;quot; DockedSplitPath=&amp;quot;0&amp;quot; DocumentWorkingSize=&amp;quot;250, 400&amp;quot; DocumentWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; DocumentIndexInWindowGroup=&amp;quot;0&amp;quot; DocumentSplitPath=&amp;quot;0&amp;quot; FloatingWorkingSize=&amp;quot;250, 400&amp;quot; FloatingWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; FloatingIndexInWindowGroup=&amp;quot;0&amp;quot; FloatingSplitPath=&amp;quot;0&amp;quot; /&amp;gt;
+  &amp;lt;Window Guid=&amp;quot;16bbe2d2-5504-4cd4-82f2-6737d26493b8&amp;quot; LastFocused=&amp;quot;0&amp;quot; DockedSize=&amp;quot;301&amp;quot; PopupSize=&amp;quot;0&amp;quot; FloatingLocation=&amp;quot;-1, -1&amp;quot; FloatingSize=&amp;quot;250, 400&amp;quot; LastOpenDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockLocation=&amp;quot;Left&amp;quot; LastFloatingWindowGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; LastDockContainerCount=&amp;quot;1&amp;quot; LastDockContainerIndex=&amp;quot;0&amp;quot; DockedWorkingSize=&amp;quot;301, 503&amp;quot; DockedWindowGroupGuid=&amp;quot;7338db9e-e761-425a-a48e-168073bbf816&amp;quot; DockedIndexInWindowGroup=&amp;quot;2&amp;quot; DockedSplitPath=&amp;quot;0&amp;quot; DocumentWorkingSize=&amp;quot;250, 400&amp;quot; DocumentWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; DocumentIndexInWindowGroup=&amp;quot;0&amp;quot; DocumentSplitPath=&amp;quot;0&amp;quot; FloatingWorkingSize=&amp;quot;250, 400&amp;quot; FloatingWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; FloatingIndexInWindowGroup=&amp;quot;0&amp;quot; FloatingSplitPath=&amp;quot;0&amp;quot; /&amp;gt;
+  &amp;lt;Window Guid=&amp;quot;1ab51f96-7428-4b68-9f25-0af0d8415f26&amp;quot; LastFocused=&amp;quot;130863407293993905&amp;quot; DockedSize=&amp;quot;301&amp;quot; PopupSize=&amp;quot;0&amp;quot; FloatingLocation=&amp;quot;-1, -1&amp;quot; FloatingSize=&amp;quot;250, 400&amp;quot; LastOpenDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockSituation=&amp;quot;Docked&amp;quot; LastFixedDockLocation=&amp;quot;Left&amp;quot; LastFloatingWindowGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; LastDockContainerCount=&amp;quot;1&amp;quot; LastDockContainerIndex=&amp;quot;0&amp;quot; DockedWorkingSize=&amp;quot;301, 503&amp;quot; DockedWindowGroupGuid=&amp;quot;7338db9e-e761-425a-a48e-168073bbf816&amp;quot; DockedIndexInWindowGroup=&amp;quot;0&amp;quot; DockedSplitPath=&amp;quot;0&amp;quot; DocumentWorkingSize=&amp;quot;250, 400&amp;quot; DocumentWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; DocumentIndexInWindowGroup=&amp;quot;0&amp;quot; DocumentSplitPath=&amp;quot;0&amp;quot; FloatingWorkingSize=&amp;quot;250, 400&amp;quot; FloatingWindowGroupGuid=&amp;quot;00000000-0000-0000-0000-000000000000&amp;quot; FloatingIndexInWindowGroup=&amp;quot;0&amp;quot; FloatingSplitPath=&amp;quot;0&amp;quot; /&amp;gt;
+  &amp;lt;Container Dock=&amp;quot;3&amp;quot; ContentSize=&amp;quot;301&amp;quot;&amp;gt;
+    &amp;lt;SplitLayoutSystem WorkingSize=&amp;quot;301, 503&amp;quot; SplitMode=&amp;quot;0&amp;quot;&amp;gt;
+      &amp;lt;ControlLayoutSystem WorkingSize=&amp;quot;301, 503&amp;quot; Guid=&amp;quot;7338db9e-e761-425a-a48e-168073bbf816&amp;quot; Collapsed=&amp;quot;0&amp;quot; SelectedControl=&amp;quot;1ab51f96-7428-4b68-9f25-0af0d8415f26&amp;quot;&amp;gt;
+        &amp;lt;Controls&amp;gt;
+          &amp;lt;Control Guid=&amp;quot;1ab51f96-7428-4b68-9f25-0af0d8415f26&amp;quot; /&amp;gt;
+          &amp;lt;Control Guid=&amp;quot;d011ae1a-b131-40cb-8ce1-4454c2694fcd&amp;quot; /&amp;gt;
+          &amp;lt;Control Guid=&amp;quot;16bbe2d2-5504-4cd4-82f2-6737d26493b8&amp;quot; /&amp;gt;
+        &amp;lt;/Controls&amp;gt;
+      &amp;lt;/ControlLayoutSystem&amp;gt;
+    &amp;lt;/SplitLayoutSystem&amp;gt;
+  &amp;lt;/Container&amp;gt;
+&amp;lt;/Layout&amp;gt;</LayoutInfo>
 </NineRays.ILOMD.Options.Project>
