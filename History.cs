@@ -594,9 +594,9 @@ namespace gep
                 "    TCHAR szErr[MAX_ERROR_TEXT_LEN];\r\n" +
                 "    DWORD res = AMGetErrorText(hr, szErr, MAX_ERROR_TEXT_LEN);\r\n" +
                 "    if (res)\r\n" +
-                "        printf(\"Error %x: %s\\n%s\\n\",hr, errtext,szErr);\r\n" +
+                "        _tprintf(_T(\"Error %x: %s\\n%s\\n\"),hr, errtext,szErr);\r\n" +
                 "    else\r\n" +
-                "        printf(\"Error %x: %s\\n\", hr, errtext);\r\n" +
+                "        _tprintf(_T(\"Error %x: %s\\n\"), hr, errtext);\r\n" +
                 "    return TRUE;\r\n" +
                 "}\r\n\r\n" +            
                 "//change this macro to fit your style of error handling\r\n" +
