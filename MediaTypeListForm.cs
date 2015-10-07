@@ -46,7 +46,7 @@ namespace gep
             }
             catch (COMException ex)
             {
-                Graph.ShowCOMException(ex, "Error getting stream capabilites");
+                Graph.ShowCOMException(ex, "Error getting stream capabilities");
             }
             catch (Exception ex)
             {

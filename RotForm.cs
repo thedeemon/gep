@@ -21,7 +21,7 @@ namespace gep
 
         delegate bool procgraph(string name, IMoniker mon, IRunningObjectTable rot); //true to stop
 
-        void EnumROT(procgraph fun)
+        static void EnumROT(procgraph fun)
         {
             IRunningObjectTable tb;
             IBindCtx bindCtx;

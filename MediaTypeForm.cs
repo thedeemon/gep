@@ -47,7 +47,7 @@ namespace gep
             WalkClass(typeof(MediaSubType), comboSubType, subtype);
         }
 
-        void WalkClass(Type MyType, ComboBox cb, Guid chosen)
+        static void WalkClass(Type MyType, ComboBox cb, Guid chosen)
         {
             string s="";
             foreach (FieldInfo m in MyType.GetFields())

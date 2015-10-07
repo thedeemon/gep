@@ -238,7 +238,7 @@ namespace gep
     class HIConnect : HistoryItem
     {
         public string filter1, filter2, pin1, pin2;
-        public int weight = 1;
+        //public int weight = 1;
         public string majortype;
         public Guid majortypeguid;
 
@@ -362,7 +362,7 @@ namespace gep
             if (i >= 0) history.RemoveAt(i);
         }
 
-        int FindConnection(Pin p1, Pin p2, List<HistoryItem> lst)
+        static int FindConnection(Pin p1, Pin p2, List<HistoryItem> lst)
         {
             for (int i = 0; i < lst.Count; i++)
             {
@@ -424,7 +424,7 @@ namespace gep
             history.Add(new HISetFormat(pin.Filter.Name, pin.Name, mt, this));
         }
 
-        public void CommitAdded(Graph graph) //sort items in temp and add to history
+        public void CommitAdded() //sort items in temp and add to history
         {
             temp.ForEach(delegate(TempHistoryItem thi) { thi.CalcOrder(); });
             temp.Sort();

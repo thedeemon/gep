@@ -16,6 +16,7 @@ namespace gep
         static int ngraphs = 0;
         int toolStripHeight;
         Timer timer = new Timer();
+        Timer animTimer = new Timer();
         public static int slider_start = 330;
         
 
@@ -113,11 +114,13 @@ namespace gep
 
         public void RenderFile(object sender, EventArgs e)
         {
-            OpenFileDialog fd = new OpenFileDialog();
-            fd.DefaultExt = "*.*";
-            if (fd.ShowDialog() != DialogResult.OK)
-                return;
-            RenderThisFile(fd.FileName);
+            using (var fd = new OpenFileDialog())
+            {
+                fd.DefaultExt = "*.*";
+                if (fd.ShowDialog() != DialogResult.OK)
+                    return;
+                RenderThisFile(fd.FileName);
+            }
         }
 
         public void RenderThisFile(string fname)
@@ -129,11 +132,13 @@ namespace gep
 
         public void AddSourceFilter(object sender, EventArgs e)
         {
-            OpenFileDialog fd = new OpenFileDialog();
-            fd.DefaultExt = "*.*";
-            if (fd.ShowDialog() != DialogResult.OK)
-                return;
-            graph.AddSourceFilter(fd.FileName);
+            using (var fd = new OpenFileDialog())
+            {
+                fd.DefaultExt = "*.*";
+                if (fd.ShowDialog() != DialogResult.OK)
+                    return;
+                graph.AddSourceFilter(fd.FileName);
+            }
             RecalcScrolls();
             Invalidate();
         }
@@ -268,8 +273,8 @@ namespace gep
                 ISampleGrabber sg = rightClickedFilter.BaseFilter as ISampleGrabber;
                 if (sg != null)
                 {
-                    MediaTypeForm sf = new MediaTypeForm(sg);
-                    sf.ShowDialog();
+                    using(var sf = new MediaTypeForm(sg))
+                        sf.ShowDialog();
                 }
             }
             rightClickedFilter = null;
@@ -296,9 +301,11 @@ namespace gep
                 IAMStreamConfig isc = connectingPin.IPin as IAMStreamConfig;
                 if (isc != null)
                 {
-                    MediaTypeListForm f = new MediaTypeListForm(isc);
-                    if (f.ShowDialog() == DialogResult.OK)
-                        graph.PinSetFormat(connectingPin, f.selected_mt);
+                    using (var f = new MediaTypeListForm(isc))
+                    {
+                        if (f.ShowDialog() == DialogResult.OK)
+                            graph.PinSetFormat(connectingPin, f.selected_mt);
+                    }
                 }
             }
             connectingPin = null;
@@ -845,24 +852,28 @@ namespace gep
 
         public void SaveGraphAs(object sender, EventArgs e)
         {
-            SaveFileDialog fd = new SaveFileDialog();
-            fd.DefaultExt = "*.grf";
-            fd.Filter = "Graph files (*.grf)|*.grf|All files (*.*)|*.*";
-            if (fd.ShowDialog() == DialogResult.OK)
+            using (var fd = new SaveFileDialog())
             {
-                graph.SaveGraph(fd.FileName);
-                savedFileName = fd.FileName;
-                Text = savedFileName;
+                fd.DefaultExt = "*.grf";
+                fd.Filter = "Graph files (*.grf)|*.grf|All files (*.*)|*.*";
+                if (fd.ShowDialog() == DialogResult.OK)
+                {
+                    graph.SaveGraph(fd.FileName);
+                    savedFileName = fd.FileName;
+                    Text = savedFileName;
+                }
             }
         }
 
         public void LoadGraph(object sender, EventArgs e)
         {
-            OpenFileDialog fd = new OpenFileDialog();
-            fd.DefaultExt = "*.grf";
-            fd.Filter = "Graph files (*.grf)|*.grf|All files (*.*)|*.*";
-            if (fd.ShowDialog() == DialogResult.OK)
-                DoLoad(fd.FileName);
+            using (var fd = new OpenFileDialog())
+            {
+                fd.DefaultExt = "*.grf";
+                fd.Filter = "Graph files (*.grf)|*.grf|All files (*.*)|*.*";
+                if (fd.ShowDialog() == DialogResult.OK)
+                    DoLoad(fd.FileName);
+            }
         }
 
         public void DoLoad(string file)
@@ -894,7 +905,6 @@ namespace gep
         }
         
         Timer regtimer = new Timer();
-        Timer animation_timer = new Timer();
 
         private void GraphForm_Load(object sender, EventArgs e)
         {
@@ -924,9 +934,10 @@ namespace gep
             timer.Interval = 1000;
             timer.Tick += OnTimer;
             timer.Start();
-            timer.Interval = 50;
-            timer.Tick += OnAnimationTimer;
-            timer.Start();
+
+            animTimer.Interval = 50;
+            animTimer.Tick += OnAnimationTimer;
+            animTimer.Start();
             toolStrip.Renderer = new SickToolStripRenderer(graph);
         }
 
@@ -1020,7 +1031,7 @@ namespace gep
             sliding = false;
         }
 
-        public void GenerateCode(lang lng)
+        public void GenerateCode(Lang lng)
         {
             Filterz.rch.EnsureInited(); 
             graph.GenerateCode(showCode[RegistryChecker.R[27] + RegistryChecker.R[14] + RegistryChecker.R[52]], lng,
@@ -1152,7 +1163,7 @@ namespace gep
         }
     }
 
-    public enum lang
+    public enum Lang
     {
         CPP = 1,
         CS = 2

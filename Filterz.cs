@@ -31,7 +31,7 @@ namespace gep
         public static RegistryChecker rch = new RegistryChecker();
         private static Dictionary<string, Guid> dmo_cats = new Dictionary<string,Guid>(); 
 
-        private void Addcat(Guid g, string dft_name)
+        private static void Addcat(Guid g, string dft_name)
         {
             string sg = Graph.GuidToString(g);
             if (!catnames.ContainsKey(sg))
@@ -148,7 +148,7 @@ namespace gep
             }
 
             RegistryChecker rch = new RegistryChecker();
-            rch.CalcDays(ty);
+            RegistryChecker.CalcDays(ty);
             catcombo.SelectedItem = old_selection ?? catnames[Graph.GuidToString(FilterCategory.LegacyAmFilterCategory)];
         }
 
@@ -350,13 +350,15 @@ namespace gep
 
         private void addbtn_Click(object sender, EventArgs e)
         {
-            OpenFileDialog fd = new OpenFileDialog();
-            fd.Filter = "DLL, AX, OCX files|*.dll;*.ax;*.ocx|All files (*.*)|*.*";
-            if (fd.ShowDialog() != DialogResult.OK)
-                return;
-            var si = new ProcessStartInfo("regsvr32.exe", "\"" + fd.FileName + "\"");
-            si.Verb = "runas";
-            Process.Start(si);
+            using (var fd = new OpenFileDialog())
+            {
+                fd.Filter = "DLL, AX, OCX files|*.dll;*.ax;*.ocx|All files (*.*)|*.*";
+                if (fd.ShowDialog() != DialogResult.OK)
+                    return;
+                var si = new ProcessStartInfo("regsvr32.exe", "\"" + fd.FileName + "\"");
+                si.Verb = "runas";
+                Process.Start(si);
+            }
             Thread.Sleep(300);
             RefreshTree();
         }

@@ -81,7 +81,7 @@ namespace gep
             ShowFoundFilters();
         }
 
-        bool match(string str, string substr)
+        static bool match(string str, string substr)
         {
             if (str == null) return false;
             return str.ToLowerInvariant().Contains(substr);

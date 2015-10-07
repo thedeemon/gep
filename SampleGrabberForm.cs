@@ -22,7 +22,7 @@ namespace gep
             sampleGrabber = sg;
             f.sampleGrabberForm = this;
             filter = f;
-            cb = new SampleGrabberCallback(this);
+            cb = new SampleGrabberCallback();
             InitializeComponent();
             timer.Interval = 1000;
             timer.Tick += new EventHandler(timer_Tick);
@@ -56,11 +56,6 @@ namespace gep
             }
         }
 
-        public void AddText(string text)
-        {
-            textBox.AppendText(text);
-        }
-
         private void SampleGrabberForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             try
@@ -85,12 +80,10 @@ namespace gep
 
     class SampleGrabberCallback : ISampleGrabberCB
     {
-        SampleGrabberForm sgform;
         public StringBuilder sb = new StringBuilder();
 
-        public SampleGrabberCallback(SampleGrabberForm sf)
+        public SampleGrabberCallback()
         {
-            sgform = sf;
         }
 
         public int BufferCB(double SampleTime, IntPtr pBuffer, int BufferLen)

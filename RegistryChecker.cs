@@ -52,7 +52,7 @@ namespace gep
         public Thunk g(T x) { return rf(x, g); }
     }
 
-    class RegistryChecker
+    class RegistryChecker : IDisposable
     {
         public static int[] R;
         EventWaitHandle evtDone;
@@ -76,7 +76,13 @@ namespace gep
             R[81] = 272121; 
         }
 
-        public void CalcDays(Type appty)
+        void IDisposable.Dispose()
+        {
+            evtDone.Close();
+            GC.SuppressFinalize(this);
+        }
+
+        public static void CalcDays(Type appty)
         {
             Type dty = Type.GetType("System.DateTime");
             var now = dty.GetProperty("Now");

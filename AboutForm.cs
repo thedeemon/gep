@@ -16,11 +16,6 @@ namespace gep
             InitializeComponent();
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Program.OpenBrowser("http://www.thedeemon.com");
-        }
-
         private void btnOK_Click(object sender, EventArgs e)
         {
             Close();

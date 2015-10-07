@@ -19,9 +19,11 @@ namespace gep
 
         private void GenerateCodeForm_Load(object sender, EventArgs e)
         {
-            FontFamily ff = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace);
-            textBox.Font = new Font(ff, 10, FontStyle.Regular);
-            textBox.Text = Code;
+            using (var ff = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace))
+            {
+                textBox.Font = new Font(ff, 10, FontStyle.Regular);
+                textBox.Text = Code;
+            }
         }
     }
 }

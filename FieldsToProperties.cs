@@ -158,7 +158,7 @@ namespace gep
             return sb.ToString();
         }
 
-        string fval(Dictionary<string, string> fields, string fmt, string key, bool strip)
+        static string fval(Dictionary<string, string> fields, string fmt, string key, bool strip)
         {
             string val;
             if (fields.TryGetValue(key, out val))
@@ -170,7 +170,7 @@ namespace gep
             return "";
         }
 
-        string fval(Dictionary<string, string> fields, string fmt, string key)
+        static string fval(Dictionary<string, string> fields, string fmt, string key)
         {
             return fval(fields, fmt, key, true);
         }

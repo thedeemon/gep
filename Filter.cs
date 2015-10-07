@@ -25,7 +25,6 @@ namespace gep
         //layout info
         public int weight;
         int stage;
-        public bool movedManually = false;
 
         //private/protected
         string name, orgname; //orgname - without filename
@@ -33,7 +32,6 @@ namespace gep
         Rectangle rect; // in pixels
         static Brush namebrush = new SolidBrush(Color.White);
         List<Pin> pins = new List<Pin>();
-        static Random rnd = new Random();
         Graph graph;
         IBaseFilter basefilter;
         FilterState filterState;
@@ -154,18 +152,19 @@ namespace gep
             int seldelta = IsSelected() ? 66 : anidelta;
             int seldelta2 = seldelta / 2;
             Rectangle rc = MyDrawRectangle(viewpoint);
-            LinearGradientBrush br = new LinearGradientBrush(new Point(rc.Left, rc.Top-1), new Point(rc.Left, rc.Bottom+1),
-                Color.FromArgb(100 + seldelta2, 100 + seldelta+seldelta2, 200+seldelta2),
-                Color.FromArgb(50 + anidelta, 50 + anidelta, 100));
-            g.FillRectangle(br, rc);
+            using (var br = new LinearGradientBrush(new Point(rc.Left, rc.Top - 1), new Point(rc.Left, rc.Bottom + 1),
+                Color.FromArgb(100 + seldelta2, 100 + seldelta + seldelta2, 200 + seldelta2),
+                Color.FromArgb(50 + anidelta, 50 + anidelta, 100)))
+            {
+                g.FillRectangle(br, rc);
 
-            Image img = images[(int)filterState];
-            g.DrawImageUnscaled(img, rc.Left + rc.Width / 2 - 8, rc.Bottom - 20);
+                Image img = images[(int)filterState];
+                g.DrawImageUnscaled(img, rc.Left + rc.Width / 2 - 8, rc.Bottom - 20);
 
-            g.DrawString(name, namefont, namebrush, x1 + 10, y1 + 5);
-            foreach (Pin pin in pins)
-                pin.Draw(g, x1, y1);
-            br.Dispose();
+                g.DrawString(name, namefont, namebrush, x1 + 10, y1 + 5);
+                foreach (Pin pin in pins)
+                    pin.Draw(g, x1, y1);
+            }
         }
 
         public Pin PinInPoint(Point point)
@@ -293,16 +292,6 @@ namespace gep
                     pin.Rect = new Rectangle(boxsize.X * cellsize - pinsize, (pin.Num + 1) * cellsize + delta, pinsize, pinsize);
         }
 
-        public System.Collections.Generic.IEnumerable<PinConnection> Connections
-        {
-            get 
-            {
-                foreach (Pin pin in pins)
-                    if (pin.Connection != null)
-                        yield return pin.Connection;
-            }
-        }
-
         public Pin FindPinByName(string pinname)
         {
             return pins.Find(delegate(Pin p) { return p.UniqName == pinname; });
@@ -377,48 +366,52 @@ namespace gep
             IFileSourceFilter fsrc = basefilter as IFileSourceFilter;
             if (fsrc != null)
             {
-                OpenFileDialog fd = new OpenFileDialog();
-                fd.DefaultExt = "*.*";
-                if (fd.ShowDialog() == DialogResult.OK)
+                using (var fd = new OpenFileDialog())
                 {
-                    try
+                    fd.DefaultExt = "*.*";
+                    if (fd.ShowDialog() == DialogResult.OK)
                     {
-                        int hr = fsrc.Load(fd.FileName, null);
-                        DsError.ThrowExceptionForHR(hr);
-                        ret = fd.FileName;
-                    }
-                    catch (COMException e)
-                    {
-                        Graph.ShowCOMException(e, "Can't load file " + fd.FileName);
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show(e.Message, "Exception caught while loading file " + fd.FileName);
-                    }
-                }
-                else
-                    if (Program.mainform.suggestURLs)
-                    {
-                        RenderURLForm rf = new RenderURLForm("Open URL");
-                        rf.ShowDialog();
-                        if (rf.selectedURL != null)
+                        try
                         {
-                            try
-                            {
-                                int hr = fsrc.Load(rf.selectedURL, null);
-                                DsError.ThrowExceptionForHR(hr);
-                                ret = rf.selectedURL;
-                            }
-                            catch (COMException e)
-                            {
-                                Graph.ShowCOMException(e, "Can't open " + rf.selectedURL);
-                            }
-                            catch (Exception e)
-                            {
-                                MessageBox.Show(e.Message, "Exception caught while loading URL " +rf.selectedURL);
-                            }
+                            int hr = fsrc.Load(fd.FileName, null);
+                            DsError.ThrowExceptionForHR(hr);
+                            ret = fd.FileName;
+                        }
+                        catch (COMException e)
+                        {
+                            Graph.ShowCOMException(e, "Can't load file " + fd.FileName);
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show(e.Message, "Exception caught while loading file " + fd.FileName);
                         }
                     }
+                    else
+                        if (Program.mainform.suggestURLs)
+                        {
+                            using (var rf = new RenderURLForm("Open URL"))
+                            {
+                                rf.ShowDialog();
+                                if (rf.selectedURL != null)
+                                {
+                                    try
+                                    {
+                                        int hr = fsrc.Load(rf.selectedURL, null);
+                                        DsError.ThrowExceptionForHR(hr);
+                                        ret = rf.selectedURL;
+                                    }
+                                    catch (COMException e)
+                                    {
+                                        Graph.ShowCOMException(e, "Can't open " + rf.selectedURL);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        MessageBox.Show(e.Message, "Exception caught while loading URL " + rf.selectedURL);
+                                    }
+                                }
+                            }//using
+                        }
+                }//using
             }
             return ret;
         }
@@ -429,47 +422,51 @@ namespace gep
             IFileSinkFilter fdst = basefilter as IFileSinkFilter;
             if (fdst != null)
             {
-                SaveFileDialog fd = new SaveFileDialog();
-                if (fd.ShowDialog() == DialogResult.OK)
+                using (var fd = new SaveFileDialog())
                 {
-                    try
+                    if (fd.ShowDialog() == DialogResult.OK)
                     {
-                        int hr = fdst.SetFileName(fd.FileName, null);
-                        DsError.ThrowExceptionForHR(hr);
-                        ret = fd.FileName;
-                    }
-                    catch (COMException e)
-                    {
-                        Graph.ShowCOMException(e, "Can't create file " + fd.FileName);
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show(e.Message, "Exception caught while setting output file name " + fd.FileName);
-                    }
-                }
-                else
-                    if (Program.mainform.suggestURLs)
-                    {
-                        RenderURLForm rf = new RenderURLForm("Open URL");
-                        rf.ShowDialog();
-                        if (rf.selectedURL != null)
+                        try
                         {
-                            try
-                            {
-                                int hr = fdst.SetFileName(rf.selectedURL, null);
-                                DsError.ThrowExceptionForHR(hr);
-                                ret = rf.selectedURL;
-                            }
-                            catch (COMException e)
-                            {
-                                Graph.ShowCOMException(e, "Can't set " + rf.selectedURL);
-                            }
-                            catch (Exception e)
-                            {
-                                MessageBox.Show(e.Message, "Exception caught while setting URL " + rf.selectedURL);
-                            }
+                            int hr = fdst.SetFileName(fd.FileName, null);
+                            DsError.ThrowExceptionForHR(hr);
+                            ret = fd.FileName;
+                        }
+                        catch (COMException e)
+                        {
+                            Graph.ShowCOMException(e, "Can't create file " + fd.FileName);
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBox.Show(e.Message, "Exception caught while setting output file name " + fd.FileName);
                         }
                     }
+                    else
+                        if (Program.mainform.suggestURLs)
+                        {
+                            using (var rf = new RenderURLForm("Open URL"))
+                            {
+                                rf.ShowDialog();
+                                if (rf.selectedURL != null)
+                                {
+                                    try
+                                    {
+                                        int hr = fdst.SetFileName(rf.selectedURL, null);
+                                        DsError.ThrowExceptionForHR(hr);
+                                        ret = rf.selectedURL;
+                                    }
+                                    catch (COMException e)
+                                    {
+                                        Graph.ShowCOMException(e, "Can't set " + rf.selectedURL);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        MessageBox.Show(e.Message, "Exception caught while setting URL " + rf.selectedURL);
+                                    }
+                                }
+                            }//using rf
+                        }
+                }//using fd
             }
             return ret;
         }
@@ -546,8 +543,8 @@ namespace gep
 	                    sb.AppendLine("}");
 	                    sb.AppendLine("GlobalFree(hg);");
 
-                        GenerateCodeForm cf = new GenerateCodeForm(sb.ToString());
-                        cf.ShowDialog();
+                        using(var cf = new GenerateCodeForm(sb.ToString()))
+                            cf.ShowDialog();
                         //MessageBox.Show(sb.ToString());
                     }
                 }

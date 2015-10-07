@@ -169,7 +169,7 @@ namespace gep
         private void OnGenCode(object sender, EventArgs e)
         {
             if (activeGraphForm != null)
-                activeGraphForm.GenerateCode(lang.CPP);
+                activeGraphForm.GenerateCode(Lang.CPP);
         }
 
         string lasthint;
@@ -185,8 +185,8 @@ namespace gep
 
         private void buyToolStripButton_Click(object sender, EventArgs e)
         {
-            RegisterForm rf = new RegisterForm();
-            rf.ShowDialog();
+            using(var rf = new RegisterForm())
+                rf.ShowDialog();
             if (RegistryChecker.R[1] == 1)
                 buyToolStripButton.Visible = false;
         }
@@ -205,8 +205,8 @@ namespace gep
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AboutForm af = new AboutForm();
-            af.ShowDialog();
+            using(var af = new AboutForm())
+                af.ShowDialog();
         }
 
         private void OnRenderFile(object sender, EventArgs e)
@@ -276,12 +276,14 @@ namespace gep
         {
             if (activeGraphForm != null)
             {
-                Bitmap bmp = activeGraphForm.MakeImage();
-                SaveFileDialog fd = new SaveFileDialog();
-                fd.DefaultExt = "*.png";
-                fd.Filter = "PNG files (*.png)|*.png|All files (*.*)|*.*";
-                if (fd.ShowDialog() == DialogResult.OK)
-                    bmp.Save(fd.FileName);
+                using (Bitmap bmp = activeGraphForm.MakeImage())
+                using (var fd = new SaveFileDialog())
+                {
+                    fd.DefaultExt = "*.png";
+                    fd.Filter = "PNG files (*.png)|*.png|All files (*.*)|*.*";
+                    if (fd.ShowDialog() == DialogResult.OK)
+                        bmp.Save(fd.FileName);
+                }
             }
         }
 
@@ -311,14 +313,16 @@ namespace gep
 
         private void OnRenderURL(object sender, EventArgs e)
         {
-            RenderURLForm rf = new RenderURLForm("Render URL");
-            rf.ShowDialog();
-            if (rf.selectedURL != null)
+            using (var rf = new RenderURLForm("Render URL"))
             {
-                if (activeGraphForm == null)
-                    OnNewGraph(sender, e);
-                if (activeGraphForm != null)
-                    activeGraphForm.RenderURL(rf.selectedURL);
+                rf.ShowDialog();
+                if (rf.selectedURL != null)
+                {
+                    if (activeGraphForm == null)
+                        OnNewGraph(sender, e);
+                    if (activeGraphForm != null)
+                        activeGraphForm.RenderURL(rf.selectedURL);
+                }
             }
         }
 
@@ -346,13 +350,13 @@ namespace gep
         private void OnGenCodeCS(object sender, EventArgs e)
         {
             if (activeGraphForm != null)
-                activeGraphForm.GenerateCode(lang.CS);
+                activeGraphForm.GenerateCode(Lang.CS);
         }
 
         private void OnCodeTemplates(object sender, EventArgs e)
         {
-            TemplatesForm tf = new TemplatesForm();
-            tf.ShowDialog();
+            using(var tf = new TemplatesForm())
+                tf.ShowDialog();
         }
 
         private void OnDragDrop(object sender, DragEventArgs e)
@@ -421,7 +425,7 @@ namespace gep
 
         private void OnPreferences(object sender, EventArgs e)
         {
-            PreferencesForm frm = new PreferencesForm(autoArrange, suggestURLs, useDirectConnect, createFiltersByName);
+            using(var frm = new PreferencesForm(autoArrange, suggestURLs, useDirectConnect, createFiltersByName))
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 autoArrange = frm.autoArrange;

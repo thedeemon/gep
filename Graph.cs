@@ -279,7 +279,7 @@ namespace gep
             else
             {
                 Connect(outpin, inpin);
-                history.CommitAdded(this);
+                history.CommitAdded();
                 inpin.Filter.ReloadPins();
                 outpin.Filter.ReloadPins();
             }
@@ -622,7 +622,7 @@ namespace gep
                 return;
             }*/
             log("reload_filters: almost done");
-            history.CommitAdded(this);
+            history.CommitAdded();
             log("reload_filters: done");
         }
 
@@ -914,7 +914,7 @@ namespace gep
             }
         }
 
-        string RefTimeToString(long rt)
+        static string RefTimeToString(long rt)
         {
             StringBuilder sb = new StringBuilder();
             long totsec = rt / 10000000;
@@ -1014,13 +1014,13 @@ namespace gep
         }
 
 
-        public void GenerateCode(GraphForm.ShowCodeDel shcode, lang lng, bool useDirectConnect)
+        public void GenerateCode(GraphForm.ShowCodeDel shcode, Lang lng, bool useDirectConnect)
         {
             CodeGenBase cg = null;
             switch (lng)
             {
-                case lang.CPP: cg = new CodeGenCPP(); break;
-                case lang.CS: cg = new CodeGenCS(); break;
+                case Lang.CPP: cg = new CodeGenCPP(); break;
+                case Lang.CS: cg = new CodeGenCS(); break;
             }
             cg.History = history;
             string code = cg.GenCode(useDirectConnect, this);

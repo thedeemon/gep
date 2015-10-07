@@ -14,7 +14,7 @@ using System.Security;
 
 namespace gep
 {
-    class FilterProps : IDisposable
+    class FilterProps 
     {
         string name;
         string longname;
@@ -324,19 +324,6 @@ namespace gep
         public FilterPropsKernel Kernel()
         {
             return new FilterPropsKernel(name, longname, guid, catguid); 
-        }
-
-        public void Dispose()
-        {
-            //if (pointer != IntPtr.Zero)
-            //    Marshal.Release(pointer); //already done after acquiring
-            pointer = IntPtr.Zero;
-            GC.SuppressFinalize(this);
-        }
-
-        ~FilterProps()
-        {
-            Dispose();
         }
     }
 

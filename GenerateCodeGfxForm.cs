@@ -13,9 +13,10 @@ namespace gep
         public GenerateCodeGfxForm(string code)
         {
             InitializeComponent();
-            FontFamily ff = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace);
-            Font font = new Font(ff, 10, FontStyle.Regular);
-            using (Graphics og = CreateGraphics()) {
+            using (var ff = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace))
+            using (var font = new Font(ff, 10, FontStyle.Regular))
+            using (Graphics og = CreateGraphics())
+            {
                 Size sz = og.MeasureString(code, font).ToSize();
                 Bitmap bmp = new Bitmap(sz.Width, sz.Height);
                 Graphics g = Graphics.FromImage(bmp);
@@ -26,7 +27,7 @@ namespace gep
                 vScrollBar.SmallChange = sz.Height / 10;
                 vScrollBar.LargeChange = panel.Size.Height;//sz.Height / 4;
                 panel.bmp = bmp;
-            }
+            }            
         }
 
         private void vScrollBar_ValueChanged(object sender, EventArgs e)
@@ -37,8 +38,8 @@ namespace gep
 
         private void OnRegister(object sender, EventArgs e)
         {
-            RegisterForm f = new RegisterForm();
-            f.ShowDialog();
+            using(var f = new RegisterForm())
+                f.ShowDialog();
         }
     }
 

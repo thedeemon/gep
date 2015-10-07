@@ -42,7 +42,7 @@ namespace gep
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.checkBoxAllCats = new System.Windows.Forms.CheckBox();
             this.linkSearchForm = new System.Windows.Forms.LinkLabel();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            //this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -276,7 +276,7 @@ namespace gep
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.ToolTip toolTip1;
+        //private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TextBox textBoxSearch;
         private System.Windows.Forms.Button btnClearSearch;

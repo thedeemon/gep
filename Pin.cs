@@ -18,7 +18,7 @@ namespace gep
             get { return rect; }
             set { rect = value; }
         }
-        public Point Location { set { rect.Location = value; } }
+        //public Point Location { set { rect.Location = value; } }
 
         Filter filter;
         public Filter Filter { get { return filter; } }
@@ -63,17 +63,19 @@ namespace gep
             rc.X += x;
             rc.Y += y;
             int delta = animation_state / 2;
-            LinearGradientBrush br = new LinearGradientBrush(new Point(0, rc.Top), new Point(0, rc.Bottom),
-                Color.FromArgb(200+delta, 200+delta, 200), 
-                Color.FromArgb(100+delta, 100+delta, 100));
-            g.FillRectangle(br, rc);
-            last_drawn_rect = rc;
-            if (direction == PinDirection.Input)
-                g.DrawString(name, pinfont, pinbrush, rc.Right + 1, rc.Top);
-            else
+            using (var br = new LinearGradientBrush(new Point(0, rc.Top), new Point(0, rc.Bottom),
+                Color.FromArgb(200 + delta, 200 + delta, 200),
+                Color.FromArgb(100 + delta, 100 + delta, 100)))
             {
-                SizeF sz = g.MeasureString(name, pinfont);
-                g.DrawString(name, pinfont, pinbrush, rc.Left - 1 - sz.Width, rc.Top);
+                g.FillRectangle(br, rc);
+                last_drawn_rect = rc;
+                if (direction == PinDirection.Input)
+                    g.DrawString(name, pinfont, pinbrush, rc.Right + 1, rc.Top);
+                else
+                {
+                    SizeF sz = g.MeasureString(name, pinfont);
+                    g.DrawString(name, pinfont, pinbrush, rc.Left - 1 - sz.Width, rc.Top);
+                }
             }
         }
 
@@ -197,7 +199,7 @@ namespace gep
         public int x, y, dir;
     }
 
-    class PinConnection : Animated
+    class PinConnection : Animated 
     {
         public Pin[] pins; //outpin, inpin
         public List<ConStep> path;
@@ -205,8 +207,9 @@ namespace gep
         public int ID { get { return id; } }
         string uniqname;
         public string UniqName { get { return uniqname; } }
-        Pen beigePen = new Pen(Brushes.Green);
-        Pen yellowPen = new Pen(Brushes.Yellow);
+        static Pen beigePen = new Pen(Brushes.Green);
+        static Pen yellowPen = new Pen(Brushes.Yellow);
+        Rectangle last_drawn_rectangle;
 
         static int lastid = 1;
         
@@ -219,7 +222,6 @@ namespace gep
             uniqname = outpin.UniqName + "-" + inpin.UniqName;
         }
 
-        Rectangle last_drawn_rectangle;
 
         public void Draw(Graphics g, bool selected, Point viewpoint)
         {
