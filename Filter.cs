@@ -141,6 +141,7 @@ namespace gep
 
         protected override bool IsSelected()
         {
+            if (graph == null || graph.SelectedFilters == null) return false;
             return graph.SelectedFilters.Contains(this);
         }
 

@@ -273,6 +273,7 @@ namespace gep
 
         protected override bool IsSelected()
         {
+            if (pins[0] == null || pins[0].Filter == null || pins[0].Filter.Graph == null) return false;
             return pins[0].Filter.Graph.SelectedConnection == this;
         }
 

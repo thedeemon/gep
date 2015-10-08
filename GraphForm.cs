@@ -931,7 +931,7 @@ namespace gep
             regtimer.Start();
             toolStripHeight = toolStrip.Size.Height;
             graph.SetEventWindow(Handle);
-            timer.Interval = 1000;
+            timer.Interval = 380;
             timer.Tick += OnTimer;
             timer.Start();
 
