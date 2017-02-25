@@ -273,8 +273,8 @@ namespace gep
             this.windowsToolStripMenuItem.Name = "windowsToolStripMenuItem";
             this.windowsToolStripMenuItem.Size = new System.Drawing.Size(68, 20);
             this.windowsToolStripMenuItem.Text = "Windows";
-            this.windowsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.windowsToolStripMenuItem_DropDownOpening);
             this.windowsToolStripMenuItem.DropDownClosed += new System.EventHandler(this.windowsToolStripMenuItem_DropDownClosed);
+            this.windowsToolStripMenuItem.DropDownOpening += new System.EventHandler(this.windowsToolStripMenuItem_DropDownOpening);
             // 
             // helpToolStripMenuItem
             // 
@@ -387,10 +387,10 @@ namespace gep
             this.Name = "MainForm";
             this.Text = "GraphEditPlus";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.OnDragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.OnDragEnter);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.mainmenu.ResumeLayout(false);
             this.mainmenu.PerformLayout();
             this.maintoolbar.ResumeLayout(false);

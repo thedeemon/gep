@@ -470,7 +470,8 @@ namespace gep
 
                     if ((filter.BaseFilter as IPersistStream) != null)
                     {
-                        menu.MenuItems.Add("Save state to code", SaveFilterStateToCode);
+                        menu.MenuItems.Add("Save state to C++ code", SaveFilterStateToCode);
+                        menu.MenuItems.Add("Save state to C# code", SaveFilterStateToCodeCS);
                     }
 
                     menu.Show(this, eLocation);
@@ -1116,13 +1117,22 @@ namespace gep
             Bounds = Program.mainform.MaximumRectangle;
         }
 
-        private void SaveFilterStateToCode(object sender, EventArgs e)
+        private void SaveFilterStateToCode(object sender, EventArgs e) 
+        {
+            SaveFilterStateToCodeImpl(true);
+        }
+        private void SaveFilterStateToCodeCS(object sender, EventArgs e)
+        {
+            SaveFilterStateToCodeImpl(false);
+        }
+
+        private void SaveFilterStateToCodeImpl(bool cpp)
         {
             if (rightClickedFilter != null)
             {
                 try
                 {
-                    rightClickedFilter.SaveStateToCode();
+                    rightClickedFilter.SaveStateToCode(cpp);
                 }
                 catch (COMException ex)
                 {

@@ -41,7 +41,7 @@ namespace gep
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(101, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "GraphEditPlus 1.5.0";
+            this.label1.Text = "GraphEditPlus 1.5.1";
             // 
             // label2
             // 
@@ -50,7 +50,7 @@ namespace gep
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(273, 13);
             this.label2.TabIndex = 1;
-            this.label2.Text = "(C) 2007-2009 Dee Mon, 2009-2015 Infognition Co. Ltd. ";
+            this.label2.Text = "(C) 2007-2009 Dee Mon, 2009-2017 Infognition Co. Ltd. ";
             // 
             // btnOK
             // 

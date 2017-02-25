@@ -500,13 +500,13 @@ namespace gep
             return graph.FilterInPoint(graph.Form.MousePos) == this;
         }
 
-        public void SaveStateToCode()
+        public void SaveStateToCode(bool cpp)
         {
             IPersistStream ips = BaseFilter as IPersistStream;
             if (ips == null) return;
             long sz = 0;
             Graph.CheckHR(ips.GetSizeMax(out sz), "ips.GetSizeMax");                
-            if (sz <= 0 || sz > 10000)
+            if (sz <= 0 || sz > 1024*1024)
                 MessageBox.Show(string.Format("Weird size returned by IPersistStream::GetSizeMax: {0}", sz));
             else
             {
@@ -521,29 +521,53 @@ namespace gep
                     long pos = Marshal.ReadInt64(ppos);
                     if (pos > 0) {
                         StringBuilder sb = new StringBuilder();
-                        sb.Append("//somewhere outside a function:\r\n");
-                        sb.Append("static unsigned char filter_data[] = {");
+                        sb.AppendLine("//somewhere outside a function:");
+                        if (cpp)
+                            sb.Append("static unsigned char filter_data[] = {");
+                        else
+                        {
+                            sb.AppendLine("[System.Runtime.InteropServices.DllImport(\"OLE32.DLL\", EntryPoint = \"CreateStreamOnHGlobal\")]");
+                            sb.AppendLine("extern public static int CreateStreamOnHGlobal(IntPtr ptr, bool delete, out IStream pOutStm);");
+                            sb.AppendLine();
+                            sb.Append("byte[] filter_data = {");
+                        }
+
                         for(int i=0; i<pos; i++) {                            
                             if (i > 0) sb.Append(", ");
                             if (i % 16 == 0) sb.Append("\r\n  ");
-                            sb.AppendFormat("{0}", Marshal.ReadByte(hg, i));
-                            
+                            sb.AppendFormat("{0}", Marshal.ReadByte(hg, i));                            
                         }
                         sb.AppendLine("\r\n};");
 
-                        sb.AppendLine("\r\n//in your graph building code:");
-	                    sb.AppendLine("HGLOBAL hg = GlobalAlloc(0, sizeof(filter_data));");
-	                    sb.AppendLine("memcpy(hg, filter_data, sizeof(filter_data));");
-	                    sb.AppendLine("IStream *pStream = NULL;");
-	                    sb.AppendLine("if (CreateStreamOnHGlobal(hg, FALSE, &pStream)==0) {");
-	                    sb.AppendLine("    CComQIPtr<IPersistStream, &IID_IPersistStream> ips(pFilter);");
-	                    sb.AppendLine("    if (ips) {");
-	                    sb.AppendLine("        hr = ips->Load(pStream);");
-	                    sb.AppendLine("        CHECK_HR(hr, _T(\"Can't load filter state.\"));");
-	                    sb.AppendLine("    }");
-	                    sb.AppendLine("}");
-	                    sb.AppendLine("GlobalFree(hg);");
 
+                        sb.AppendLine("\r\n//in your graph building code:");
+                        if (cpp)
+                        {
+                            sb.AppendLine("HGLOBAL hg = GlobalAlloc(0, sizeof(filter_data));");
+                            sb.AppendLine("memcpy(hg, filter_data, sizeof(filter_data));");
+                            sb.AppendLine("IStream *pStream = NULL;");
+                            sb.AppendLine("if (CreateStreamOnHGlobal(hg, FALSE, &pStream)==0) {");
+                            sb.AppendLine("    CComQIPtr<IPersistStream, &IID_IPersistStream> ips(pFilter);");
+                            sb.AppendLine("    if (ips) {");
+                            sb.AppendLine("        hr = ips->Load(pStream);");
+                            sb.AppendLine("        CHECK_HR(hr, _T(\"Can't load filter state.\"));");
+                            sb.AppendLine("    }");
+                            sb.AppendLine("}");
+                            sb.AppendLine("GlobalFree(hg);");
+                        }
+                        else
+                        {
+                            sb.AppendLine("IPersistStream ips = pFilter as IPersistStream;");
+                            sb.AppendLine("if (ips != null)");
+                            sb.AppendLine("{");
+                            sb.AppendLine("    IStream stream;");
+                            sb.AppendLine("    IntPtr hg = Marshal.AllocHGlobal(filter_data.Length);");
+                            sb.AppendLine("    Marshal.Copy(filter_data, 0, hg, filter_data.Length);");
+                            sb.AppendLine("    if (CreateStreamOnHGlobal(hg, false, out stream) == 0)");
+                            sb.AppendLine("        checkHR(ips.Load(stream), \"Can't load filter state.\");");
+                            sb.AppendLine("    Marshal.FreeHGlobal(hg);");
+                            sb.AppendLine("}");
+                        }
                         using(var cf = new GenerateCodeForm(sb.ToString()))
                             cf.ShowDialog();
                         //MessageBox.Show(sb.ToString());

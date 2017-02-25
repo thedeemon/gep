@@ -101,6 +101,17 @@ namespace gep
             createFiltersByName = (int)nrk.GetValue("createFiltersByName", 1) > 0;
             autoArrange = (int)nrk.GetValue("autoArrange", 0) > 0;
 
+            int maxed = (int)nrk.GetValue("winMaxed", 1);
+            if (maxed == 0)
+            {
+                WindowState = FormWindowState.Normal;                
+                int left = (int)nrk.GetValue("winLeft", 0);
+                int right = (int)nrk.GetValue("winRight", 1200);
+                int top = (int)nrk.GetValue("winTop", 0);
+                int bottom = (int)nrk.GetValue("winBottom", 720);
+                DesktopBounds = new Rectangle(left, top, right - left, bottom - top);
+            }
+
             if (filetoopen == null)
                 OnNewGraph(null, null);
             else
@@ -337,6 +348,13 @@ namespace gep
                 rk.SetValue("createFiltersByName", createFiltersByName ? 1 : 0);
                 rk.SetValue("autoArrange", autoArrange ? 1 : 0);
                 SaveFavorites(rk);
+                int maxed = (WindowState == FormWindowState.Maximized) ? 1 : 0;
+                Rectangle rc = DesktopBounds;
+                rk.SetValue("winMaxed", maxed);
+                rk.SetValue("winLeft", rc.Left);
+                rk.SetValue("winTop", rc.Top);
+                rk.SetValue("winRight", rc.Right);
+                rk.SetValue("winBottom", rc.Bottom);
             }
         }
 
